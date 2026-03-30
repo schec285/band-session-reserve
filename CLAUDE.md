@@ -9,9 +9,33 @@ npm run dev        # 開発サーバー起動
 npm run build      # 本番ビルド
 npm run start      # 本番サーバー起動
 npm run lint       # Next.js 経由で ESLint を実行
+npm test           # テスト実行（Jest）
+npm run test:watch # ウォッチモード
+npm run test:api   # APIテストのみ
+npm run test:ui    # UIテストのみ
 ```
 
-テストフレームワークは未設定。
+**テストフレームワーク**: Jest + ts-jest + React Testing Library + node-mocks-http
+
+- APIテスト: `node` 環境（`app/api/**/*.test.ts`）
+- UIテスト: `jsdom` 環境（`components/**/*.test.tsx`）
+- 設定ファイル: `jest.config.ts`
+
+## 開発方針
+
+**開発フロー**: バックエンドAPI設計先行 → フロントエンド実装の順で進める。
+
+**開発手法**: TDD（テスト駆動開発）を採用。
+1. 失敗するテストを書く（Red）
+2. テストが通る最小限の実装をする（Green）
+3. リファクタリング（Refactor）
+
+**実装順序**:
+1. 型定義（`types/`）
+2. APIルートのテスト作成（`app/api/**/*.test.ts`）
+3. APIルート実装（`app/api/**/*.ts`）
+4. フロントエンドのテスト作成
+5. フロントエンド実装
 
 ## アーキテクチャ
 
@@ -28,6 +52,14 @@ npm run lint       # Next.js 経由で ESLint を実行
 **フォーム項目**: 名前、日付（本日以降）、曲名、パート（Guitar/Bass/Drums/Keyboard/Vocal/その他）、コメント（任意）。
 
 **バリデーションは意図的に二重実装** — `ReserveForm.tsx` でクライアント側、`app/api/reserve/route.ts` でサーバー側、同じ許可 `part` 値に対して両方で検証する。
+
+## CI / GitHub Actions
+
+`.github/workflows/ci.yml` にPR時の自動チェックを定義。
+
+- **job順序**: `test` → `build`（`needs: test` でテスト通過後にビルド実行）
+- **マージ条件**: Branch Protection Rules で `TDDテスト` と `ビルド確認` の両ジョブがグリーンであることを必須とする
+- テストが1件でも失敗するとマージ不可
 
 ## 注意事項
 

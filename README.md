@@ -25,6 +25,49 @@ npm run dev
 | `npm run build` | 本番ビルド |
 | `npm run start` | 本番サーバー起動 |
 | `npm run lint` | ESLint 実行 |
+| `npm test` | テスト実行 |
+| `npm run test:watch` | テストをウォッチモードで実行 |
+| `npm run test:api` | APIテストのみ実行 |
+| `npm run test:ui` | UIテストのみ実行 |
+
+## 開発フロー
+
+**TDD（テスト駆動開発）** を採用しています。
+
+```
+1. Red   — 失敗するテストを書く
+2. Green — テストが通る最小限の実装をする
+3. Refactor — コードを整理する
+```
+
+**実装順序**: 型定義 → APIテスト → API実装 → UIテスト → UI実装
+
+### テストファイルの配置
+
+```
+app/api/reserve/
+  route.ts
+  route.test.ts       ← APIテスト（node環境）
+components/
+  ReserveForm.tsx
+  ReserveForm.test.tsx ← UIテスト（jsdom環境）
+types/
+  reserve.ts          ← 型定義（テスト・実装の共通基盤）
+```
+
+## CI / GitHub Actions
+
+PRを作成すると以下のチェックが自動実行されます。**すべてグリーンでないとマージ不可**です。
+
+```
+PR作成
+  ├─ [1] TDDテスト（npm test）
+  │       └─ FAIL → マージ不可 ❌
+  └─ [2] ビルド確認（npm run build）※テスト通過後に実行
+          └─ FAIL → マージ不可 ❌
+```
+
+設定ファイル: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ## 予約フォームの入力項目
 
