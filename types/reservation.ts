@@ -1,4 +1,4 @@
-// 予約フォームの型定義
+// パートの型
 export type Part =
   | "guitar"
   | "bass"
@@ -7,26 +7,38 @@ export type Part =
   | "vocal"
   | "other";
 
+// イベントの型
+export interface Event {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  venue: string;
+  description: string;
+  isPast: boolean;
+}
+
+// 予約フォームの型（api-design.md に準拠）
 export interface ReservationForm {
-  name: string;
-  date: string;
+  eventId: string;
   songTitle: string;
   part: Part;
+  snsConsent: boolean;
   comment?: string;
 }
 
 // バリデーションエラーの型
 export interface FormErrors {
-  name?: string;
-  date?: string;
+  eventId?: string;
   songTitle?: string;
   part?: string;
+  snsConsent?: string;
 }
 
 // APIレスポンスの型
 export interface ApiResponse {
   success: boolean;
   message: string;
+  token?: string; // ログイン時のみ
 }
 
 // パート選択肢のラベルマッピング
@@ -38,3 +50,13 @@ export const PART_LABELS: Record<Part, string> = {
   vocal: "ボーカル",
   other: "その他",
 };
+
+// 許可するパートの値リスト
+export const VALID_PARTS: Part[] = [
+  "guitar",
+  "bass",
+  "drums",
+  "keyboard",
+  "vocal",
+  "other",
+];
