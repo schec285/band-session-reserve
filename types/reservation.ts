@@ -34,6 +34,22 @@ export interface FormErrors {
   snsConsent?: string;
 }
 
+// 予約レコードの型（DB保存時のデータ構造）
+export interface Reservation {
+  id: string;
+  userId: string;
+  songTitle: string;
+  parts: Part[];
+  snsConsent: boolean;
+  comment?: string;
+  createdAt: string;
+}
+
+// PATCH リクエストボディの型
+export interface UpdateReservationBody {
+  parts: Part[];
+}
+
 // APIレスポンスの型
 export interface ApiResponse {
   success: boolean;
