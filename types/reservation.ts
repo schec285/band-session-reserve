@@ -11,10 +11,11 @@ export type Part =
 export interface Event {
   id: string;
   title: string;
-  date: string; // YYYY-MM-DD
+  startAt: string;         // ISO 8601 (例: "2026-04-20T10:00:00+09:00")
+  endAt: string;           // ISO 8601 (例: "2026-04-20T18:00:00+09:00")
+  closedAt: string | null; // 受付締め切り日時。null の場合は startAt で判断
   venue: string;
   description: string;
-  isPast: boolean;
 }
 
 // 予約フォームの型（api-design.md に準拠）

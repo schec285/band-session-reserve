@@ -8,6 +8,8 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
+| GET | `/api/events` | イベント一覧を取得する | 不要 |
+| GET | `/api/events/:eventId/songs` | イベントの曲一覧と予約状況を取得する | 不要 |
 | POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
 | POST | `/api/auth/verify-email` | メールアドレス認証・アカウント有効化 | 不要 |
 | POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
@@ -17,6 +19,7 @@
 | DELETE | `/api/reserve/:reservationId` | 予約をキャンセルする | 要 |
 
 詳細仕様:
+- [イベント API](./events.md)
 - [認証 API](./auth.md)
 - [予約 API](./reserve.md)
 
@@ -73,5 +76,5 @@ Authorization: Bearer <api_token>
 ## 現在の制約・今後の拡張ポイント
 
 - **永続化なし**: 予約データは `console.log` のみ。DB 設計は `docs/db-design.md` を参照。
-- **イベント・曲管理 API なし**: `songId` の存在チェックには別途イベント・曲一覧 API が必要。
+- **イベント・曲データは静的**: 現状 `GET /api/events` はハードコードされたデータを返す。
 - **セッションストアなし**: セッションの永続化・無効化には Redis 等のストアが必要。
