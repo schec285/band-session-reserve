@@ -95,6 +95,17 @@ interface ApiResponse {
 }
 ```
 
+#### 409 Conflict — 受付終了
+
+受付締め切り判定: `(closedAt ?? startAt) <= 現在時刻` の場合
+
+```json
+{
+  "success": false,
+  "message": "このイベントの受付は終了しています"
+}
+```
+
 #### 409 Conflict — パートが埋まっている
 
 ```json

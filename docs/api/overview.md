@@ -62,6 +62,7 @@ Authorization: Bearer <api_token>
 | `songId` 存在チェック（DB照合） | - | ✓ | POST |
 | `parts` 1件以上チェック | ✓ | ✓ | POST / PATCH |
 | `parts` 許可値チェック | ✓ | ✓ | POST / PATCH |
+| 受付締め切りチェック（`closedAt ?? startAt` <= 現在時刻） | - | ✓ | POST |
 | パート埋まりチェック（DB照合） | - | ✓ | POST / PATCH |
 | `snsConsent` boolean チェック | ✓ | ✓ | POST |
 | `reservationId` 存在チェック（DB照合） | - | ✓ | PATCH / DELETE |
