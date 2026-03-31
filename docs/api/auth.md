@@ -2,6 +2,18 @@
 
 ---
 
+## ユーザーロール
+
+| 値 | 説明 | 備考 |
+|---|---|---|
+| `"member"` | 一般メンバー | 登録時のデフォルト |
+| `"admin"` | 管理者 | イベント・曲の管理が可能 |
+
+- 新規登録ユーザーは常に `"member"` として作成される
+- `"admin"` への昇格は既存の管理者のみが行える（管理者向け API は別途設計）
+
+---
+
 ## 認証フロー概要
 
 ```
@@ -150,11 +162,13 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 {
   "success": true,
   "message": "ログインしました",
-  "token": "<api_token>"
+  "token": "<api_token>",
+  "role": "member"
 }
 ```
 
 > `token` はクライアントが保持し、以降のリクエストの `Authorization` ヘッダーで使用する。
+> `role` は `"admin"` または `"member"`。クライアントはこの値で管理者向け UI の表示を切り替える。
 
 #### 401 Unauthorized — 認証失敗
 
