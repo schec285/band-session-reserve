@@ -8,7 +8,8 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| POST | `/api/auth/register` | ユーザー登録 | 不要 |
+| POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
+| POST | `/api/auth/verify-email` | メールアドレス認証・アカウント有効化 | 不要 |
 | POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
 | POST | `/api/auth/logout` | ログアウト（セッションクッキー削除） | 要 |
 | POST | `/api/reserve` | セッション予約を受け付ける | 要 |
@@ -62,6 +63,8 @@ Authorization: Bearer <api_token>
 | `snsConsent` boolean チェック | ✓ | ✓ | POST |
 | `reservationId` 存在チェック（DB照合） | - | ✓ | PATCH / DELETE |
 | 予約の所有者チェック | - | ✓ | PATCH / DELETE |
+| メールアドレス認証済みチェック | - | ✓ | login |
+| メール検証トークン有効性チェック | - | ✓ | verify-email |
 | セッションクッキー有効性 | - | ✓ | 全エンドポイント |
 | API トークン有効性 | - | ✓ | 全エンドポイント |
 
