@@ -10,6 +10,7 @@
 |---|---|---|---|
 | GET | `/api/events` | イベント一覧を取得する | 不要 |
 | GET | `/api/events/:eventId/songs` | イベントの曲一覧と予約状況を取得する | 不要 |
+| GET | `/api/auth/challenge` | 認証用チャレンジを取得する | 不要 |
 | POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
 | POST | `/api/auth/verify-email` | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
 | POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
