@@ -95,9 +95,16 @@ interface ApiResponse {
 }
 ```
 
-#### 409 Conflict — 受付終了
+#### 405 Method Not Allowed — POST 以外のメソッド
 
-受付締め切り判定: `(closedAt ?? startAt) <= 現在時刻` の場合
+```json
+{
+  "success": false,
+  "message": "Method Not Allowed"
+}
+```
+
+#### 409 Conflict — 受付終了
 
 ```json
 {
@@ -112,15 +119,6 @@ interface ApiResponse {
 {
   "success": false,
   "message": "このパートはすでに埋まっています"
-}
-```
-
-#### 405 Method Not Allowed — POST 以外のメソッド
-
-```json
-{
-  "success": false,
-  "message": "Method Not Allowed"
 }
 ```
 
@@ -211,6 +209,15 @@ Content-Type: application/json
 {
   "success": false,
   "message": "予約が見つかりません"
+}
+```
+
+#### 409 Conflict — 受付終了
+
+```json
+{
+  "success": false,
+  "message": "このイベントの受付は終了しています"
 }
 ```
 
