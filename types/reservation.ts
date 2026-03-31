@@ -1,6 +1,7 @@
 // パートの型
 export type Part =
-  | "guitar"
+  | "readGuitar"
+  | "backingGuitar"
   | "bass"
   | "drums"
   | "keyboard"
@@ -60,7 +61,8 @@ export interface ApiResponse {
 
 // パート選択肢のラベルマッピング
 export const PART_LABELS: Record<Part, string> = {
-  guitar: "ギター",
+  readGuitar: "リードギター",
+  backingGuitar: "バッキングギター",
   bass: "ベース",
   drums: "ドラム",
   keyboard: "キーボード",
@@ -70,7 +72,8 @@ export const PART_LABELS: Record<Part, string> = {
 
 // 許可するパートの値リスト
 export const VALID_PARTS: Part[] = [
-  "guitar",
+  "readGuitar",
+  "backingGuitar",
   "bass",
   "drums",
   "keyboard",

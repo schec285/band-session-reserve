@@ -79,26 +79,12 @@
       "id": "song-uuid-1",
       "title": "千本桜",
       "reservations": [
-        {
-          "part": "guitar",
-          "isFilled": true
-        },
-        {
-          "part": "bass",
-          "isFilled": false
-        },
-        {
-          "part": "drums",
-          "isFilled": true
-        },
-        {
-          "part": "keyboard",
-          "isFilled": false
-        },
-        {
-          "part": "vocal",
-          "isFilled": false
-        }
+        { "part": "readGuitar",    "isFilled": true  },
+        { "part": "backingGuitar", "isFilled": false },
+        { "part": "bass",          "isFilled": false },
+        { "part": "drums",         "isFilled": true  },
+        { "part": "keyboard",      "isFilled": false },
+        { "part": "vocal",         "isFilled": false }
       ]
     }
   ]
@@ -116,6 +102,7 @@
 | `reservations[].isFilled` | boolean | 予約済みかどうか |
 
 > ユーザー個人の予約情報（誰が予約したか）は含まない。パートが埋まっているかどうかのみ公開する。
+> 曲に不要なパートは `reservations` 配列に含めない（配列に存在しない＝その曲では募集していない）。
 
 #### 404 Not Found — イベントが存在しない
 
