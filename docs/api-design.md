@@ -12,6 +12,8 @@
 | POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
 | POST | `/api/auth/logout` | ログアウト（セッションクッキー削除） | 要 |
 | POST | `/api/reserve` | セッション予約を受け付ける | 要 |
+| PATCH | `/api/reserve/:reservationId` | 予約のパートを部分変更する | 要 |
+| DELETE | `/api/reserve/:reservationId` | 予約をキャンセルする | 要 |
 
 ---
 
@@ -305,20 +307,171 @@ interface ApiResponse {
 
 ---
 
+## PATCH `/api/reserve/:reservationId`
+
+### 概要
+
+予約済みのパートを部分変更する。`parts` の配列を上書きする形で更新する。
+
+### リクエストヘッダー
+
+```
+Cookie: session=<session_token>
+Authorization: Bearer <api_token>
+Content-Type: application/json
+```
+
+### パスパラメーター
+
+| パラメーター | 型 | 説明 |
+|---|---|---|
+| `reservationId` | string | 変更対象の予約 UUID |
+
+### リクエストボディ
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `parts` | string[] | ✓ | 変更後のパート配列（1つ以上） |
+
+#### リクエスト例
+
+```json
+{
+  "parts": ["vocal"]
+}
+```
+
+### レスポンス
+
+#### 200 OK — 更新成功
+
+```json
+{
+  "success": true,
+  "message": "予約を更新しました"
+}
+```
+
+#### 400 Bad Request — バリデーションエラー
+
+| 条件 | `message` |
+|---|---|
+| `parts` が空配列または未指定 | `"パートは1つ以上指定してください"` |
+| `parts` に不正値が含まれる | `"パートが不正です"` |
+
+#### 401 Unauthorized — 未認証
+
+```json
+{
+  "success": false,
+  "message": "認証が必要です"
+}
+```
+
+#### 403 Forbidden — 他ユーザーの予約を操作しようとした
+
+```json
+{
+  "success": false,
+  "message": "この操作は許可されていません"
+}
+```
+
+#### 404 Not Found — 予約が存在しない
+
+```json
+{
+  "success": false,
+  "message": "予約が見つかりません"
+}
+```
+
+#### 409 Conflict — 変更後のパートが埋まっている
+
+```json
+{
+  "success": false,
+  "message": "このパートはすでに埋まっています"
+}
+```
+
+---
+
+## DELETE `/api/reserve/:reservationId`
+
+### 概要
+
+予約をキャンセルする（予約レコードごと削除）。
+
+### リクエストヘッダー
+
+```
+Cookie: session=<session_token>
+Authorization: Bearer <api_token>
+```
+
+### パスパラメーター
+
+| パラメーター | 型 | 説明 |
+|---|---|---|
+| `reservationId` | string | キャンセル対象の予約 UUID |
+
+### レスポンス
+
+#### 200 OK — キャンセル成功
+
+```json
+{
+  "success": true,
+  "message": "予約をキャンセルしました"
+}
+```
+
+#### 401 Unauthorized — 未認証
+
+```json
+{
+  "success": false,
+  "message": "認証が必要です"
+}
+```
+
+#### 403 Forbidden — 他ユーザーの予約を操作しようとした
+
+```json
+{
+  "success": false,
+  "message": "この操作は許可されていません"
+}
+```
+
+#### 404 Not Found — 予約が存在しない
+
+```json
+{
+  "success": false,
+  "message": "予約が見つかりません"
+}
+```
+
+---
+
 ## バリデーション仕様
 
 バリデーションはクライアント（`components/ReserveForm.tsx`）とサーバー（`app/api/reserve/route.ts`）の両方で実施する（意図的な二重実装）。
 
-| チェック項目 | クライアント | サーバー |
-|---|---|---|
-| `songId` 必須チェック | ✓ | ✓ |
-| `songId` 存在チェック（DB照合） | - | ✓ |
-| `parts` 1件以上チェック | ✓ | ✓ |
-| `parts` 許可値チェック | ✓ | ✓ |
-| パート埋まりチェック（DB照合） | - | ✓ |
-| `snsConsent` boolean チェック | ✓ | ✓ |
-| セッションクッキー有効性 | - | ✓ |
-| API トークン有効性 | - | ✓ |
+| チェック項目 | クライアント | サーバー | 対象エンドポイント |
+|---|---|---|---|
+| `songId` 必須チェック | ✓ | ✓ | POST |
+| `songId` 存在チェック（DB照合） | - | ✓ | POST |
+| `parts` 1件以上チェック | ✓ | ✓ | POST / PATCH |
+| `parts` 許可値チェック | ✓ | ✓ | POST / PATCH |
+| パート埋まりチェック（DB照合） | - | ✓ | POST / PATCH |
+| `snsConsent` boolean チェック | ✓ | ✓ | POST |
+| `reservationId` 存在チェック（DB照合） | - | ✓ | PATCH / DELETE |
+| 予約の所有者チェック | - | ✓ | PATCH / DELETE |
+| セッションクッキー有効性 | - | ✓ | 全エンドポイント |
+| API トークン有効性 | - | ✓ | 全エンドポイント |
 
 ---
 
