@@ -30,7 +30,7 @@
 
 ### 概要
 
-副作用を伴うリクエスト（POST / PATCH / DELETE）に必要な CSRFトークンを発行する。認証不要で誰でも取得できる。
+副作用を伴うリクエスト（POST / PATCH / DELETE）に必要な CSRFトークンを発行する。認証不要で誰でも取得できる。ログイン成功後は、レスポンスに含まれる新しい CSRFトークンに更新すること。
 
 ### レスポンス
 
@@ -208,11 +208,13 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 {
   "success": true,
   "message": "ログインしました",
-  "role": "member"
+  "role": "member",
+  "csrfToken": "<csrf_token>"
 }
 ```
 
 > `role` は `"admin"` または `"member"`。クライアントはこの値で管理者向け UI の表示を切り替える。
+> `csrfToken` は以降のリクエストで使用する新しい CSRFトークン。ログイン前のトークンと差し替えること。
 
 #### 401 Unauthorized — 認証失敗
 
@@ -261,5 +263,14 @@ Set-Cookie: session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0
 {
   "success": true,
   "message": "ログアウトしました"
+}
+```
+
+#### 401 Unauthorized — 未認証
+
+```json
+{
+  "success": false,
+  "message": "認証が必要です"
 }
 ```
