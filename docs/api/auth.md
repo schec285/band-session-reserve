@@ -23,6 +23,8 @@
 | POST | [`/api/auth/verify-email`](#post-apiauthverify-email) | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
 | POST | [`/api/auth/login`](#post-apiauthlogin) | ログイン（セッションクッキー発行） | 不要 |
 | POST | [`/api/auth/logout`](#post-apiauthlogout) | ログアウト（セッションクッキー削除） | 要 |
+| POST | [`/api/auth/password-reset/request`](#post-apiauthpassword-resetrequest) | パスワードリセットメール送信 | 不要 |
+| POST | [`/api/auth/password-reset`](#post-apiauthpassword-reset) | パスワードリセット | 不要 |
 
 ---
 
@@ -265,4 +267,107 @@ Set-Cookie: session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0
   "message": "ログアウトしました"
 }
 ```
+
+---
+
+## POST `/api/auth/password-reset/request`
+
+### 概要
+
+パスワードリセット用のトークンを生成し、登録済みメールアドレスに送信する。メールアドレスが存在しない場合も同一のレスポンスを返す（メールアドレス列挙攻撃対策）。
+
+### リクエスト
+
+**ヘッダー**:
+
+```
+X-CSRF-Token: <csrf_token>
+Content-Type: application/json
+```
+
+#### ボディ
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `email` | string | ✓ | 登録済みメールアドレス |
+
+#### リクエスト例
+
+```json
+{
+  "email": "yamada@example.com"
+}
+```
+
+### レスポンス
+
+#### 200 OK
+
+```json
+{
+  "success": true,
+  "message": "パスワードリセット用のメールを送信しました。メールに記載のリンクからパスワードを再設定してください"
+}
+```
+
+> メールアドレスが登録されていない場合も同じレスポンスを返す。
+
+#### 400 Bad Request — バリデーションエラー
+
+| 条件 | `message` |
+|---|---|
+| `email` が空 | `"メールアドレスは必須です"` |
+| `email` が不正 | `"メールアドレスの形式が不正です"` |
+
+---
+
+## POST `/api/auth/password-reset`
+
+### 概要
+
+メールに記載されたリセットトークンと新しいパスワードを受け取り、パスワードを更新する。トークンは有効期限付き・1回限り有効。
+
+### リクエスト
+
+**ヘッダー**:
+
+```
+X-CSRF-Token: <csrf_token>
+Content-Type: application/json
+```
+
+#### ボディ
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| `token` | string | ✓ | メールに記載されたリセットトークン |
+| `password` | string | ✓ | 新しいパスワード |
+
+#### リクエスト例
+
+```json
+{
+  "token": "<reset_token>",
+  "password": "newP@ssw0rd"
+}
+```
+
+### レスポンス
+
+#### 200 OK — パスワード更新成功
+
+```json
+{
+  "success": true,
+  "message": "パスワードを再設定しました。新しいパスワードでログインしてください"
+}
+```
+
+#### 400 Bad Request — バリデーションエラー
+
+| 条件 | `message` |
+|---|---|
+| `token` が空 | `"トークンは必須です"` |
+| `token` が無効・期限切れ・使用済み | `"トークンが無効です。再度パスワードリセットを申請してください"` |
+| `password` が空 | `"パスワードは必須です"` |
 
