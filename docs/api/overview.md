@@ -58,26 +58,3 @@ X-CSRF-Token: <csrf_token>
 }
 ```
 
----
-
-## バリデーション仕様
-
-バリデーションはクライアント（`components/ReserveForm.tsx`）とサーバー（`app/api/reserve/route.ts`）の両方で実施する（意図的な二重実装）。
-
-| チェック項目 | クライアント | サーバー | 対象エンドポイント |
-|---|---|---|---|
-| `songId` 必須チェック | ✓ | ✓ | POST |
-| `songId` 存在チェック（DB照合） | - | ✓ | POST |
-| `parts` 1件以上チェック | ✓ | ✓ | POST / PATCH |
-| `parts` 許可値チェック | ✓ | ✓ | POST / PATCH |
-| 受付締め切りチェック（`closedAt ?? startAt` <= 現在時刻） | - | ✓ | POST / PATCH / DELETE |
-| パート埋まりチェック（DB照合） | - | ✓ | POST / PATCH |
-| `snsConsent` boolean チェック | ✓ | ✓ | POST |
-| `reservationId` 存在チェック（DB照合） | - | ✓ | PATCH / DELETE |
-| 予約の所有者チェック | - | ✓ | PATCH / DELETE |
-| メールアドレス認証済みチェック | - | ✓ | login |
-| メール検証トークン有効性チェック | - | ✓ | verify-email |
-| セッションクッキー有効性 | - | ✓ | 全エンドポイント |
-| CSRFトークン有効性 | - | ✓ | POST / PATCH / DELETE 全エンドポイント |
-
----
