@@ -18,31 +18,10 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| GET | `/api/auth/challenge` | 認証用チャレンジを取得する | 不要 |
 | POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
 | POST | `/api/auth/verify-email` | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
 | POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
 | POST | `/api/auth/logout` | ログアウト（セッションクッキー削除） | 要 |
-
----
-
-## GET `/api/auth/challenge`
-
-### 概要
-
-ログインに使用するチャレンジ（nonce）を発行する。CSRF・リプレイ攻撃対策として、ログインリクエストに必須となる。認証不要で誰でも取得できる。
-
-### レスポンス
-
-#### 200 OK
-
-```json
-{
-  "challenge": "<nonce>"
-}
-```
-
-> チャレンジは発行から **5分** 以内、**1回限り** 有効。ログインリクエストの `challenge` フィールドに含めて送信する。
 
 ---
 
@@ -167,7 +146,6 @@
 |---|---|---|---|
 | `email` | string | ✓ | 登録済みメールアドレス |
 | `password` | string | ✓ | パスワード |
-| `challenge` | string | ✓ | `GET /api/auth/challenge` で取得した nonce |
 
 #### リクエスト例
 
@@ -202,13 +180,6 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 
 > `token` はクライアントが保持し、以降のリクエストの `Authorization` ヘッダーで使用する。
 > `role` は `"admin"` または `"member"`。クライアントはこの値で管理者向け UI の表示を切り替える。
-
-#### 400 Bad Request — チャレンジ不正
-
-| 条件 | `message` |
-|---|---|
-| `challenge` が空 | `"チャレンジは必須です"` |
-| チャレンジが無効・期限切れ・使用済み | `"チャレンジが無効です。再度お試しください"` |
 
 #### 401 Unauthorized — 認証失敗
 
