@@ -125,7 +125,6 @@ Content-Type: application/json
 
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
-| `email` | string | ✓ | 登録時のメールアドレス |
 | `code` | string | ✓ | メールに記載された認証コード（6桁の数字） |
 | `challenge` | string | ✓ | `POST /api/auth/register` のレスポンスで取得した nonce |
 
@@ -133,7 +132,6 @@ Content-Type: application/json
 
 ```json
 {
-  "email": "yamada@example.com",
   "code": "483920",
   "challenge": "<nonce>"
 }
@@ -154,7 +152,6 @@ Content-Type: application/json
 
 | 条件 | `message` |
 |---|---|
-| `email` が空 | `"メールアドレスは必須です"` |
 | `code` が空 | `"認証コードは必須です"` |
 | コードが無効 | `"認証コードが正しくありません"` |
 | コードの有効期限切れ（5分） | `"認証コードの有効期限が切れています。再度登録してください"` |
@@ -231,7 +228,7 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 ```json
 {
   "success": false,
-  "message": "メールアドレスの確認が完了していません。確認メールをご確認ください"
+  "message": "メールアドレスの確認が完了していません。メールをご確認ください"
 }
 ```
 
