@@ -6,9 +6,9 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| POST | `/api/reserve` | セッション予約を受け付ける | 要 |
-| PATCH | `/api/reserve/:reservationId` | 予約のパートを部分変更する | 要 |
-| DELETE | `/api/reserve/:reservationId` | 予約をキャンセルする | 要 |
+| POST | [`/api/reserve`](#post-apireserve) | セッション予約を受け付ける | 要 |
+| PATCH | [`/api/reserve/:reservationId`](#patch-apireservereservationid) | 予約のパートを部分変更する | 要 |
+| DELETE | [`/api/reserve/:reservationId`](#delete-apireservereservationid) | 予約をキャンセルする | 要 |
 
 ---
 

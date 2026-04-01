@@ -18,10 +18,10 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
-| POST | `/api/auth/verify-email` | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
-| POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
-| POST | `/api/auth/logout` | ログアウト（セッションクッキー削除） | 要 |
+| POST | [`/api/auth/register`](#post-apiauthregister) | ユーザー登録（確認メール送信） | 不要 |
+| POST | [`/api/auth/verify-email`](#post-apiauthverify-email) | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
+| POST | [`/api/auth/login`](#post-apiauthlogin) | ログイン（セッションクッキー発行） | 不要 |
+| POST | [`/api/auth/logout`](#post-apiauthlogout) | ログアウト（セッションクッキー削除） | 要 |
 
 ---
 

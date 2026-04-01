@@ -6,8 +6,8 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| GET | `/api/events` | イベント一覧を取得する | 不要 |
-| GET | `/api/events/:eventId/songs` | イベントの曲一覧と予約状況を取得する | 不要 |
+| GET | [`/api/events`](#get-apievents) | イベント一覧を取得する | 不要 |
+| GET | [`/api/events/:eventId/songs`](#get-apieventseventidsongs) | イベントの曲一覧と予約状況を取得する | 不要 |
 
 ---
 
