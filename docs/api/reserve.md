@@ -96,14 +96,6 @@ interface ApiResponse {
 }
 ```
 
-#### 401 Unauthorized — 未認証
-
-```json
-{
-  "success": false,
-  "message": "認証が必要です"
-}
-```
 
 #### 405 Method Not Allowed — POST 以外のメソッド
 
@@ -195,14 +187,6 @@ Content-Type: application/json
 | `parts` が空配列または未指定 | `"パートは1つ以上指定してください"` |
 | `parts` に不正値が含まれる | `"パートが不正です"` |
 
-#### 401 Unauthorized — 未認証
-
-```json
-{
-  "success": false,
-  "message": "認証が必要です"
-}
-```
 
 #### 403 Forbidden — 他ユーザーの予約を操作しようとした
 
@@ -272,14 +256,6 @@ X-CSRF-Token: <csrf_token>
 }
 ```
 
-#### 401 Unauthorized — 未認証
-
-```json
-{
-  "success": false,
-  "message": "認証が必要です"
-}
-```
 
 #### 403 Forbidden — 他ユーザーの予約を操作しようとした
 
