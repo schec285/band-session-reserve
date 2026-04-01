@@ -20,9 +20,7 @@ export default function RootLayout({
             <a href="/" className="header-logo">
               🎸 BandSession
             </a>
-            <nav className="header-nav">
-              <a href="/reserve">予約する</a>
-            </nav>
+            <nav className="header-nav"></nav>
           </div>
         </header>
 

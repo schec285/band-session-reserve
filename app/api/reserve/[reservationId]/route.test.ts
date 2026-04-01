@@ -1,7 +1,7 @@
 import { PATCH, DELETE } from "./route";
 import { NextRequest } from "next/server";
 import { reservationStore } from "../store";
-import type { Reservation } from "@/types/reservation";
+import type { Reservation } from "@/types/reserve";
 
 // テスト用の固定値
 const VALID_RESERVATION_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";

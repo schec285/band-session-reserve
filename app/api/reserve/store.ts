@@ -1,4 +1,4 @@
-import type { Reservation } from "@/types/reservation";
+import type { Reservation } from "@/types/reserve";
 
 /**
  * in-memory 予約ストア（DB実装までの暫定）
