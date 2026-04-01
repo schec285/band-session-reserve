@@ -25,16 +25,23 @@ Cookie: session=<session_token>
 - `Secure`: true（HTTPS のみ）
 - `SameSite`: `Strict`
 
-### トークン認証（API トークン）
+### CSRF トークン
 
-認証が必要なエンドポイントは、リクエストヘッダーに API トークンを含める。
+副作用を伴うすべてのリクエスト（POST / PATCH / DELETE）は、`GET /api/auth/csrf` で取得した CSRFトークンをヘッダーに含める。
 
 ```
-Authorization: Bearer <api_token>
+X-CSRF-Token: <csrf_token>
 ```
 
-- ログイン時にセッションクッキーとあわせて発行する
-- クッキー認証とトークン認証の両方が揃っている場合のみ受け付ける（二重認証）
+- セッション確立前（登録・ログインなど）も必須
+- トークンが無効・未送信の場合は **403 Forbidden** を返す
+
+```json
+{
+  "success": false,
+  "message": "CSRFトークンが無効です"
+}
+```
 
 ---
 
@@ -56,6 +63,6 @@ Authorization: Bearer <api_token>
 | メールアドレス認証済みチェック | - | ✓ | login |
 | メール検証トークン有効性チェック | - | ✓ | verify-email |
 | セッションクッキー有効性 | - | ✓ | 全エンドポイント |
-| API トークン有効性 | - | ✓ | 全エンドポイント |
+| CSRFトークン有効性 | - | ✓ | POST / PATCH / DELETE 全エンドポイント |
 
 ---

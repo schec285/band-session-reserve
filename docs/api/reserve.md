@@ -22,7 +22,7 @@
 
 ```
 Cookie: session=<session_token>
-Authorization: Bearer <api_token>
+X-CSRF-Token: <csrf_token>
 Content-Type: application/json
 ```
 
@@ -153,7 +153,7 @@ interface ApiResponse {
 
 ```
 Cookie: session=<session_token>
-Authorization: Bearer <api_token>
+X-CSRF-Token: <csrf_token>
 Content-Type: application/json
 ```
 
@@ -252,7 +252,7 @@ Content-Type: application/json
 
 ```
 Cookie: session=<session_token>
-Authorization: Bearer <api_token>
+X-CSRF-Token: <csrf_token>
 ```
 
 ### パスパラメーター

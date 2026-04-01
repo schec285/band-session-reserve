@@ -18,10 +18,31 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
+| GET | [`/api/auth/csrf`](#get-apiauthcsrf) | CSRFトークンを取得する | 不要 |
 | POST | [`/api/auth/register`](#post-apiauthregister) | ユーザー登録（確認メール送信） | 不要 |
 | POST | [`/api/auth/verify-email`](#post-apiauthverify-email) | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
 | POST | [`/api/auth/login`](#post-apiauthlogin) | ログイン（セッションクッキー発行） | 不要 |
 | POST | [`/api/auth/logout`](#post-apiauthlogout) | ログアウト（セッションクッキー削除） | 要 |
+
+---
+
+## GET `/api/auth/csrf`
+
+### 概要
+
+副作用を伴うリクエスト（POST / PATCH / DELETE）に必要な CSRFトークンを発行する。認証不要で誰でも取得できる。
+
+### レスポンス
+
+#### 200 OK
+
+```json
+{
+  "csrfToken": "<csrf_token>"
+}
+```
+
+> CSRFトークンはクライアントが保持し、副作用を伴うすべてのリクエストの `X-CSRF-Token` ヘッダーに含めて送信する。
 
 ---
 
@@ -33,7 +54,12 @@
 
 ### リクエスト
 
-**Content-Type**: `application/json`
+**ヘッダー**:
+
+```
+X-CSRF-Token: <csrf_token>
+Content-Type: application/json
+```
 
 #### ボディ
 
@@ -86,7 +112,12 @@
 
 ### リクエスト
 
-**Content-Type**: `application/json`
+**ヘッダー**:
+
+```
+X-CSRF-Token: <csrf_token>
+Content-Type: application/json
+```
 
 #### ボディ
 
@@ -94,7 +125,7 @@
 |---|---|---|---|
 | `email` | string | ✓ | 登録時のメールアドレス |
 | `code` | string | ✓ | メールに記載された認証コード（6桁の数字） |
-| `challenge` | string | ✓ | `POST /api/auth/verify-email/challenge` で取得した nonce |
+| `challenge` | string | ✓ | `POST /api/auth/register` のレスポンスで取得した nonce |
 
 #### リクエスト例
 
@@ -134,11 +165,16 @@
 
 ### 概要
 
-認証情報を検証し、セッションクッキーと API トークンを発行する。メールアドレス未認証のアカウントはログインできない。
+認証情報を検証し、セッションクッキーを発行する。メールアドレス未認証のアカウントはログインできない。
 
 ### リクエスト
 
-**Content-Type**: `application/json`
+**ヘッダー**:
+
+```
+X-CSRF-Token: <csrf_token>
+Content-Type: application/json
+```
 
 #### ボディ
 
@@ -152,8 +188,7 @@
 ```json
 {
   "email": "yamada@example.com",
-  "password": "p@ssw0rd",
-  "challenge": "<nonce>"
+  "password": "p@ssw0rd"
 }
 ```
 
@@ -173,12 +208,10 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 {
   "success": true,
   "message": "ログインしました",
-  "token": "<api_token>",
   "role": "member"
 }
 ```
 
-> `token` はクライアントが保持し、以降のリクエストの `Authorization` ヘッダーで使用する。
 > `role` は `"admin"` または `"member"`。クライアントはこの値で管理者向け UI の表示を切り替える。
 
 #### 401 Unauthorized — 認証失敗
@@ -211,7 +244,7 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 
 ```
 Cookie: session=<session_token>
-Authorization: Bearer <api_token>
+X-CSRF-Token: <csrf_token>
 ```
 
 ### レスポンス
