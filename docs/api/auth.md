@@ -14,15 +14,15 @@
 
 ---
 
-## 認証フロー概要
+## エンドポイント一覧
 
-```
-1. POST /api/auth/register     → アカウント作成 + 確認メール送信 + チャレンジ発行
-2. POST /api/auth/verify-email → 認証コード + チャレンジ検証 → アカウント有効化
-3. GET  /api/auth/challenge    → ログイン用チャレンジ取得
-4. POST /api/auth/login        → チャレンジ検証 + セッションクッキー + API トークン発行
-5. POST /api/auth/logout       → セッション無効化
-```
+| メソッド | パス | 概要 | 認証要否 |
+|---|---|---|---|
+| GET | `/api/auth/challenge` | 認証用チャレンジを取得する | 不要 |
+| POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
+| POST | `/api/auth/verify-email` | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
+| POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
+| POST | `/api/auth/logout` | ログアウト（セッションクッキー削除） | 要 |
 
 ---
 

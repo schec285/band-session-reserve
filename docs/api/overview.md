@@ -4,21 +4,6 @@
 
 ---
 
-## エンドポイント一覧
-
-| メソッド | パス | 概要 | 認証要否 |
-|---|---|---|---|
-| GET | `/api/events` | イベント一覧を取得する | 不要 |
-| GET | `/api/events/:eventId/songs` | イベントの曲一覧と予約状況を取得する | 不要 |
-| GET | `/api/auth/challenge` | 認証用チャレンジを取得する | 不要 |
-| POST | `/api/auth/register` | ユーザー登録（確認メール送信） | 不要 |
-| POST | `/api/auth/verify-email` | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
-| POST | `/api/auth/login` | ログイン（セッションクッキー発行） | 不要 |
-| POST | `/api/auth/logout` | ログアウト（セッションクッキー削除） | 要 |
-| POST | `/api/reserve` | セッション予約を受け付ける | 要 |
-| PATCH | `/api/reserve/:reservationId` | 予約のパートを部分変更する | 要 |
-| DELETE | `/api/reserve/:reservationId` | 予約をキャンセルする | 要 |
-
 詳細仕様:
 - [イベント API](./events.md)
 - [認証 API](./auth.md)
