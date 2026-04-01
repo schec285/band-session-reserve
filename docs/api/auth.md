@@ -306,11 +306,13 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "message": "パスワードリセット用の認証コードを送信しました。メールに記載の認証コードを入力してパスワードを再設定してください"
+  "message": "パスワードリセット用の認証コードを送信しました。メールに記載の認証コードを入力してパスワードを再設定してください",
+  "challenge": "<nonce>"
 }
 ```
 
 > メールアドレスが登録されていない場合も同じレスポンスを返す。
+> `challenge` はクライアントが保持し、`POST /api/auth/password-reset` に認証コードと合わせて送信する。有効期限は **5分**、一回限り有効。
 
 #### 400 Bad Request — バリデーションエラー
 
@@ -341,6 +343,7 @@ Content-Type: application/json
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | `code` | string | ✓ | メールに記載された認証コード（6桁の数字） |
+| `challenge` | string | ✓ | `POST /api/auth/password-reset/request` のレスポンスで取得した nonce |
 | `password` | string | ✓ | 新しいパスワード |
 
 #### リクエスト例
@@ -348,6 +351,7 @@ Content-Type: application/json
 ```json
 {
   "code": "847201",
+  "challenge": "<nonce>",
   "password": "newP@ssw0rd"
 }
 ```
@@ -370,5 +374,7 @@ Content-Type: application/json
 | `code` が空 | `"認証コードは必須です"` |
 | `code` が無効 | `"認証コードが正しくありません"` |
 | `code` が期限切れ・使用済み（5分） | `"認証コードの有効期限が切れています。再度パスワードリセットを申請してください"` |
+| `challenge` が空 | `"チャレンジは必須です"` |
+| チャレンジが無効・期限切れ・使用済み | `"チャレンジが無効です。再度お試しください"` |
 | `password` が空 | `"パスワードは必須です"` |
 
