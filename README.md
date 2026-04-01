@@ -10,8 +10,47 @@
 
 ## セットアップ
 
+### 1. 依存パッケージのインストール
+
 ```bash
 npm install
+```
+
+### 2. 環境変数の設定
+
+`.env.local.example` をコピーして `.env.local` を作成し、各値を設定してください。
+
+```bash
+cp .env.local.example .env.local
+```
+
+`SESSION_SECRET` と `API_TOKEN_SECRET` は以下のコマンドで生成できます。
+
+```bash
+openssl rand -hex 32
+```
+
+### 3. データベースの起動
+
+#### Docker を使う場合
+
+```bash
+docker compose up -d
+```
+
+#### ローカルの PostgreSQL を使う場合
+
+ローカルに PostgreSQL をインストール済みであれば、`.env.local` の `DATABASE_URL` を接続先に合わせて変更してください。
+
+### 4. マイグレーションの実行
+
+```bash
+npm run db:migrate
+```
+
+### 5. 開発サーバーの起動
+
+```bash
 npm run dev
 ```
 
