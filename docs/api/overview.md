@@ -15,7 +15,7 @@
 
 ### クッキー認証（セッション）
 
-ログイン成功時にサーバーがセッションクッキーを発行する。以降のリクエストはこのクッキーを自動送信することでユーザーを識別する。
+初回アクセスとログイン成功時にサーバーがセッションクッキーを発行する。以降のリクエストはこのクッキーを自動送信することでユーザーを識別する。
 
 ```
 Cookie: session=<session_token>
@@ -27,7 +27,7 @@ Cookie: session=<session_token>
 
 ### CSRF トークン
 
-副作用を伴うすべてのリクエスト（POST / PATCH / DELETE）は、`GET /api/auth/csrf` で取得した CSRFトークンをヘッダーに含める。
+初回アクセスとログイン成功時に`GET /api/auth/csrf`で取得する。副作用を伴うすべてのリクエスト（POST / PATCH / DELETE）は、取得した CSRFトークンをヘッダーに含める。
 
 ```
 X-CSRF-Token: <csrf_token>
