@@ -50,13 +50,13 @@ src/app/api/reserve/
 
 **Next.js App Router** を使ったバンドセッション予約システム（`band-session-reserve`）。
 
-**スタック**: Next.js 16 + React 19 + TypeScript。データベースなし（現状、予約内容はコンソールへのログ出力のみ）。
+**スタック**: Next.js 16 + React 19 + TypeScript + PostgreSQL（Drizzle ORM）。
 
 **主なデータフロー**:
 1. ユーザーが `/reserve` ページのフォームを送信（`src/components/ReserveForm.tsx` がクライアントコンポーネントとして描画）
 2. `ReserveForm.tsx` でクライアントサイドバリデーション
 3. `/api/reserve` へ POST（`src/app/api/reserve/route.ts` が処理）
-4. サーバーサイドで再バリデーション → コンソールにログ出力 → JSON レスポンスを返す
+4. サーバーサイドで再バリデーション → DBに保存 → JSON レスポンスを返す
 
 **フォーム項目**: 名前、日付（本日以降）、曲名、パート（Guitar/Bass/Drums/Keyboard/Vocal/その他）、コメント（任意）。
 
@@ -74,4 +74,4 @@ src/app/api/reserve/
 
 - UI テキストはすべて日本語。
 - ダークテーマは `src/app/globals.css` の CSS カスタムプロパティで定義。
-- 永続化ストレージなし — 拡張する場合は `src/app/api/reserve/route.ts` にデータベース層を追加する必要がある。
+- DBスキーマは `src/lib/db/schema/` に Drizzle ORM で定義済み。

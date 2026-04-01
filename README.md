@@ -83,15 +83,19 @@ npm run dev
 
 ### テストファイルの配置
 
+各ディレクトリに `test/` サブディレクトリを作成し、対象ファイルと同名の `.test.ts` / `.test.tsx` を置く。
+
 ```
-app/api/reserve/
+src/app/api/reserve/
   route.ts
-  route.test.ts       ← APIテスト（node環境）
-components/
-  ReserveForm.tsx
-  ReserveForm.test.tsx ← UIテスト（jsdom環境）
-types/
-  reserve.ts          ← 型定義（テスト・実装の共通基盤）
+  test/
+    route.test.ts       ← APIテスト（node環境）
+src/components/ReserveForm/
+  index.tsx
+  test/
+    index.test.tsx      ← UIテスト（jsdom環境）
+src/types/
+  reserve.ts            ← 型定義（テスト・実装の共通基盤）
 ```
 
 ## CI / GitHub Actions
@@ -118,6 +122,3 @@ PR作成
 | パート | ✓ | Guitar / Bass / Drums / Keyboard / Vocal / その他 |
 | コメント | — | 自由記入欄 |
 
-## 現在の制限事項
-
-予約データはコンソールへのログ出力のみで、データベースへの永続化は未実装です。本番運用には `app/api/reserve/route.ts` へのデータベース層の追加が必要です。
