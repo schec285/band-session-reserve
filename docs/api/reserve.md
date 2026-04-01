@@ -288,3 +288,12 @@ Authorization: Bearer <api_token>
   "message": "予約が見つかりません"
 }
 ```
+
+#### 409 Conflict — 受付終了
+
+```json
+{
+  "success": false,
+  "message": "このイベントの受付は終了しています"
+}
+```
