@@ -17,9 +17,18 @@ npm run test:ui    # UIテストのみ
 
 **テストフレームワーク**: Jest + ts-jest + React Testing Library + node-mocks-http
 
-- APIテスト: `node` 環境（`app/api/**/*.test.ts`）
-- UIテスト: `jsdom` 環境（`components/**/*.test.tsx`）
+- APIテスト: `node` 環境（`src/app/api/**/test/*.test.ts`）
+- UIテスト: `jsdom` 環境（`src/components/**/test/*.test.tsx`）
 - 設定ファイル: `jest.config.ts`
+
+**テストファイルの配置**: 各ディレクトリに `test/` サブディレクトリを作成し、対象ファイルと同名の `.test.ts` / `.test.tsx` を置く。
+
+```
+src/app/api/reserve/
+  route.ts
+  test/
+    route.test.ts
+```
 
 ## 開発方針
 
@@ -31,10 +40,10 @@ npm run test:ui    # UIテストのみ
 3. リファクタリング（Refactor）
 
 **実装順序**:
-1. 型定義（`types/`）
-2. APIルートのテスト作成（`app/api/**/*.test.ts`）
-3. APIルート実装（`app/api/**/*.ts`）
-4. フロントエンドのテスト作成
+1. 型定義（`src/types/`）
+2. APIルートのテスト作成（`src/app/api/**/test/*.test.ts`）
+3. APIルート実装（`src/app/api/**/*.ts`）
+4. フロントエンドのテスト作成（`src/components/**/test/*.test.tsx`）
 5. フロントエンド実装
 
 ## アーキテクチャ
@@ -44,14 +53,14 @@ npm run test:ui    # UIテストのみ
 **スタック**: Next.js 16 + React 19 + TypeScript。データベースなし（現状、予約内容はコンソールへのログ出力のみ）。
 
 **主なデータフロー**:
-1. ユーザーが `/reserve` ページのフォームを送信（`components/ReserveForm.tsx` がクライアントコンポーネントとして描画）
+1. ユーザーが `/reserve` ページのフォームを送信（`src/components/ReserveForm.tsx` がクライアントコンポーネントとして描画）
 2. `ReserveForm.tsx` でクライアントサイドバリデーション
-3. `/api/reserve` へ POST（`app/api/reserve/route.ts` が処理）
+3. `/api/reserve` へ POST（`src/app/api/reserve/route.ts` が処理）
 4. サーバーサイドで再バリデーション → コンソールにログ出力 → JSON レスポンスを返す
 
 **フォーム項目**: 名前、日付（本日以降）、曲名、パート（Guitar/Bass/Drums/Keyboard/Vocal/その他）、コメント（任意）。
 
-**バリデーションは意図的に二重実装** — `ReserveForm.tsx` でクライアント側、`app/api/reserve/route.ts` でサーバー側、同じ許可 `part` 値に対して両方で検証する。
+**バリデーションは意図的に二重実装** — `ReserveForm.tsx` でクライアント側、`src/app/api/reserve/route.ts` でサーバー側、同じ許可 `part` 値に対して両方で検証する。
 
 ## CI / GitHub Actions
 
@@ -64,5 +73,5 @@ npm run test:ui    # UIテストのみ
 ## 注意事項
 
 - UI テキストはすべて日本語。
-- ダークテーマは `app/globals.css` の CSS カスタムプロパティで定義。
-- 永続化ストレージなし — 拡張する場合は `app/api/reserve/route.ts` にデータベース層を追加する必要がある。
+- ダークテーマは `src/app/globals.css` の CSS カスタムプロパティで定義。
+- 永続化ストレージなし — 拡張する場合は `src/app/api/reserve/route.ts` にデータベース層を追加する必要がある。

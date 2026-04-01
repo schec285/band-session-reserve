@@ -5,23 +5,23 @@ const config: Config = {
     {
       displayName: "API",
       testEnvironment: "node",
-      testMatch: ["<rootDir>/app/api/**/*.test.ts"],
+      testMatch: ["<rootDir>/src/app/api/**/test/*.test.ts"],
       transform: {
         "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],
       },
       moduleNameMapper: {
-        "^@/(.*)$": "<rootDir>/$1",
+        "^@/(.*)$": "<rootDir>/src/$1",
       },
     },
     {
       displayName: "UI",
       testEnvironment: "jsdom",
-      testMatch: ["<rootDir>/components/**/*.test.tsx"],
+      testMatch: ["<rootDir>/src/components/**/test/*.test.tsx"],
       transform: {
         "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],
       },
       moduleNameMapper: {
-        "^@/(.*)$": "<rootDir>/$1",
+        "^@/(.*)$": "<rootDir>/src/$1",
       },
       setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
     },
