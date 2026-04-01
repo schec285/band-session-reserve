@@ -45,6 +45,21 @@ X-CSRF-Token: <csrf_token>
 
 ---
 
+## 共通エラーレスポンス
+
+### 401 Unauthorized — 未認証
+
+認証が必要なエンドポイントに対して、セッションが未確立または無効な状態でリクエストした場合に返す。
+
+```json
+{
+  "success": false,
+  "message": "認証が必要です"
+}
+```
+
+---
+
 ## バリデーション仕様
 
 バリデーションはクライアント（`components/ReserveForm.tsx`）とサーバー（`app/api/reserve/route.ts`）の両方で実施する（意図的な二重実装）。

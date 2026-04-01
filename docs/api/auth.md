@@ -266,11 +266,3 @@ Set-Cookie: session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0
 }
 ```
 
-#### 401 Unauthorized — 未認証
-
-```json
-{
-  "success": false,
-  "message": "認証が必要です"
-}
-```
