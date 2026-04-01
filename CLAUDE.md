@@ -1,6 +1,7 @@
 # CLAUDE.md
 
 このファイルは、リポジトリ内のコードを扱う際に Claude Code (claude.ai/code) へのガイダンスを提供します。
+日本語で会話。
 
 ## コマンド
 
@@ -56,15 +57,8 @@ src/app/api/reserve/
 1. ユーザーが `/reserve` ページのフォームを送信（`src/components/ReserveForm.tsx` がクライアントコンポーネントとして描画）
 2. `ReserveForm.tsx` でクライアントサイドバリデーション
 3. `/api/reserve` へ POST（`src/app/api/reserve/route.ts` が処理）
-4. サーバーサイドで再バリデーション → DBに保存 → JSON レスポンスを返す
-
-**フォーム項目**: 名前、日付（本日以降）、曲名、パート（Guitar/Bass/Drums/Keyboard/Vocal/その他）、コメント（任意）。
-
-**バリデーションは意図的に二重実装** — `ReserveForm.tsx` でクライアント側、`src/app/api/reserve/route.ts` でサーバー側、同じ許可 `part` 値に対して両方で検証する。
-
+4. サーバーサイドで再バリデーション → DBに保存 → JSON レスポンスを
 ## CI / GitHub Actions
-
-`.github/workflows/ci.yml` にPR時の自動チェックを定義。
 
 - **job順序**: `test` → `build`（`needs: test` でテスト通過後にビルド実行）
 - **マージ条件**: Branch Protection Rules で `TDDテスト` と `ビルド確認` の両ジョブがグリーンであることを必須とする
@@ -79,5 +73,3 @@ src/app/api/reserve/
 ## 注意事項
 
 - UI テキストはすべて日本語。
-- ダークテーマは `src/app/globals.css` の CSS カスタムプロパティで定義。
-- DBスキーマは `src/lib/db/schema/` に Drizzle ORM で定義済み。
