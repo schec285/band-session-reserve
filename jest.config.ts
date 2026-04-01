@@ -5,7 +5,10 @@ const config: Config = {
     {
       displayName: "API",
       testEnvironment: "node",
-      testMatch: ["<rootDir>/src/app/api/**/test/*.test.ts"],
+      testMatch: [
+        "<rootDir>/src/app/api/**/test/*.test.ts",
+        "<rootDir>/src/lib/**/test/*.test.ts",
+      ],
       transform: {
         "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],
       },
