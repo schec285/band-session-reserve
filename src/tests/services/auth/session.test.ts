@@ -1,5 +1,5 @@
 import { createSession, getSession, invalidateSession } from "@/server/services/auth/session";
-import type { ISessionRepository } from "@/lib/auth/repository/session-repository";
+import type { ISessionRepository } from "@/server/repositories/auth/session-repository";
 
 const mockRepo: jest.Mocked<ISessionRepository> = {
   save: jest.fn(),

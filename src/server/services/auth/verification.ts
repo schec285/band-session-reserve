@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import type { IVerificationRepository } from "@/lib/auth/repository/verification-repository";
+import type { IVerificationRepository } from "@/server/repositories/auth/verification-repository";
 
 /**
  * メールアドレス確認用の認証コードを検証する。

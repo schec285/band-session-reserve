@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import type { IUserRepository } from "@/lib/auth/repository/user-repository";
+import type { IUserRepository } from "@/server/repositories/auth/user-repository";
 
 const SALT_ROUNDS = 12;
 
