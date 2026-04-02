@@ -18,4 +18,5 @@ export const reservations = pgTable("reservations", {
   snsConsent: boolean("sns_consent").notNull().default(false),
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

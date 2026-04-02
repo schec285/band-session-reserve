@@ -9,4 +9,5 @@ export const events = pgTable("events", {
   venue: varchar("venue", { length: 255 }).notNull(),
   description: text("description").notNull().default(""),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

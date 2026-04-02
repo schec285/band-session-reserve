@@ -8,4 +8,5 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 50 }).notNull().default("member"),
   emailVerifiedAt: timestamp("email_verified_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
