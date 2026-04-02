@@ -11,11 +11,16 @@ jest.mock("@/lib/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
+jest.mock("@/lib/auth/challenge", () => ({
+  generateChallenge: jest.fn(),
+}));
+
 jest.mock("@/lib/auth/email", () => ({
   sendVerificationEmail: jest.fn(),
 }));
 
 import { validateCsrfToken } from "@/lib/auth/csrf";
+import { generateChallenge } from "@/lib/auth/challenge";
 import { sendVerificationEmail } from "@/lib/auth/email";
 import { db } from "@/lib/db";
 
@@ -39,6 +44,7 @@ function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
 beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
+  (generateChallenge as jest.Mock).mockResolvedValue("mock-challenge");
   (db.select as jest.Mock).mockReturnValue({
     from: jest.fn().mockReturnValue({
       where: jest.fn().mockResolvedValue([]),
@@ -58,8 +64,7 @@ describe("POST /api/auth/register", () => {
 
       expect(res.status).toBe(201);
       expect(json.success).toBe(true);
-      expect(typeof json.challenge).toBe("string");
-      expect(json.challenge.length).toBeGreaterThan(0);
+      expect(json.challenge).toBe("mock-challenge");
     });
   });
 
@@ -91,8 +96,27 @@ describe("POST /api/auth/register", () => {
       expect(json.message).toBe("パスワードは必須です");
     });
 
+    it("400: ユーザー名が既に登録済み", async () => {
+      (db.select as jest.Mock).mockReturnValueOnce({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([{ id: "existing-user-id" }]),
+        }),
+      });
+
+      const res = await POST(makeRequest(validBody));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("このユーザー名は既に使用されています");
+    });
+
     it("400: メールアドレスが既に登録済み", async () => {
-      (db.select as jest.Mock).mockReturnValue({
+      (db.select as jest.Mock).mockReturnValueOnce({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([]),
+        }),
+      }).mockReturnValueOnce({
         from: jest.fn().mockReturnValue({
           where: jest.fn().mockResolvedValue([{ id: "existing-user-id" }]),
         }),
