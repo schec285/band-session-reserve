@@ -4,6 +4,10 @@ jest.mock("@/lib/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
+jest.mock("@/lib/auth/challenge", () => ({
+  generateChallenge: jest.fn(),
+}));
+
 jest.mock("@/lib/auth/email", () => ({
   sendPasswordResetEmail: jest.fn(),
 }));
@@ -15,6 +19,7 @@ jest.mock("@/lib/db", () => ({
 }));
 
 import { validateCsrfToken } from "@/lib/auth/csrf";
+import { generateChallenge } from "@/lib/auth/challenge";
 import { sendPasswordResetEmail } from "@/lib/auth/email";
 import { db } from "@/lib/db";
 
@@ -34,6 +39,7 @@ function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
 beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
+  (generateChallenge as jest.Mock).mockResolvedValue("mock-challenge");
   (db.select as jest.Mock).mockReturnValue({
     from: jest.fn().mockReturnValue({
       where: jest.fn().mockResolvedValue([{ id: "user-id" }]),
@@ -50,8 +56,7 @@ describe("POST /api/auth/password-reset/request", () => {
 
       expect(res.status).toBe(200);
       expect(json.success).toBe(true);
-      expect(typeof json.challenge).toBe("string");
-      expect(json.challenge.length).toBeGreaterThan(0);
+      expect(json.challenge).toBe("mock-challenge");
     });
 
     it("200: 存在しないメールアドレスでも同じレスポンスを返す（列挙攻撃対策）", async () => {
@@ -66,7 +71,7 @@ describe("POST /api/auth/password-reset/request", () => {
 
       expect(res.status).toBe(200);
       expect(json.success).toBe(true);
-      expect(typeof json.challenge).toBe("string");
+      expect(json.challenge).toBe("mock-challenge");
       expect(sendPasswordResetEmail).not.toHaveBeenCalled();
     });
   });
