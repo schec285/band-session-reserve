@@ -49,7 +49,7 @@ describe("POST /api/auth/verify-email", () => {
 
       expect(res.status).toBe(200);
       expect(json.success).toBe(true);
-      expect(json.message).toBe("メールアドレスを確認しました。ログインしてください");
+      expect(json.message).toBe("メールアドレス認証が完了しました。ログインしてください");
     });
   });
 
