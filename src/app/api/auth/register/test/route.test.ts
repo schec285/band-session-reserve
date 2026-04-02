@@ -1,12 +1,5 @@
 import { POST } from "../route";
 
-jest.mock("@/lib/db", () => ({
-  db: {
-    select: jest.fn(),
-    insert: jest.fn(),
-  },
-}));
-
 jest.mock("@/lib/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
@@ -19,10 +12,16 @@ jest.mock("@/lib/auth/email", () => ({
   sendVerificationEmail: jest.fn(),
 }));
 
+jest.mock("@/lib/auth/user", () => ({
+  findUserByUsername: jest.fn(),
+  findUserByEmail: jest.fn(),
+  createUser: jest.fn(),
+}));
+
 import { validateCsrfToken } from "@/lib/auth/csrf";
 import { generateChallenge } from "@/lib/auth/challenge";
 import { sendVerificationEmail } from "@/lib/auth/email";
-import { db } from "@/lib/db";
+import { findUserByUsername, findUserByEmail, createUser } from "@/lib/auth/user";
 
 const validBody = {
   username: "山田太郎",
@@ -45,14 +44,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (generateChallenge as jest.Mock).mockResolvedValue("mock-challenge");
-  (db.select as jest.Mock).mockReturnValue({
-    from: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue([]),
-    }),
-  });
-  (db.insert as jest.Mock).mockReturnValue({
-    values: jest.fn().mockResolvedValue(undefined),
-  });
+  (findUserByUsername as jest.Mock).mockResolvedValue(null);
+  (findUserByEmail as jest.Mock).mockResolvedValue(null);
+  (createUser as jest.Mock).mockResolvedValue(undefined);
   (sendVerificationEmail as jest.Mock).mockResolvedValue(undefined);
 });
 
@@ -97,11 +91,7 @@ describe("POST /api/auth/register", () => {
     });
 
     it("400: ユーザー名が既に登録済み", async () => {
-      (db.select as jest.Mock).mockReturnValueOnce({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([{ id: "existing-user-id" }]),
-        }),
-      });
+      (findUserByUsername as jest.Mock).mockResolvedValue({ id: "existing-user-id" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -112,15 +102,7 @@ describe("POST /api/auth/register", () => {
     });
 
     it("400: メールアドレスが既に登録済み", async () => {
-      (db.select as jest.Mock).mockReturnValueOnce({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([]),
-        }),
-      }).mockReturnValueOnce({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([{ id: "existing-user-id" }]),
-        }),
-      });
+      (findUserByEmail as jest.Mock).mockResolvedValue({ id: "existing-user-id" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();

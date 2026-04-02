@@ -12,16 +12,14 @@ jest.mock("@/lib/auth/email", () => ({
   sendPasswordResetEmail: jest.fn(),
 }));
 
-jest.mock("@/lib/db", () => ({
-  db: {
-    select: jest.fn(),
-  },
+jest.mock("@/lib/auth/user", () => ({
+  findUserByEmail: jest.fn(),
 }));
 
 import { validateCsrfToken } from "@/lib/auth/csrf";
 import { generateChallenge } from "@/lib/auth/challenge";
 import { sendPasswordResetEmail } from "@/lib/auth/email";
-import { db } from "@/lib/db";
+import { findUserByEmail } from "@/lib/auth/user";
 
 const validBody = { email: "yamada@example.com" };
 
@@ -40,11 +38,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (generateChallenge as jest.Mock).mockResolvedValue("mock-challenge");
-  (db.select as jest.Mock).mockReturnValue({
-    from: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue([{ id: "user-id" }]),
-    }),
-  });
+  (findUserByEmail as jest.Mock).mockResolvedValue({ id: "user-id" });
   (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
 });
 
@@ -60,11 +54,7 @@ describe("POST /api/auth/password-reset/request", () => {
     });
 
     it("200: 存在しないメールアドレスでも同じレスポンスを返す（列挙攻撃対策）", async () => {
-      (db.select as jest.Mock).mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([]),
-        }),
-      });
+      (findUserByEmail as jest.Mock).mockResolvedValue(null);
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();

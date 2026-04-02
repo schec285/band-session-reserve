@@ -9,27 +9,17 @@ jest.mock("@/lib/auth/session", () => ({
   createSession: jest.fn(),
 }));
 
-jest.mock("@/lib/db", () => ({
-  db: {
-    select: jest.fn(),
-  },
+jest.mock("@/lib/auth/user", () => ({
+  authenticateUser: jest.fn(),
 }));
 
 import { validateCsrfToken, generateCsrfToken } from "@/lib/auth/csrf";
 import { createSession } from "@/lib/auth/session";
-import { db } from "@/lib/db";
+import { authenticateUser } from "@/lib/auth/user";
 
 const validBody = {
   email: "yamada@example.com",
   password: "p@ssw0rd",
-};
-
-const verifiedUser = {
-  id: "user-id",
-  email: "yamada@example.com",
-  passwordHash: "hashed-password",
-  role: "member",
-  emailVerifiedAt: new Date(),
 };
 
 function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
@@ -48,10 +38,9 @@ beforeEach(() => {
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (generateCsrfToken as jest.Mock).mockReturnValue("new-csrf-token");
   (createSession as jest.Mock).mockResolvedValue("session-token");
-  (db.select as jest.Mock).mockReturnValue({
-    from: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue([verifiedUser]),
-    }),
+  (authenticateUser as jest.Mock).mockResolvedValue({
+    status: "ok",
+    user: { id: "user-id", role: "member" },
   });
 });
 
@@ -77,11 +66,7 @@ describe("POST /api/auth/login", () => {
 
   describe("異常系 — 認証失敗", () => {
     it("401: メールアドレスが存在しない", async () => {
-      (db.select as jest.Mock).mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([]),
-        }),
-      });
+      (authenticateUser as jest.Mock).mockResolvedValue({ status: "not-found" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -94,9 +79,9 @@ describe("POST /api/auth/login", () => {
     });
 
     it("401: パスワードが正しくない", async () => {
-      const res = await POST(
-        makeRequest({ ...validBody, password: "wrong-password" })
-      );
+      (authenticateUser as jest.Mock).mockResolvedValue({ status: "wrong-password" });
+
+      const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
       expect(res.status).toBe(401);
@@ -107,13 +92,7 @@ describe("POST /api/auth/login", () => {
     });
 
     it("403: メールアドレス未認証", async () => {
-      (db.select as jest.Mock).mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([
-            { ...verifiedUser, emailVerifiedAt: null },
-          ]),
-        }),
-      });
+      (authenticateUser as jest.Mock).mockResolvedValue({ status: "unverified" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
