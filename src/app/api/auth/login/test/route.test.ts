@@ -91,16 +91,16 @@ describe("POST /api/auth/login", () => {
       );
     });
 
-    it("403: メールアドレス未認証", async () => {
+    it("401: メールアドレス未認証", async () => {
       (authenticateUser as jest.Mock).mockResolvedValue({ status: "unverified" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(401);
       expect(json.success).toBe(false);
       expect(json.message).toBe(
-        "メールアドレスの確認が完了していません。メールをご確認ください"
+        "メールアドレスまたはパスワードが正しくありません"
       );
     });
   });
