@@ -18,17 +18,22 @@ npm run test:api   # APIテストのみ
 **テストフレームワーク**: Jest + ts-jest + node-mocks-http
 
 - APIテスト: `node` 環境（`src/tests/api/**/*.test.ts`）
+- サービステスト: `node` 環境（`src/tests/services/**/*.test.ts`）
 - 設定ファイル: `jest.config.ts`
 
 **テストファイルの配置**: `src/tests/` 配下にソースのパスを反映した構造で配置する。
 
 ```
 src/
-  app/api/reserve/
+  app/api/auth/login/
     route.ts
+  server/services/auth/
+    user.ts
   tests/
-    api/reserve/
+    api/auth/login/
       route.test.ts
+    services/auth/
+      user.test.ts
 ```
 
 ## 開発方針
@@ -51,6 +56,23 @@ src/
 **Next.js App Router** を使ったバンドセッション予約システム（`band-session-reserve`）。
 
 **スタック**: Next.js 16 + React 19 + TypeScript + PostgreSQL（Drizzle ORM）。
+
+**ディレクトリ構成**:
+```
+drizzle/
+  schema/        # DBスキーマ定義
+  migrations/    # drizzle-kit 生成マイグレーション
+src/
+  app/api/       # Next.js APIルート
+  server/
+    services/    # ビジネスロジック
+    repositories/ # DBアクセス層
+  tests/
+    api/         # APIルートテスト
+    services/    # サービステスト
+  components/    # フロントエンドコンポーネント
+  types/         # 型定義
+```
 
 **主なデータフロー**:
 1. ユーザーが `/reserve` ページのフォームを送信（`src/components/ReserveForm.tsx` がクライアントコンポーネントとして描画）
