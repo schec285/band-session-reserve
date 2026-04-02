@@ -68,6 +68,8 @@ describe("createUser", () => {
       username: "山田太郎",
       email: "yamada@example.com",
       passwordHash: "hashed-password",
+      createdAt: expect.any(Date),
+      updatedAt: expect.any(Date),
     });
   });
 });

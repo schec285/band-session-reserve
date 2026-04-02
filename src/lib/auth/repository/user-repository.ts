@@ -13,5 +13,5 @@ export interface IUserRepository {
   /** メールアドレスでユーザーを検索する */
   findByEmail(email: string): Promise<IUserRecord | null>;
   /** ユーザーを新規作成する */
-  create(data: { username: string; email: string; passwordHash: string }): Promise<void>;
+  create(data: { username: string; email: string; passwordHash: string; createdAt: Date; updatedAt: Date }): Promise<void>;
 }

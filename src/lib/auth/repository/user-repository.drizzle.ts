@@ -9,7 +9,7 @@ export class DrizzleUserRepository implements IUserRepository {
     throw new Error("not implemented");
   }
 
-  async create(_data: { username: string; email: string; passwordHash: string }): Promise<void> {
+  async create(_data: { username: string; email: string; passwordHash: string; createdAt: Date; updatedAt: Date }): Promise<void> {
     throw new Error("not implemented");
   }
 }

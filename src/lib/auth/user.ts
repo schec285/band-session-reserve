@@ -34,7 +34,8 @@ export async function createUser(
   data: { username: string; email: string; password: string }
 ): Promise<void> {
   const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
-  await repo.create({ username: data.username, email: data.email, passwordHash });
+  const now = new Date();
+  await repo.create({ username: data.username, email: data.email, passwordHash, createdAt: now, updatedAt: now });
 }
 
 /**
