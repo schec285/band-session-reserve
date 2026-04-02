@@ -13,22 +13,22 @@ npm run lint       # Next.js 経由で ESLint を実行
 npm test           # テスト実行（Jest）
 npm run test:watch # ウォッチモード
 npm run test:api   # APIテストのみ
-npm run test:ui    # UIテストのみ
 ```
 
-**テストフレームワーク**: Jest + ts-jest + React Testing Library + node-mocks-http
+**テストフレームワーク**: Jest + ts-jest + node-mocks-http
 
-- APIテスト: `node` 環境（`src/app/api/**/test/*.test.ts`）
-- UIテスト: `jsdom` 環境（`src/components/**/test/*.test.tsx`）
+- APIテスト: `node` 環境（`src/tests/api/**/*.test.ts`）
 - 設定ファイル: `jest.config.ts`
 
-**テストファイルの配置**: 各ディレクトリに `test/` サブディレクトリを作成し、対象ファイルと同名の `.test.ts` / `.test.tsx` を置く。
+**テストファイルの配置**: `src/tests/` 配下にソースのパスを反映した構造で配置する。
 
 ```
-src/app/api/reserve/
-  route.ts
-  test/
-    route.test.ts
+src/
+  app/api/reserve/
+    route.ts
+  tests/
+    api/reserve/
+      route.test.ts
 ```
 
 ## 開発方針
@@ -42,10 +42,9 @@ src/app/api/reserve/
 
 **実装順序**:
 1. 型定義（`src/types/`）
-2. APIルートのテスト作成（`src/app/api/**/test/*.test.ts`）
+2. APIルートのテスト作成（`src/tests/api/**/*.test.ts`）
 3. APIルート実装（`src/app/api/**/*.ts`）
-4. フロントエンドのテスト作成（`src/components/**/test/*.test.tsx`）
-5. フロントエンド実装
+4. フロントエンド実装
 
 ## アーキテクチャ
 

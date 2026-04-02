@@ -1,4 +1,4 @@
-import { POST } from "../route";
+import { POST } from "@/app/api/auth/login/route";
 
 jest.mock("@/lib/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),

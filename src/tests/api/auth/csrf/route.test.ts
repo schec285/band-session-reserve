@@ -1,4 +1,4 @@
-import { GET } from "../route";
+import { GET } from "@/app/api/auth/csrf/route";
 
 describe("GET /api/auth/csrf", () => {
   it("CSRFトークンを返す", async () => {

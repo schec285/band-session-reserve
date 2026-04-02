@@ -6,7 +6,7 @@ const config: Config = {
       displayName: "API",
       testEnvironment: "node",
       testMatch: [
-        "<rootDir>/src/app/api/**/test/*.test.ts",
+        "<rootDir>/src/tests/api/**/*.test.ts",
         "<rootDir>/src/lib/**/test/*.test.ts",
       ],
       transform: {
