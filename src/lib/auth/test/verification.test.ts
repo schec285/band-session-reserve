@@ -4,15 +4,18 @@ import {
   validatePasswordResetCode,
   updatePassword,
 } from "../verification";
+import type { IVerificationRepository } from "../repository/verification-repository";
 
-jest.mock("@/lib/db", () => ({
-  db: {
-    select: jest.fn(),
-    update: jest.fn(),
-  },
+jest.mock("bcryptjs", () => ({
+  hash: jest.fn().mockResolvedValue("hashed-password"),
 }));
 
-import { db } from "@/lib/db";
+const mockRepo: jest.Mocked<IVerificationRepository> = {
+  findCode: jest.fn(),
+  markCodeAsUsed: jest.fn(),
+  activateUser: jest.fn(),
+  updateUserPassword: jest.fn(),
+};
 
 const validRecord = {
   userId: "user-id",
@@ -23,91 +26,76 @@ const validRecord = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (db.select as jest.Mock).mockReturnValue({
-    from: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue([validRecord]),
-    }),
-  });
-  (db.update as jest.Mock).mockReturnValue({
-    set: jest.fn().mockReturnValue({
-      where: jest.fn().mockResolvedValue(undefined),
-    }),
-  });
+  mockRepo.findCode.mockResolvedValue(validRecord);
+  mockRepo.markCodeAsUsed.mockResolvedValue(undefined);
+  mockRepo.activateUser.mockResolvedValue(undefined);
+  mockRepo.updateUserPassword.mockResolvedValue(undefined);
 });
 
 describe("validateVerificationCode", () => {
   it("正しいコードは valid を返す", async () => {
-    const result = await validateVerificationCode("valid-challenge", "483920");
+    const result = await validateVerificationCode(mockRepo, "valid-challenge", "483920");
     expect(result).toBe("valid");
   });
 
   it("コードが一致しない場合は invalid を返す", async () => {
-    const result = await validateVerificationCode("valid-challenge", "000000");
+    const result = await validateVerificationCode(mockRepo, "valid-challenge", "000000");
     expect(result).toBe("invalid");
   });
 
   it("有効期限切れは expired を返す", async () => {
-    (db.select as jest.Mock).mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockResolvedValue([
-          { ...validRecord, expiresAt: new Date(Date.now() - 1000) },
-        ]),
-      }),
+    mockRepo.findCode.mockResolvedValue({
+      ...validRecord,
+      expiresAt: new Date(Date.now() - 1000),
     });
 
-    const result = await validateVerificationCode("expired-challenge", "483920");
+    const result = await validateVerificationCode(mockRepo, "expired-challenge", "483920");
     expect(result).toBe("expired");
   });
 
   it("使用済みコードは invalid を返す", async () => {
-    (db.select as jest.Mock).mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockResolvedValue([
-          { ...validRecord, usedAt: new Date() },
-        ]),
-      }),
+    mockRepo.findCode.mockResolvedValue({
+      ...validRecord,
+      usedAt: new Date(),
     });
 
-    const result = await validateVerificationCode("used-challenge", "483920");
+    const result = await validateVerificationCode(mockRepo, "used-challenge", "483920");
     expect(result).toBe("invalid");
   });
 });
 
 describe("activateUser", () => {
   it("ユーザーのメールアドレスを有効化する", async () => {
-    await activateUser("valid-challenge");
-    expect(db.update).toHaveBeenCalled();
+    await activateUser(mockRepo, "valid-challenge");
+    expect(mockRepo.activateUser).toHaveBeenCalledWith("user-id");
   });
 });
 
 describe("validatePasswordResetCode", () => {
   it("正しいコードは valid を返す", async () => {
-    const result = await validatePasswordResetCode("valid-challenge", "483920");
+    const result = await validatePasswordResetCode(mockRepo, "valid-challenge", "483920");
     expect(result).toBe("valid");
   });
 
   it("コードが一致しない場合は invalid を返す", async () => {
-    const result = await validatePasswordResetCode("valid-challenge", "000000");
+    const result = await validatePasswordResetCode(mockRepo, "valid-challenge", "000000");
     expect(result).toBe("invalid");
   });
 
   it("有効期限切れは expired を返す", async () => {
-    (db.select as jest.Mock).mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockResolvedValue([
-          { ...validRecord, expiresAt: new Date(Date.now() - 1000) },
-        ]),
-      }),
+    mockRepo.findCode.mockResolvedValue({
+      ...validRecord,
+      expiresAt: new Date(Date.now() - 1000),
     });
 
-    const result = await validatePasswordResetCode("expired-challenge", "483920");
+    const result = await validatePasswordResetCode(mockRepo, "expired-challenge", "483920");
     expect(result).toBe("expired");
   });
 });
 
 describe("updatePassword", () => {
   it("パスワードを更新する", async () => {
-    await updatePassword("valid-challenge", "newP@ssw0rd");
-    expect(db.update).toHaveBeenCalled();
+    await updatePassword(mockRepo, "valid-challenge", "newP@ssw0rd");
+    expect(mockRepo.updateUserPassword).toHaveBeenCalledWith("user-id", "hashed-password");
   });
 });

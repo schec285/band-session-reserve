@@ -1,14 +1,11 @@
 import { createSession, getSession, invalidateSession } from "../session";
+import type { ISessionRepository } from "../repository/session-repository";
 
-jest.mock("@/lib/db", () => ({
-  db: {
-    insert: jest.fn(),
-    select: jest.fn(),
-    delete: jest.fn(),
-  },
-}));
-
-import { db } from "@/lib/db";
+const mockRepo: jest.Mocked<ISessionRepository> = {
+  save: jest.fn(),
+  findByToken: jest.fn(),
+  deleteByToken: jest.fn(),
+};
 
 function makeRequest(cookie?: string) {
   const headers: Record<string, string> = {};
@@ -18,15 +15,13 @@ function makeRequest(cookie?: string) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRepo.save.mockResolvedValue(undefined);
+  mockRepo.deleteByToken.mockResolvedValue(undefined);
 });
 
 describe("createSession", () => {
   it("セッショントークンを返す", async () => {
-    (db.insert as jest.Mock).mockReturnValue({
-      values: jest.fn().mockResolvedValue(undefined),
-    });
-
-    const token = await createSession("user-id");
+    const token = await createSession(mockRepo, "user-id");
     expect(typeof token).toBe("string");
     expect(token.length).toBeGreaterThan(0);
   });
@@ -34,40 +29,28 @@ describe("createSession", () => {
 
 describe("getSession", () => {
   it("有効なセッションクッキーは userId を返す", async () => {
-    (db.select as jest.Mock).mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockResolvedValue([{ userId: "user-id" }]),
-      }),
-    });
+    mockRepo.findByToken.mockResolvedValue({ userId: "user-id" });
 
-    const session = await getSession(makeRequest("session=valid-token"));
+    const session = await getSession(mockRepo, makeRequest("session=valid-token"));
     expect(session).toEqual({ userId: "user-id" });
   });
 
   it("セッションクッキーがない場合は null を返す", async () => {
-    const session = await getSession(makeRequest());
+    const session = await getSession(mockRepo, makeRequest());
     expect(session).toBeNull();
   });
 
   it("存在しないセッションは null を返す", async () => {
-    (db.select as jest.Mock).mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockResolvedValue([]),
-      }),
-    });
+    mockRepo.findByToken.mockResolvedValue(null);
 
-    const session = await getSession(makeRequest("session=unknown-token"));
+    const session = await getSession(mockRepo, makeRequest("session=unknown-token"));
     expect(session).toBeNull();
   });
 });
 
 describe("invalidateSession", () => {
   it("セッションを削除する", async () => {
-    (db.delete as jest.Mock).mockReturnValue({
-      where: jest.fn().mockResolvedValue(undefined),
-    });
-
-    await expect(invalidateSession("session-token")).resolves.not.toThrow();
-    expect(db.delete).toHaveBeenCalled();
+    await expect(invalidateSession(mockRepo, "session-token")).resolves.not.toThrow();
+    expect(mockRepo.deleteByToken).toHaveBeenCalledWith("session-token");
   });
 });
