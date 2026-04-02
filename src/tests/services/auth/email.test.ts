@@ -1,4 +1,4 @@
-import { sendVerificationEmail, sendPasswordResetEmail } from "../email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/server/services/auth/email";
 
 beforeEach(() => {
   jest.spyOn(console, "log").mockImplementation(() => {});

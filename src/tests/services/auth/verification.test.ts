@@ -3,8 +3,8 @@ import {
   activateUser,
   validatePasswordResetCode,
   updatePassword,
-} from "../verification";
-import type { IVerificationRepository } from "../repository/verification-repository";
+} from "@/server/services/auth/verification";
+import type { IVerificationRepository } from "@/lib/auth/repository/verification-repository";
 
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),

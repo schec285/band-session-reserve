@@ -1,16 +1,16 @@
 import { POST } from "@/app/api/auth/logout/route";
 
-jest.mock("@/lib/auth/csrf", () => ({
+jest.mock("@/server/services/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/session", () => ({
+jest.mock("@/server/services/auth/session", () => ({
   invalidateSession: jest.fn(),
   getSession: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/lib/auth/csrf";
-import { invalidateSession, getSession } from "@/lib/auth/session";
+import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { invalidateSession, getSession } from "@/server/services/auth/session";
 
 function makeRequest(csrfToken = "valid-csrf-token", sessionCookie = "session=valid-session-token") {
   return new Request("http://localhost/api/auth/logout", {

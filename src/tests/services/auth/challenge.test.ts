@@ -1,5 +1,5 @@
-import { generateChallenge, validateChallenge } from "../challenge";
-import type { IChallengeRepository } from "../repository/challenge-repository";
+import { generateChallenge, validateChallenge } from "@/server/services/auth/challenge";
+import type { IChallengeRepository } from "@/lib/auth/repository/challenge-repository";
 
 const mockRepo: jest.Mocked<IChallengeRepository> = {
   save: jest.fn(),

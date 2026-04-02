@@ -1,5 +1,5 @@
-import { findUserByUsername, findUserByEmail, createUser, authenticateUser } from "../user";
-import type { IUserRepository } from "../repository/user-repository";
+import { findUserByUsername, findUserByEmail, createUser, authenticateUser } from "@/server/services/auth/user";
+import type { IUserRepository } from "@/lib/auth/repository/user-repository";
 
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),

@@ -1,25 +1,25 @@
 import { POST } from "@/app/api/auth/password-reset/request/route";
 
-jest.mock("@/lib/auth/csrf", () => ({
+jest.mock("@/server/services/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/challenge", () => ({
+jest.mock("@/server/services/auth/challenge", () => ({
   generateChallenge: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/email", () => ({
+jest.mock("@/server/services/auth/email", () => ({
   sendPasswordResetEmail: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/user", () => ({
+jest.mock("@/server/services/auth/user", () => ({
   findUserByEmail: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/lib/auth/csrf";
-import { generateChallenge } from "@/lib/auth/challenge";
-import { sendPasswordResetEmail } from "@/lib/auth/email";
-import { findUserByEmail } from "@/lib/auth/user";
+import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { generateChallenge } from "@/server/services/auth/challenge";
+import { sendPasswordResetEmail } from "@/server/services/auth/email";
+import { findUserByEmail } from "@/server/services/auth/user";
 
 const validBody = { email: "yamada@example.com" };
 

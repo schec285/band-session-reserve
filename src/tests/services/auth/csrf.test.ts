@@ -1,4 +1,4 @@
-import { generateCsrfToken, validateCsrfToken } from "../csrf";
+import { generateCsrfToken, validateCsrfToken } from "@/server/services/auth/csrf";
 
 function makeRequest(csrfToken?: string) {
   const headers: Record<string, string> = {};

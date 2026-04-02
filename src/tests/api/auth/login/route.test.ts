@@ -1,21 +1,21 @@
 import { POST } from "@/app/api/auth/login/route";
 
-jest.mock("@/lib/auth/csrf", () => ({
+jest.mock("@/server/services/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
   generateCsrfToken: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/session", () => ({
+jest.mock("@/server/services/auth/session", () => ({
   createSession: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/user", () => ({
+jest.mock("@/server/services/auth/user", () => ({
   authenticateUser: jest.fn(),
 }));
 
-import { validateCsrfToken, generateCsrfToken } from "@/lib/auth/csrf";
-import { createSession } from "@/lib/auth/session";
-import { authenticateUser } from "@/lib/auth/user";
+import { validateCsrfToken, generateCsrfToken } from "@/server/services/auth/csrf";
+import { createSession } from "@/server/services/auth/session";
+import { authenticateUser } from "@/server/services/auth/user";
 
 const validBody = {
   email: "yamada@example.com",

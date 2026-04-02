@@ -1,21 +1,21 @@
 import { POST } from "@/app/api/auth/password-reset/route";
 
-jest.mock("@/lib/auth/csrf", () => ({
+jest.mock("@/server/services/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/challenge", () => ({
+jest.mock("@/server/services/auth/challenge", () => ({
   validateChallenge: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/verification", () => ({
+jest.mock("@/server/services/auth/verification", () => ({
   validatePasswordResetCode: jest.fn(),
   updatePassword: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/lib/auth/csrf";
-import { validateChallenge } from "@/lib/auth/challenge";
-import { validatePasswordResetCode, updatePassword } from "@/lib/auth/verification";
+import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateChallenge } from "@/server/services/auth/challenge";
+import { validatePasswordResetCode, updatePassword } from "@/server/services/auth/verification";
 
 const validBody = {
   code: "847201",

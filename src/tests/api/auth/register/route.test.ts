@@ -1,27 +1,27 @@
 import { POST } from "@/app/api/auth/register/route";
 
-jest.mock("@/lib/auth/csrf", () => ({
+jest.mock("@/server/services/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/challenge", () => ({
+jest.mock("@/server/services/auth/challenge", () => ({
   generateChallenge: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/email", () => ({
+jest.mock("@/server/services/auth/email", () => ({
   sendVerificationEmail: jest.fn(),
 }));
 
-jest.mock("@/lib/auth/user", () => ({
+jest.mock("@/server/services/auth/user", () => ({
   findUserByUsername: jest.fn(),
   findUserByEmail: jest.fn(),
   createUser: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/lib/auth/csrf";
-import { generateChallenge } from "@/lib/auth/challenge";
-import { sendVerificationEmail } from "@/lib/auth/email";
-import { findUserByUsername, findUserByEmail, createUser } from "@/lib/auth/user";
+import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { generateChallenge } from "@/server/services/auth/challenge";
+import { sendVerificationEmail } from "@/server/services/auth/email";
+import { findUserByUsername, findUserByEmail, createUser } from "@/server/services/auth/user";
 
 const validBody = {
   username: "山田太郎",

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { IChallengeRepository } from "./repository/challenge-repository";
+import type { IChallengeRepository } from "@/lib/auth/repository/challenge-repository";
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 

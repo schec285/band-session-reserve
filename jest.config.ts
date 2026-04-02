@@ -7,7 +7,7 @@ const config: Config = {
       testEnvironment: "node",
       testMatch: [
         "<rootDir>/src/tests/api/**/*.test.ts",
-        "<rootDir>/src/lib/**/test/*.test.ts",
+        "<rootDir>/src/tests/services/**/*.test.ts",
       ],
       transform: {
         "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],

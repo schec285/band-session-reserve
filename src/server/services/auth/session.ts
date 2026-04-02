@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { ISessionRepository } from "./repository/session-repository";
+import type { ISessionRepository } from "@/lib/auth/repository/session-repository";
 
 /**
  * 新しいセッションを作成しトークンを返す。
