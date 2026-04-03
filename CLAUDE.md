@@ -46,7 +46,7 @@ src/
 3. リファクタリング（Refactor）
 
 **実装順序**:
-1. 型定義（`src/types/`）
+1. 型定義（`src/lib/types/`）
 2. APIルートのテスト作成（`src/tests/api/**/*.test.ts`）
 3. APIルート実装（`src/app/api/**/*.ts`）
 4. フロントエンド実装
@@ -70,8 +70,9 @@ src/
   tests/
     api/         # APIルートテスト
     services/    # サービステスト
+  lib/
+    types/       # 型定義（api/{endpoint}/index.ts, common/index.ts）
   components/    # フロントエンドコンポーネント
-  types/         # 型定義
 ```
 
 **主なデータフロー**:
