@@ -81,6 +81,15 @@ describe("POST /api/auth/register", () => {
       expect(json.message).toBe("メールアドレスの形式が不正です");
     });
 
+    it("400: email が空", async () => {
+      const res = await POST(makeRequest({ ...validBody, email: "" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("メールアドレスは必須です");
+    });
+
     it("400: password が空", async () => {
       const res = await POST(makeRequest({ ...validBody, password: "" }));
       const json = await res.json();
@@ -88,6 +97,17 @@ describe("POST /api/auth/register", () => {
       expect(res.status).toBe(400);
       expect(json.success).toBe(false);
       expect(json.message).toBe("パスワードは必須です");
+    });
+
+    it("400: password がポリシー違反", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "short" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe(
+        "パスワードは12文字以上で、大文字・数字・記号を各1文字以上含めてください"
+      );
     });
 
   });

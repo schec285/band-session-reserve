@@ -61,6 +61,35 @@ describe("POST /api/auth/login", () => {
     });
   });
 
+  describe("異常系 — バリデーション", () => {
+    it("400: email が空", async () => {
+      const res = await POST(makeRequest({ ...validBody, email: "" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("メールアドレスは必須です");
+    });
+
+    it("400: email が不正な形式", async () => {
+      const res = await POST(makeRequest({ ...validBody, email: "invalid" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("メールアドレスの形式が不正です");
+    });
+
+    it("400: password が空", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("パスワードは必須です");
+    });
+  });
+
   describe("異常系 — 認証失敗", () => {
     it("401: メールアドレスが存在しない", async () => {
       (authenticateUser as jest.Mock).mockResolvedValue({ status: "not-found" });

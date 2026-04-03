@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
+import type { IVerificationRepository } from "@/server/repositories/auth/verification-repository";
 
 const SALT_ROUNDS = 12;
 
@@ -56,4 +57,36 @@ export async function authenticateUser(
   if (!user.emailVerifiedAt) return { status: "unverified" };
 
   return { status: "ok", user: { id: user.id, role: user.role } };
+}
+
+/**
+ * メールアドレス認証を完了し、ユーザーを有効化する。
+ * 認証コードレコードを削除してからユーザーの emailVerifiedAt を更新する。
+ */
+export async function activateUser(
+  verificationRepo: IVerificationRepository,
+  userRepo: IUserRepository,
+  sessionId: string
+): Promise<void> {
+  const record = await verificationRepo.findBySessionId(sessionId);
+  if (!record) throw new Error("verification record not found");
+  await verificationRepo.deleteBySessionId(sessionId);
+  await userRepo.activateUser(record.userId);
+}
+
+/**
+ * パスワードをリセットする。
+ * 認証コードレコードを削除してから新しいパスワードハッシュを保存する。
+ */
+export async function updatePassword(
+  verificationRepo: IVerificationRepository,
+  userRepo: IUserRepository,
+  sessionId: string,
+  newPassword: string
+): Promise<void> {
+  const record = await verificationRepo.findBySessionId(sessionId);
+  if (!record) throw new Error("verification record not found");
+  const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await verificationRepo.deleteBySessionId(sessionId);
+  await userRepo.updatePassword(record.userId, passwordHash);
 }

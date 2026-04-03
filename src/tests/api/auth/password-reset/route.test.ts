@@ -66,6 +66,15 @@ describe("POST /api/auth/password-reset", () => {
       expect(json.message).toBe("認証コードは必須です");
     });
 
+    it("400: code が6桁の数字でない", async () => {
+      const res = await POST(makeRequest({ ...validBody, code: "abc" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("認証コードは6桁の数字で入力してください");
+    });
+
     it("400: password が空", async () => {
       const res = await POST(makeRequest({ ...validBody, password: "" }));
       const json = await res.json();
@@ -73,6 +82,17 @@ describe("POST /api/auth/password-reset", () => {
       expect(res.status).toBe(400);
       expect(json.success).toBe(false);
       expect(json.message).toBe("パスワードは必須です");
+    });
+
+    it("400: password がポリシー違反", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "short" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe(
+        "パスワードは12文字以上で、大文字・数字・記号を各1文字以上含めてください"
+      );
     });
   });
 

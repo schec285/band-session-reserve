@@ -1,8 +1,8 @@
 import { pgTable, uuid, timestamp } from "drizzle-orm/pg-core";
 
 /**
- * ログインセッション。
- * ログアウト時に DELETE する。
+ * 認証済みセッション。
+ * ログイン時に発行（再発行）、ログアウト時に DELETE する。
  */
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().defaultRandom(),

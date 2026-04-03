@@ -1,13 +1,13 @@
 export interface IChallengeRecord {
-  usedAt: Date | null;
-  expiresAt: Date;
+  id: string;
+  type: string;
 }
 
 export interface IChallengeRepository {
   /** チャレンジをDBに保存する */
-  save(challenge: string, expiresAt: Date): Promise<void>;
-  /** チャレンジをDBから取得する */
-  findByChallenge(challenge: string): Promise<IChallengeRecord | null>;
-  /** チャレンジを使用済みにする */
-  markAsUsed(challenge: string): Promise<void>;
+  save(sessionId: string, challengeId: string, type: string): Promise<void>;
+  /** セッションIDでチャレンジを取得する */
+  findBySessionId(sessionId: string): Promise<IChallengeRecord | null>;
+  /** チャレンジをDBから削除する */
+  deleteBySessionId(sessionId: string): Promise<void>;
 }

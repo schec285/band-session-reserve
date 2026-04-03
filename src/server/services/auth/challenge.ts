@@ -1,27 +1,32 @@
 import { randomUUID } from "crypto";
 import type { IChallengeRepository } from "@/server/repositories/auth/challenge-repository";
 
-const CHALLENGE_TTL_MS = 5 * 60 * 1000;
-
 /**
  * ランダムなnonce文字列（チャレンジ）を生成してDBに保存し、返す。
+ * sessionId をキーに保存し、type で操作の種別を管理する。
  */
-export async function generateChallenge(repo: IChallengeRepository): Promise<string> {
-  const challenge = randomUUID();
-  const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS);
-  await repo.save(challenge, expiresAt);
-  return challenge;
+export async function generateChallenge(
+  repo: IChallengeRepository,
+  sessionId: string,
+  type: string
+): Promise<string> {
+  const challengeId = randomUUID();
+  await repo.save(sessionId, challengeId, type);
+  return challengeId;
 }
 
 /**
  * チャレンジの正当性を検証する。
- * DBに存在し、有効期限内かつ未使用であれば true を返す。
+ * sessionId に紐づくチャレンジが存在し、nonce が一致すれば削除して true を返す。
  */
-export async function validateChallenge(repo: IChallengeRepository, challenge: string): Promise<boolean> {
-  const record = await repo.findByChallenge(challenge);
+export async function validateChallenge(
+  repo: IChallengeRepository,
+  sessionId: string,
+  challengeNonce: string
+): Promise<boolean> {
+  const record = await repo.findBySessionId(sessionId);
   if (!record) return false;
-  if (record.usedAt !== null) return false;
-  if (record.expiresAt < new Date()) return false;
-  await repo.markAsUsed(challenge);
+  if (record.id !== challengeNonce) return false;
+  await repo.deleteBySessionId(sessionId);
   return true;
 }

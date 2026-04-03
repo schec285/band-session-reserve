@@ -62,6 +62,15 @@ describe("POST /api/auth/verify-email", () => {
       expect(json.success).toBe(false);
       expect(json.message).toBe("認証コードは必須です");
     });
+
+    it("400: code が6桁の数字でない", async () => {
+      const res = await POST(makeRequest({ ...validBody, code: "abc" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe("認証コードは6桁の数字で入力してください");
+    });
   });
 
   describe("異常系 — 認証失敗", () => {

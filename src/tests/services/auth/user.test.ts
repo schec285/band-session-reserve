@@ -1,5 +1,6 @@
-import { findUserByUsername, findUserByEmail, createUser, authenticateUser } from "@/server/services/auth/user";
+import { findUserByUsername, findUserByEmail, createUser, authenticateUser, activateUser, updatePassword } from "@/server/services/auth/user";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
+import type { IVerificationRepository } from "@/server/repositories/auth/verification-repository";
 
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),
@@ -18,6 +19,7 @@ const verifiedUser = {
 };
 
 let mockRepo: jest.Mocked<IUserRepository>;
+let mockVerificationRepo: jest.Mocked<IVerificationRepository>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -25,6 +27,13 @@ beforeEach(() => {
     findByUsername: jest.fn(),
     findByEmail: jest.fn(),
     create: jest.fn(),
+    activateUser: jest.fn(),
+    updatePassword: jest.fn(),
+  };
+  mockVerificationRepo = {
+    save: jest.fn(),
+    findBySessionId: jest.fn(),
+    deleteBySessionId: jest.fn(),
   };
 });
 
@@ -104,5 +113,39 @@ describe("authenticateUser", () => {
 
     const result = await authenticateUser(mockRepo, "yamada@example.com", "p@ssw0rd");
     expect(result).toEqual({ status: "unverified" });
+  });
+});
+
+describe("activateUser", () => {
+  it("ユーザーのメールアドレスを有効化し、認証コードを削除する", async () => {
+    mockVerificationRepo.findBySessionId.mockResolvedValue({
+      userId: "user-id",
+      code: "483920",
+      expiresAt: new Date(Date.now() + 60000),
+    });
+    mockVerificationRepo.deleteBySessionId.mockResolvedValue(undefined);
+    mockRepo.activateUser.mockResolvedValue(undefined);
+
+    await activateUser(mockVerificationRepo, mockRepo, "session-id");
+
+    expect(mockVerificationRepo.deleteBySessionId).toHaveBeenCalledWith("session-id");
+    expect(mockRepo.activateUser).toHaveBeenCalledWith("user-id");
+  });
+});
+
+describe("updatePassword", () => {
+  it("パスワードをハッシュ化して更新し、認証コードを削除する", async () => {
+    mockVerificationRepo.findBySessionId.mockResolvedValue({
+      userId: "user-id",
+      code: "483920",
+      expiresAt: new Date(Date.now() + 60000),
+    });
+    mockVerificationRepo.deleteBySessionId.mockResolvedValue(undefined);
+    mockRepo.updatePassword.mockResolvedValue(undefined);
+
+    await updatePassword(mockVerificationRepo, mockRepo, "session-id", "newP@ssw0rd");
+
+    expect(mockVerificationRepo.deleteBySessionId).toHaveBeenCalledWith("session-id");
+    expect(mockRepo.updatePassword).toHaveBeenCalledWith("user-id", "hashed-password");
   });
 });
