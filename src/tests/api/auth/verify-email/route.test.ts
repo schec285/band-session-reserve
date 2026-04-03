@@ -62,40 +62,44 @@ describe("POST /api/auth/verify-email", () => {
       expect(json.success).toBe(false);
       expect(json.message).toBe("認証コードは必須です");
     });
+  });
 
-    it("400: コードが無効", async () => {
+  describe("異常系 — 認証失敗", () => {
+    it("401: コードが無効", async () => {
       (validateVerificationCode as jest.Mock).mockResolvedValue("invalid");
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
       expect(json.success).toBe(false);
       expect(json.message).toBe("認証コードが正しくありません");
     });
 
-    it("400: コードの有効期限切れ（5分）", async () => {
-      (validateVerificationCode as jest.Mock).mockResolvedValue("expired");
-
-      const res = await POST(makeRequest(validBody));
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.success).toBe(false);
-      expect(json.message).toBe(
-        "認証コードの有効期限が切れています。再度登録してください"
-      );
-    });
-
-    it("400: チャレンジ検証失敗", async () => {
+    it("401: チャレンジ検証失敗", async () => {
       (validateChallenge as jest.Mock).mockResolvedValue(false);
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
       expect(json.success).toBe(false);
       expect(json.message).toBe("操作が無効です。最初からやり直してください");
+    });
+  });
+
+  describe("異常系 — 期限切れ", () => {
+    it("408: コードの有効期限切れ（5分）", async () => {
+      (validateVerificationCode as jest.Mock).mockResolvedValue("expired");
+
+      const res = await POST(makeRequest(validBody));
+      const json = await res.json();
+
+      expect(res.status).toBe(408);
+      expect(json.success).toBe(false);
+      expect(json.message).toBe(
+        "認証コードの有効期限が切れています。再度登録してください"
+      );
     });
   });
 

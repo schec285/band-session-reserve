@@ -240,13 +240,12 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 ```json
 {
   "message": "ログインしました",
-  "role": "member",
-  "csrfToken": "<csrf_token>"
+  "role": "member"
 }
 ```
 
 > `role` は `"admin"` または `"member"`。クライアントはこの値で管理者向け UI の表示を切り替える。
-> `csrfToken` は以降のリクエストで使用する新しい CSRFトークン。ログイン前のトークンと差し替えること。
+> CSRFトークンのローテーションはサーバーがセッション発行時に自動で行う。
 
 #### 400 Bad Request — バリデーションエラー
 

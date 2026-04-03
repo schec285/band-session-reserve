@@ -2,7 +2,6 @@ import { POST } from "@/app/api/auth/login/route";
 
 jest.mock("@/server/services/auth/csrf", () => ({
   validateCsrfToken: jest.fn(),
-  generateCsrfToken: jest.fn(),
 }));
 
 jest.mock("@/server/services/auth/session", () => ({
@@ -13,7 +12,7 @@ jest.mock("@/server/services/auth/user", () => ({
   authenticateUser: jest.fn(),
 }));
 
-import { validateCsrfToken, generateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/auth/csrf";
 import { createSession } from "@/server/services/auth/session";
 import { authenticateUser } from "@/server/services/auth/user";
 
@@ -36,7 +35,6 @@ function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
 beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
-  (generateCsrfToken as jest.Mock).mockReturnValue("new-csrf-token");
   (createSession as jest.Mock).mockResolvedValue("session-token");
   (authenticateUser as jest.Mock).mockResolvedValue({
     status: "ok",
@@ -46,7 +44,7 @@ beforeEach(() => {
 
 describe("POST /api/auth/login", () => {
   describe("正常系", () => {
-    it("200: ログイン成功・Set-Cookie・role・csrfToken を返す", async () => {
+    it("200: ログイン成功・Set-Cookie・role を返す", async () => {
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
@@ -54,7 +52,6 @@ describe("POST /api/auth/login", () => {
       expect(json.success).toBe(true);
       expect(json.message).toBe("ログインしました");
       expect(json.role === "member" || json.role === "admin").toBe(true);
-      expect(typeof json.csrfToken).toBe("string");
 
       const setCookie = res.headers.get("Set-Cookie");
       expect(setCookie).toContain("session=");

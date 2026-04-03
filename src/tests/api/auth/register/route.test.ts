@@ -90,24 +90,27 @@ describe("POST /api/auth/register", () => {
       expect(json.message).toBe("パスワードは必須です");
     });
 
-    it("400: ユーザー名が既に登録済み", async () => {
+  });
+
+  describe("異常系 — コンフリクト", () => {
+    it("409: ユーザー名が既に登録済み", async () => {
       (findUserByUsername as jest.Mock).mockResolvedValue({ id: "existing-user-id" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(json.success).toBe(false);
       expect(json.message).toBe("このユーザー名は既に使用されています");
     });
 
-    it("400: メールアドレスが既に登録済み", async () => {
+    it("409: メールアドレスが既に登録済み", async () => {
       (findUserByEmail as jest.Mock).mockResolvedValue({ id: "existing-user-id" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(json.success).toBe(false);
       expect(json.message).toBe("このメールアドレスは既に使用されています");
     });

@@ -11,7 +11,6 @@ export type LoginBody = z.infer<typeof LoginBodySchema>;
 export const LoginResponseSchema = z.object({
   message: z.string(),
   role: UserRoleSchema,
-  csrfToken: z.string(),
 });
 
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
