@@ -1,8 +1,8 @@
-import { GET } from "@/app/api/auth/csrf/route";
+import { GET } from "@/app/api/csrf/route";
 
-describe("GET /api/auth/csrf", () => {
+describe("GET /api/csrf", () => {
   it("CSRFトークンを返す", async () => {
-    const req = new Request("http://localhost/api/auth/csrf");
+    const req = new Request("http://localhost/api/csrf");
     const res = await GET(req);
     const json = await res.json();
 

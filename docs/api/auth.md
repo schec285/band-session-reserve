@@ -20,7 +20,7 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| GET | [`/api/auth/csrf`](#get-apiauthcsrf) | CSRFトークンを取得する | 不要 |
+| GET | [`/api/csrf`](../csrf.md) | CSRFトークンを取得する | 不要 |
 | POST | [`/api/auth/register`](#post-apiauthregister) | ユーザー登録（確認メール送信） | 不要 |
 | POST | [`/api/auth/verify-email`](#post-apiauthverify-email) | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
 | POST | [`/api/auth/login`](#post-apiauthlogin) | ログイン（セッションクッキー発行） | 不要 |
@@ -30,25 +30,6 @@
 
 ---
 
-## GET `/api/auth/csrf`
-
-### 概要
-
-副作用を伴うリクエスト（POST / PATCH / DELETE）に必要な CSRFトークンを発行する。認証不要で誰でも取得できる。ログイン成功後は、レスポンスに含まれる新しい CSRFトークンに更新すること。
-
-### レスポンス
-
-#### 200 OK
-
-```json
-{
-  "csrfToken": "<csrf_token>"
-}
-```
-
-> CSRFトークンはクライアントが保持し、副作用を伴うすべてのリクエストの `X-CSRF-Token` ヘッダーに含めて送信する。
-
----
 
 ## POST `/api/auth/register`
 

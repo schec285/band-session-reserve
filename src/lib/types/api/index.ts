@@ -22,12 +22,3 @@ export const ErrorResponseSchema = z.object({
 
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 
-/**
- * CSRFトークン取得レスポンスのスキーマ。
- * 認証に限らず副作用を伴うすべてのリクエストで使用する。
- */
-export const CsrfResponseSchema = z.object({
-  csrfToken: z.string(),
-});
-
-export type CsrfResponse = z.infer<typeof CsrfResponseSchema>;
