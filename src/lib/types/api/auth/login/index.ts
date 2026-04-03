@@ -1,8 +1,5 @@
 import { z } from "zod";
-
-export const UserRoleSchema = z.enum(["member", "admin"]);
-
-export type UserRole = z.infer<typeof UserRoleSchema>;
+import { UserRoleSchema } from "@/lib/types/api/auth";
 
 export const LoginBodySchema = z.object({
   email: z.string().min(1, "メールアドレスは必須です").check(z.email("メールアドレスの形式が不正です")),
@@ -12,7 +9,6 @@ export const LoginBodySchema = z.object({
 export type LoginBody = z.infer<typeof LoginBodySchema>;
 
 export const LoginResponseSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
   role: UserRoleSchema,
   csrfToken: z.string(),

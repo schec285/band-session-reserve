@@ -14,7 +14,6 @@ export const RegisterBodySchema = z.object({
 export type RegisterBody = z.infer<typeof RegisterBodySchema>;
 
 export const RegisterResponseSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
   challenge: z.string(),
 });

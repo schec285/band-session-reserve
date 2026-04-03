@@ -8,7 +8,6 @@ export const VerifyEmailBodySchema = z.object({
 export type VerifyEmailBody = z.infer<typeof VerifyEmailBodySchema>;
 
 export const VerifyEmailResponseSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
 });
 

@@ -14,7 +14,6 @@ export const PasswordResetBodySchema = z.object({
 export type PasswordResetBody = z.infer<typeof PasswordResetBodySchema>;
 
 export const PasswordResetResponseSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
 });
 

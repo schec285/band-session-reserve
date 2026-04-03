@@ -1,5 +1,7 @@
 # API 設計書 — 認証 (`/api/auth`)
 
+> エラーレスポンスの共通形式は [shared.md](./shared.md) を参照。
+
 ---
 
 ## ユーザーロール
@@ -88,7 +90,6 @@ Content-Type: application/json
 
 ```json
 {
-  "success": true,
   "message": "確認メールを送信しました。メールに記載の認証コードを入力してアカウントを有効化してください",
   "challenge": "<nonce>"
 }
@@ -98,20 +99,38 @@ Content-Type: application/json
 
 #### 400 Bad Request — バリデーションエラー
 
-| 条件 | `message` |
-|---|---|
-| `username` が空 | `"ユーザー名は必須です"` |
-| `email` が空 | `"メールアドレスは必須です"` |
-| `email` が形式不正 | `"メールアドレスの形式が不正です"` |
-| `password` が空 | `"パスワードは必須です"` |
-| `password` がポリシー違反 | `"パスワードは12文字以上で、大文字・数字・記号を各1文字以上含めてください"` |
+```json
+{
+  "message": "入力内容を確認してください",
+  "errors": [
+    { "field": "username", "message": "ユーザー名は必須です" }
+  ]
+}
+```
+
+| `field` | 条件 | `message` |
+|---|---|---|
+| `username` | 空 | `"ユーザー名は必須です"` |
+| `email` | 空 | `"メールアドレスは必須です"` |
+| `email` | 形式不正 | `"メールアドレスの形式が不正です"` |
+| `password` | 空 | `"パスワードは必須です"` |
+| `password` | ポリシー違反 | `"パスワードは12文字以上で、大文字・数字・記号を各1文字以上含めてください"` |
 
 #### 409 Conflict — コンフリクトエラー
 
-| 条件 | `message` |
-|---|---|
-| ユーザー名が既に登録済み | `"このユーザー名は既に使用されています"` |
-| メールアドレスが既に登録済み | `"このメールアドレスは既に使用されています"` |
+```json
+{
+  "message": "入力内容を確認してください",
+  "errors": [
+    { "field": "email", "message": "このメールアドレスは既に使用されています" }
+  ]
+}
+```
+
+| `field` | 条件 | `message` |
+|---|---|---|
+| `username` | 既に登録済み | `"このユーザー名は既に使用されています"` |
+| `email` | 既に登録済み | `"このメールアドレスは既に使用されています"` |
 
 ---
 
@@ -152,24 +171,38 @@ Content-Type: application/json
 
 ```json
 {
-  "success": true,
   "message": "メールアドレス認証が完了しました。ログインしてください"
 }
 ```
 
 #### 400 Bad Request — バリデーションエラー
 
-| 条件 | `message` |
-|---|---|
-| `code` が空 | `"認証コードは必須です"` |
-| `code` が6桁の数字でない | `"認証コードは6桁の数字で入力してください"` |
+```json
+{
+  "message": "入力内容を確認してください",
+  "errors": [
+    { "field": "code", "message": "認証コードは必須です" }
+  ]
+}
+```
+
+| `field` | 条件 | `message` |
+|---|---|---|
+| `code` | 空 | `"認証コードは必須です"` |
+| `code` | 6桁の数字でない | `"認証コードは6桁の数字で入力してください"` |
 
 #### 401 Unauthorized — 認証失敗
 
+```json
+{
+  "message": "認証コードが正しくありません"
+}
+```
+
 | 条件 | `message` |
 |---|---|
-| `code`が不正 | `"認証コードが正しくありません"` |
-| `challenge`が不正 | `"操作が無効です。最初からやり直してください"` |
+| `code` が不正 | `"認証コードが正しくありません"` |
+| `challenge` が不正 | `"操作が無効です。最初からやり直してください"` |
 
 #### 408 Request Timeout — 期限切れ
 
@@ -225,7 +258,6 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 
 ```json
 {
-  "success": true,
   "message": "ログインしました",
   "role": "member",
   "csrfToken": "<csrf_token>"
@@ -237,11 +269,20 @@ Set-Cookie: session=<session_token>; HttpOnly; Secure; SameSite=Strict; Path=/
 
 #### 400 Bad Request — バリデーションエラー
 
-| 条件 | `message` |
-|---|---|
-| `email` が空 | `"メールアドレスは必須です"` |
-| `email` が形式不正 | `"メールアドレスの形式が不正です"` |
-| `password` が空 | `"パスワードは必須です"` |
+```json
+{
+  "message": "入力内容を確認してください",
+  "errors": [
+    { "field": "email", "message": "メールアドレスは必須です" }
+  ]
+}
+```
+
+| `field` | 条件 | `message` |
+|---|---|---|
+| `email` | 空 | `"メールアドレスは必須です"` |
+| `email` | 形式不正 | `"メールアドレスの形式が不正です"` |
+| `password` | 空 | `"パスワードは必須です"` |
 
 #### 401 Unauthorized — 認証失敗
 
@@ -277,7 +318,6 @@ Set-Cookie: session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0
 
 ```json
 {
-  "success": true,
   "message": "ログアウトしました"
 }
 ```
@@ -319,7 +359,6 @@ Content-Type: application/json
 
 ```json
 {
-  "success": true,
   "message": "パスワードリセット用の認証コードを送信しました。メールに記載の認証コードを入力してパスワードを再設定してください",
   "challenge": "<nonce>"
 }
@@ -330,10 +369,19 @@ Content-Type: application/json
 
 #### 400 Bad Request — バリデーションエラー
 
-| 条件 | `message` |
-|---|---|
-| `email` が空 | `"メールアドレスは必須です"` |
-| `email` が形式不正 | `"メールアドレスの形式が不正です"` |
+```json
+{
+  "message": "入力内容を確認してください",
+  "errors": [
+    { "field": "email", "message": "メールアドレスは必須です" }
+  ]
+}
+```
+
+| `field` | 条件 | `message` |
+|---|---|---|
+| `email` | 空 | `"メールアドレスは必須です"` |
+| `email` | 形式不正 | `"メールアドレスの形式が不正です"` |
 
 ---
 
@@ -376,19 +424,27 @@ Content-Type: application/json
 
 ```json
 {
-  "success": true,
   "message": "パスワードを再設定しました。新しいパスワードでログインしてください"
 }
 ```
 
 #### 400 Bad Request — バリデーションエラー
 
-| 条件 | `message` |
-|---|---|
-| `code` が空 | `"認証コードは必須です"` |
-| `code` が6桁の数字でない | `"認証コードは6桁の数字で入力してください"` |
-| `password` が空 | `"パスワードは必須です"` |
-| `password` がポリシー違反 | `"パスワードは12文字以上で、大文字・数字・記号を各1文字以上含めてください"` |
+```json
+{
+  "message": "入力内容を確認してください",
+  "errors": [
+    { "field": "code", "message": "認証コードは必須です" }
+  ]
+}
+```
+
+| `field` | 条件 | `message` |
+|---|---|---|
+| `code` | 空 | `"認証コードは必須です"` |
+| `code` | 6桁の数字でない | `"認証コードは6桁の数字で入力してください"` |
+| `password` | 空 | `"パスワードは必須です"` |
+| `password` | ポリシー違反 | `"パスワードは12文字以上で、大文字・数字・記号を各1文字以上含めてください"` |
 
 #### 401 Unauthorized — 認証失敗
 

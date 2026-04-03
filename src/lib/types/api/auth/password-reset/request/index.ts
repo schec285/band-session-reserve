@@ -7,7 +7,6 @@ export const PasswordResetRequestBodySchema = z.object({
 export type PasswordResetRequestBody = z.infer<typeof PasswordResetRequestBodySchema>;
 
 export const PasswordResetRequestResponseSchema = z.object({
-  success: z.boolean(),
   message: z.string(),
   challenge: z.string(),
 });
