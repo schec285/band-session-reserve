@@ -1,9 +1,5 @@
 # CSRF 保護設計書
 
-> エラーレスポンスの共通形式は [shared.md](../api/shared.md) を参照。
-
----
-
 ## 概要
 
 Double Submit Cookie パターンで CSRF 保護を実装する。`/api/csrf` エンドポイントは存在しない。
