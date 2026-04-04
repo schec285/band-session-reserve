@@ -1,4 +1,4 @@
-import { validateCode } from "@/server/services/auth/verification";
+import { saveCode, validateCode } from "@/server/services/auth/verification";
 import type { IVerificationRepository } from "@/server/repositories/auth/verification-repository";
 
 const mockRepo: jest.Mocked<IVerificationRepository> = {
@@ -16,6 +16,22 @@ const validRecord = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockRepo.findBySessionId.mockResolvedValue(validRecord);
+});
+
+describe("saveCode", () => {
+  it("認証コードをリポジトリに保存する", async () => {
+    mockRepo.save.mockResolvedValue(undefined);
+    const expiresAt = new Date(Date.now() + 300000);
+    await saveCode(mockRepo, "session-id", "user-id", "483920", expiresAt);
+    expect(mockRepo.save).toHaveBeenCalledWith("session-id", "user-id", "483920", expiresAt);
+  });
+
+  it("userId が null でも保存できる（未認証ユーザー）", async () => {
+    mockRepo.save.mockResolvedValue(undefined);
+    const expiresAt = new Date(Date.now() + 300000);
+    await saveCode(mockRepo, "session-id", null, "483920", expiresAt);
+    expect(mockRepo.save).toHaveBeenCalledWith("session-id", null, "483920", expiresAt);
+  });
 });
 
 describe("validateCode", () => {

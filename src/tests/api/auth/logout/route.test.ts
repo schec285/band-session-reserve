@@ -1,6 +1,6 @@
 import { POST } from "@/app/api/auth/logout/route";
 
-jest.mock("@/server/services/auth/csrf", () => ({
+jest.mock("@/server/services/csrf/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
@@ -9,7 +9,7 @@ jest.mock("@/server/services/auth/session", () => ({
   getSession: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
 import { invalidateSession, getSession } from "@/server/services/auth/session";
 
 function makeRequest(csrfToken = "valid-csrf-token", sessionCookie = "session=valid-session-token") {

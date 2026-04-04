@@ -1,6 +1,6 @@
 import { POST } from "@/app/api/auth/login/route";
 
-jest.mock("@/server/services/auth/csrf", () => ({
+jest.mock("@/server/services/csrf/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
@@ -12,7 +12,7 @@ jest.mock("@/server/services/auth/user", () => ({
   authenticateUser: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
 import { createSession } from "@/server/services/auth/session";
 import { authenticateUser } from "@/server/services/auth/user";
 

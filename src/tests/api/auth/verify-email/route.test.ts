@@ -1,6 +1,6 @@
 import { POST } from "@/app/api/auth/verify-email/route";
 
-jest.mock("@/server/services/auth/csrf", () => ({
+jest.mock("@/server/services/csrf/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
@@ -9,25 +9,29 @@ jest.mock("@/server/services/auth/challenge", () => ({
 }));
 
 jest.mock("@/server/services/auth/verification", () => ({
-  validateVerificationCode: jest.fn(),
+  validateCode: jest.fn(),
+}));
+
+jest.mock("@/server/services/auth/user", () => ({
   activateUser: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
 import { validateChallenge } from "@/server/services/auth/challenge";
-import { validateVerificationCode, activateUser } from "@/server/services/auth/verification";
+import { validateCode } from "@/server/services/auth/verification";
+import { activateUser } from "@/server/services/auth/user";
 
 const validBody = {
   code: "483920",
-  challenge: "valid-challenge",
 };
 
-function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
+function makeRequest(body: unknown, csrfToken = "valid-csrf-token", challengeToken = "valid-session:valid-challenge") {
   return new Request("http://localhost/api/auth/verify-email", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-CSRF-Token": csrfToken,
+      "X-Challenge-Token": challengeToken,
     },
     body: JSON.stringify(body),
   });
@@ -37,7 +41,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (validateChallenge as jest.Mock).mockResolvedValue(true);
-  (validateVerificationCode as jest.Mock).mockResolvedValue("valid");
+  (validateCode as jest.Mock).mockResolvedValue("valid");
   (activateUser as jest.Mock).mockResolvedValue(undefined);
 });
 
@@ -75,7 +79,7 @@ describe("POST /api/auth/verify-email", () => {
 
   describe("異常系 — 認証失敗", () => {
     it("401: コードが無効", async () => {
-      (validateVerificationCode as jest.Mock).mockResolvedValue("invalid");
+      (validateCode as jest.Mock).mockResolvedValue("invalid");
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -99,7 +103,7 @@ describe("POST /api/auth/verify-email", () => {
 
   describe("異常系 — 期限切れ", () => {
     it("408: コードの有効期限切れ（5分）", async () => {
-      (validateVerificationCode as jest.Mock).mockResolvedValue("expired");
+      (validateCode as jest.Mock).mockResolvedValue("expired");
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();

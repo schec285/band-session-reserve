@@ -1,11 +1,15 @@
 import { POST } from "@/app/api/auth/register/route";
 
-jest.mock("@/server/services/auth/csrf", () => ({
+jest.mock("@/server/services/csrf/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
 jest.mock("@/server/services/auth/challenge", () => ({
   generateChallenge: jest.fn(),
+}));
+
+jest.mock("@/server/services/auth/verification", () => ({
+  saveCode: jest.fn(),
 }));
 
 jest.mock("@/server/services/auth/email", () => ({
@@ -18,9 +22,10 @@ jest.mock("@/server/services/auth/user", () => ({
   createUser: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
 import { generateChallenge } from "@/server/services/auth/challenge";
 import { sendVerificationEmail } from "@/server/services/auth/email";
+import { saveCode } from "@/server/services/auth/verification";
 import { findUserByUsername, findUserByEmail, createUser } from "@/server/services/auth/user";
 
 const validBody = {
@@ -44,6 +49,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (generateChallenge as jest.Mock).mockResolvedValue("mock-challenge");
+  (saveCode as jest.Mock).mockResolvedValue(undefined);
   (findUserByUsername as jest.Mock).mockResolvedValue(null);
   (findUserByEmail as jest.Mock).mockResolvedValue(null);
   (createUser as jest.Mock).mockResolvedValue(undefined);
@@ -52,13 +58,17 @@ beforeEach(() => {
 
 describe("POST /api/auth/register", () => {
   describe("正常系", () => {
-    it("201: 登録成功・challenge を返す", async () => {
+    it("201: 登録成功・challenge クッキーを発行する", async () => {
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
       expect(res.status).toBe(201);
       expect(json.success).toBe(true);
-      expect(json.challenge).toBe("mock-challenge");
+
+      const setCookie = res.headers.get("Set-Cookie");
+      expect(setCookie).toContain("challenge=");
+      expect(setCookie).toContain("mock-challenge");
+      expect(setCookie).toContain("Path=/api/auth/verify-email");
     });
   });
 

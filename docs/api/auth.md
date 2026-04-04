@@ -20,7 +20,6 @@
 
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
-| GET | [`/api/csrf`](../csrf.md) | CSRFトークンを取得する | 不要 |
 | POST | [`/api/auth/register`](#post-apiauthregister) | ユーザー登録（確認メール送信） | 不要 |
 | POST | [`/api/auth/verify-email`](#post-apiauthverify-email) | 認証コード + チャレンジ検証・アカウント有効化 | 不要 |
 | POST | [`/api/auth/login`](#post-apiauthlogin) | ログイン（セッションクッキー発行） | 不要 |
@@ -69,14 +68,21 @@ Content-Type: application/json
 
 #### 201 Created — 登録成功（メール送信済み）
 
+**レスポンスヘッダー**:
+
+```
+Set-Cookie: challenge=<nonce>; Secure; SameSite=Strict; Path=/api/auth/verify-email
+```
+
+**レスポンスボディ**:
+
 ```json
 {
-  "message": "確認メールを送信しました。メールに記載の認証コードを入力してアカウントを有効化してください",
-  "challenge": "<nonce>"
+  "message": "確認メールを送信しました。メールに記載の認証コードを入力してアカウントを有効化してください"
 }
 ```
 
-> `challenge` はクライアントが保持し、`POST /api/auth/verify-email` に認証コードと合わせて送信する。有効期限は **5分**、一回限り有効。
+> `challenge` はクッキーとして発行される。クライアントはクッキーの値を読み取り、`POST /api/auth/verify-email` の `X-Challenge-Token` ヘッダーに付与して送信する。一回限り有効。
 
 #### 400 Bad Request — バリデーションエラー
 
@@ -127,22 +133,23 @@ Content-Type: application/json
 
 ```
 X-CSRF-Token: <csrf_token>
+X-Challenge-Token: <challenge>
 Content-Type: application/json
 ```
+
+> `X-Challenge-Token` は `POST /api/auth/register` のレスポンスで発行された `challenge` クッキーの値を読み取り付与する。
 
 #### ボディ
 
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | `code` | string | ✓ | メールに記載された認証コード（6桁の数字） |
-| `challenge` | string | ✓ | `POST /api/auth/register` のレスポンスで取得した nonce |
 
 #### リクエスト例
 
 ```json
 {
-  "code": "483920",
-  "challenge": "<nonce>"
+  "code": "483920"
 }
 ```
 
@@ -337,15 +344,22 @@ Content-Type: application/json
 
 #### 200 OK
 
+**レスポンスヘッダー**:
+
+```
+Set-Cookie: challenge=<nonce>; Secure; SameSite=Strict; Path=/api/auth/password-reset
+```
+
+**レスポンスボディ**:
+
 ```json
 {
-  "message": "パスワードリセット用の認証コードを送信しました。メールに記載の認証コードを入力してパスワードを再設定してください",
-  "challenge": "<nonce>"
+  "message": "パスワードリセット用の認証コードを送信しました。メールに記載の認証コードを入力してパスワードを再設定してください"
 }
 ```
 
 > メールアドレスが登録されていない場合も同じレスポンスを返す。
-> `challenge` はクライアントが保持し、`POST /api/auth/password-reset` に認証コードと合わせて送信する。有効期限は **5分**、一回限り有効。
+> `challenge` はクッキーとして発行される。クライアントはクッキーの値を読み取り、`POST /api/auth/password-reset` の `X-Challenge-Token` ヘッダーに付与して送信する。一回限り有効。
 
 #### 400 Bad Request — バリデーションエラー
 
@@ -377,15 +391,17 @@ Content-Type: application/json
 
 ```
 X-CSRF-Token: <csrf_token>
+X-Challenge-Token: <challenge>
 Content-Type: application/json
 ```
+
+> `X-Challenge-Token` は `POST /api/auth/password-reset/request` のレスポンスで発行された `challenge` クッキーの値を読み取り付与する。
 
 #### ボディ
 
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | `code` | string | ✓ | メールに記載された認証コード（6桁の数字） |
-| `challenge` | string | ✓ | `POST /api/auth/password-reset/request` のレスポンスで取得した nonce |
 | `password` | string | ✓ | 新しいパスワード（12文字以上、大文字・数字・記号を各1文字以上含む） |
 
 #### リクエスト例
@@ -393,7 +409,6 @@ Content-Type: application/json
 ```json
 {
   "code": "847201",
-  "challenge": "<nonce>",
   "password": "newP@ssw0rd"
 }
 ```

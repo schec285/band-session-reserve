@@ -11,7 +11,7 @@ export class DrizzleVerificationRepository implements IVerificationRepository {
    * 認証コードをDBに保存する。
    * 1セッション1件のみ保持するため、sessionId が PK となる。
    */
-  async save(sessionId: string, userId: string, code: string, expiresAt: Date): Promise<void> {
+  async save(sessionId: string, userId: string | null, code: string, expiresAt: Date): Promise<void> {
     await db.insert(verificationCodes).values({ sessionId, userId, code, expiresAt });
   }
 

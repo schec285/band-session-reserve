@@ -1,6 +1,6 @@
 import { POST } from "@/app/api/auth/password-reset/route";
 
-jest.mock("@/server/services/auth/csrf", () => ({
+jest.mock("@/server/services/csrf/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
@@ -9,26 +9,30 @@ jest.mock("@/server/services/auth/challenge", () => ({
 }));
 
 jest.mock("@/server/services/auth/verification", () => ({
-  validatePasswordResetCode: jest.fn(),
+  validateCode: jest.fn(),
+}));
+
+jest.mock("@/server/services/auth/user", () => ({
   updatePassword: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
 import { validateChallenge } from "@/server/services/auth/challenge";
-import { validatePasswordResetCode, updatePassword } from "@/server/services/auth/verification";
+import { validateCode } from "@/server/services/auth/verification";
+import { updatePassword } from "@/server/services/auth/user";
 
 const validBody = {
   code: "847201",
-  challenge: "valid-challenge",
   password: "newP@ssw0rd",
 };
 
-function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
+function makeRequest(body: unknown, csrfToken = "valid-csrf-token", challengeToken = "valid-session:valid-challenge") {
   return new Request("http://localhost/api/auth/password-reset", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-CSRF-Token": csrfToken,
+      "X-Challenge-Token": challengeToken,
     },
     body: JSON.stringify(body),
   });
@@ -38,7 +42,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (validateChallenge as jest.Mock).mockResolvedValue(true);
-  (validatePasswordResetCode as jest.Mock).mockResolvedValue("valid");
+  (validateCode as jest.Mock).mockResolvedValue("valid");
   (updatePassword as jest.Mock).mockResolvedValue(undefined);
 });
 
@@ -98,7 +102,7 @@ describe("POST /api/auth/password-reset", () => {
 
   describe("異常系 — 認証失敗", () => {
     it("401: コードが無効", async () => {
-      (validatePasswordResetCode as jest.Mock).mockResolvedValue("invalid");
+      (validateCode as jest.Mock).mockResolvedValue("invalid");
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -122,7 +126,7 @@ describe("POST /api/auth/password-reset", () => {
 
   describe("異常系 — 期限切れ", () => {
     it("408: コードの有効期限切れ（5分）", async () => {
-      (validatePasswordResetCode as jest.Mock).mockResolvedValue("expired");
+      (validateCode as jest.Mock).mockResolvedValue("expired");
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();

@@ -6,7 +6,7 @@ import { pgTable, uuid, varchar, timestamp } from "drizzle-orm/pg-core";
  */
 export const verificationCodes = pgTable("verification_codes", {
   sessionId: uuid("session_id").primaryKey(),
-  userId: uuid("user_id").notNull(),
+  userId: uuid("user_id"),
   code: varchar("code", { length: 6 }).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
 });

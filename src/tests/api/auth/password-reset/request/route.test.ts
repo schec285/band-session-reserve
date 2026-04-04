@@ -1,11 +1,15 @@
 import { POST } from "@/app/api/auth/password-reset/request/route";
 
-jest.mock("@/server/services/auth/csrf", () => ({
+jest.mock("@/server/services/csrf/csrf", () => ({
   validateCsrfToken: jest.fn(),
 }));
 
 jest.mock("@/server/services/auth/challenge", () => ({
   generateChallenge: jest.fn(),
+}));
+
+jest.mock("@/server/services/auth/verification", () => ({
+  saveCode: jest.fn(),
 }));
 
 jest.mock("@/server/services/auth/email", () => ({
@@ -16,8 +20,9 @@ jest.mock("@/server/services/auth/user", () => ({
   findUserByEmail: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/auth/csrf";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
 import { generateChallenge } from "@/server/services/auth/challenge";
+import { saveCode } from "@/server/services/auth/verification";
 import { sendPasswordResetEmail } from "@/server/services/auth/email";
 import { findUserByEmail } from "@/server/services/auth/user";
 
@@ -38,19 +43,24 @@ beforeEach(() => {
   jest.clearAllMocks();
   (validateCsrfToken as jest.Mock).mockReturnValue(true);
   (generateChallenge as jest.Mock).mockResolvedValue("mock-challenge");
+  (saveCode as jest.Mock).mockResolvedValue(undefined);
   (findUserByEmail as jest.Mock).mockResolvedValue({ id: "user-id" });
   (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
 });
 
 describe("POST /api/auth/password-reset/request", () => {
   describe("正常系", () => {
-    it("200: リセットコード送信・challenge を返す", async () => {
+    it("200: リセットコード送信・challenge クッキーを発行する", async () => {
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
       expect(res.status).toBe(200);
       expect(json.success).toBe(true);
-      expect(json.challenge).toBe("mock-challenge");
+
+      const setCookie = res.headers.get("Set-Cookie");
+      expect(setCookie).toContain("challenge=");
+      expect(setCookie).toContain("mock-challenge");
+      expect(setCookie).toContain("Path=/api/auth/password-reset");
     });
 
     it("200: 存在しないメールアドレスでも同じレスポンスを返す（列挙攻撃対策）", async () => {
@@ -61,7 +71,10 @@ describe("POST /api/auth/password-reset/request", () => {
 
       expect(res.status).toBe(200);
       expect(json.success).toBe(true);
-      expect(json.challenge).toBe("mock-challenge");
+
+      const setCookie = res.headers.get("Set-Cookie");
+      expect(setCookie).toContain("challenge=");
+      expect(setCookie).toContain("mock-challenge");
       expect(sendPasswordResetEmail).not.toHaveBeenCalled();
     });
   });
