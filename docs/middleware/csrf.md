@@ -1,6 +1,6 @@
 # CSRF 保護設計書
 
-> エラーレスポンスの共通形式は [shared.md](./shared.md) を参照。
+> エラーレスポンスの共通形式は [shared.md](../api/shared.md) を参照。
 
 ---
 
