@@ -1,31 +1,48 @@
-# API 設計書 — CSRF (`/api/csrf`)
+# CSRF 保護設計書
 
 > エラーレスポンスの共通形式は [shared.md](./shared.md) を参照。
 
 ---
 
-## エンドポイント一覧
+## 概要
 
-| メソッド | パス | 概要 | 認証要否 |
-|---|---|---|---|
-| GET | [`/api/csrf`](../csrf.md) | CSRFトークンを取得する | 不要 |
+Double Submit Cookie パターンで CSRF 保護を実装する。`/api/csrf` エンドポイントは存在しない。
 
 ---
 
-## GET `/api/csrf`
+## クッキー発行
 
-### 概要
+ミドルウェア（`middleware.ts`）がすべてのリクエストを処理し、`csrf` クッキーが未発行の場合に自動でセットする。
 
-副作用を伴うリクエスト（POST / PATCH / DELETE）に必要な CSRFトークンを発行する。認証不要で誰でも取得できる。ログイン成功後は、レスポンスに含まれる新しい CSRFトークンに更新すること。
+| 属性 | 値 |
+|------|-----|
+| 名前 | `csrf` |
+| 値 | UUID v4 |
+| Secure | ✓ |
+| SameSite | Strict |
+| HttpOnly | なし（JS から読み取り可能） |
 
-### レスポンス
+---
 
-#### 200 OK
+## クライアント実装
 
-```json
-{
-  "csrfToken": "<csrf_token>"
-}
+副作用を伴うリクエスト（POST / PATCH / DELETE）を送信する前に、JS で `csrf` クッキーの値を読み取り `X-CSRF-Token` ヘッダーに付与する。
+
+```js
+const csrfToken = document.cookie.match(/(?:^|;\s*)csrf=([^;]+)/)?.[1];
+
+fetch("/api/auth/login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-CSRF-Token": csrfToken,
+  },
+  body: JSON.stringify({ email, password }),
+});
 ```
 
-> CSRFトークンはクライアントが保持し、副作用を伴うすべてのリクエストの `X-CSRF-Token` ヘッダーに含めて送信し、クッキーとヘッダーの値が一致することを検証する。
+---
+
+## サーバー検証
+
+すべての副作用エンドポイントで `validateCsrfToken(request)` を呼び出す。`X-CSRF-Token` ヘッダーと `csrf` クッキーの値が一致しない場合は `403` を返す。
