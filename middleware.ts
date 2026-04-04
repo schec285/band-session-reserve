@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 
 /**
  * グローバルミドルウェア。
@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   if (!request.cookies.get("csrf")) {
-    response.cookies.set("csrf", randomUUID(), {
+    response.cookies.set("csrf", randomBytes(32).toString("hex"), {
       secure: true,
       sameSite: "strict",
       path: "/",

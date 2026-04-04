@@ -1,11 +1,11 @@
-import { randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 
 /**
  * CSRFトークンを生成する。
  * セッション発行と同タイミングで呼び出し、csrf Cookie（HttpOnly: false）にセットする。
  */
 export function generateCsrfToken(): string {
-  return randomUUID();
+  return randomBytes(32).toString("hex");
 }
 
 /**

@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { createSession, getSession, invalidateSession } from "@/server/services/auth/session";
 import type { ISessionRepository } from "@/server/repositories/auth/session-repository";
 
@@ -13,6 +14,10 @@ function makeRequest(cookie?: string) {
   return new Request("http://localhost/", { headers });
 }
 
+function hash(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockRepo.save.mockResolvedValue(undefined);
@@ -20,10 +25,11 @@ beforeEach(() => {
 });
 
 describe("createSession", () => {
-  it("セッショントークンを返す", async () => {
+  it("生トークンを返し、DBにはハッシュを保存する", async () => {
     const token = await createSession(mockRepo, "user-id");
     expect(typeof token).toBe("string");
     expect(token.length).toBeGreaterThan(0);
+    expect(mockRepo.save).toHaveBeenCalledWith(hash(token), "user-id");
   });
 });
 
@@ -33,6 +39,7 @@ describe("getSession", () => {
 
     const session = await getSession(mockRepo, makeRequest("session=valid-token"));
     expect(session).toEqual({ userId: "user-id" });
+    expect(mockRepo.findByToken).toHaveBeenCalledWith(hash("valid-token"));
   });
 
   it("セッションクッキーがない場合は null を返す", async () => {
@@ -49,8 +56,8 @@ describe("getSession", () => {
 });
 
 describe("invalidateSession", () => {
-  it("セッションを削除する", async () => {
+  it("トークンのハッシュでセッションを削除する", async () => {
     await expect(invalidateSession(mockRepo, "session-token")).resolves.not.toThrow();
-    expect(mockRepo.deleteByToken).toHaveBeenCalledWith("session-token");
+    expect(mockRepo.deleteByToken).toHaveBeenCalledWith(hash("session-token"));
   });
 });
