@@ -2,6 +2,7 @@ import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { events } from "./events";
 import { songs } from "./songs";
+import { partEnum } from "./enums";
 
 export const reservations = pgTable("reservations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -14,7 +15,7 @@ export const reservations = pgTable("reservations", {
   songId: uuid("song_id")
     .notNull()
     .references(() => songs.id),
-  parts: text("parts").array().notNull(),
+  parts: partEnum("parts").array().notNull(),
   snsConsent: boolean("sns_consent").notNull().default(false),
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

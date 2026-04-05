@@ -23,7 +23,6 @@
 
 ```json
 {
-  "success": true,
   "events": [
     {
       "id": "event-uuid-1",
@@ -60,6 +59,7 @@
 | `description` | string | イベント概要 |
 
 > 受付中かどうかはクライアントが `(closedAt ?? startAt) > 現在時刻` で判断する。
+> 並び順: 募集中イベント（`startAt` 昇順）を先頭に、終了済みイベント（`startAt` 降順）をその後に続ける。
 
 ---
 
@@ -81,19 +81,17 @@
 
 ```json
 {
-  "success": true,
-  "eventId": "event-uuid-1",
   "songs": [
     {
       "id": "song-uuid-1",
       "title": "千本桜",
       "reservations": [
-        { "part": "readGuitar",    "isFilled": true  },
-        { "part": "backingGuitar", "isFilled": false },
-        { "part": "bass",          "isFilled": false },
-        { "part": "drums",         "isFilled": true  },
-        { "part": "keyboard",      "isFilled": false },
-        { "part": "vocal",         "isFilled": false }
+        { "part": "readGuitar",    "username": "yamada_taro" },
+        { "part": "backingGuitar", "username": null          },
+        { "part": "bass",          "username": null          },
+        { "part": "drums",         "username": "sato_hanako" },
+        { "part": "keyboard",      "username": null          },
+        { "part": "vocal",         "username": null          }
       ]
     }
   ]
@@ -108,16 +106,15 @@
 | `title` | string | 曲名 |
 | `reservations` | array | パート別の予約状況 |
 | `reservations[].part` | string | パート名 |
-| `reservations[].isFilled` | boolean | 予約済みかどうか |
+| `reservations[].username` | string \| null | 予約者のユーザー名。`null` の場合は空き |
 
-> ユーザー個人の予約情報（誰が予約したか）は含まない。パートが埋まっているかどうかのみ公開する。
+> `username` が `null` であれば空き、文字列であれば予約済みを表す。
 > 曲に不要なパートは `reservations` 配列に含めない（配列に存在しない＝その曲では募集していない）。
 
 #### 404 Not Found — イベントが存在しない
 
 ```json
 {
-  "success": false,
   "message": "イベントが見つかりません"
 }
 ```
