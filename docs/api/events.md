@@ -85,6 +85,7 @@
     {
       "id": "song-uuid-1",
       "title": "千本桜",
+      "artist": "黒うさP",
       "reservations": [
         { "part": "readGuitar",    "username": "yamada_taro" },
         { "part": "backingGuitar", "username": null          },
@@ -104,6 +105,7 @@
 |---|---|---|
 | `id` | string | 曲 UUID |
 | `title` | string | 曲名 |
+| `artist` | string | アーティスト名 |
 | `reservations` | array | パート別の予約状況 |
 | `reservations[].part` | string | パート名 |
 | `reservations[].username` | string \| null | 予約者のユーザー名。`null` の場合は空き |
