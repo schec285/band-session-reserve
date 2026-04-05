@@ -6,4 +6,5 @@ export * from "./verification-codes";
 export * from "./sessions";
 export * from "./events";
 export * from "./songs";
+export * from "./event-songs";
 export * from "./reservations";

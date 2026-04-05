@@ -1,21 +1,21 @@
 import { pgTable, uuid, text, boolean, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users";
-import { events } from "./events";
-import { songs } from "./songs";
+import { eventSongs } from "./event-songs";
 import { partEnum } from "./enums";
 
+/**
+ * バンドセッションの予約を管理する。
+ * 1レコードが1ユーザー・1イベント曲・1パートの予約を表す。
+ */
 export const reservations = pgTable("reservations", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  eventId: uuid("event_id")
+  eventSongId: uuid("event_song_id")
     .notNull()
-    .references(() => events.id, { onDelete: "cascade" }),
-  songId: uuid("song_id")
-    .notNull()
-    .references(() => songs.id),
-  parts: partEnum("parts").array().notNull(),
+    .references(() => eventSongs.id, { onDelete: "cascade" }),
+  part: partEnum("part").notNull(),
   snsConsent: boolean("sns_consent").notNull().default(false),
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
