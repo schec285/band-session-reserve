@@ -1,0 +1,97 @@
+import { NextResponse } from "next/server";
+import { validateCsrfToken } from "@/server/services/csrf/csrf";
+import { getSession } from "@/server/services/auth/session";
+import { updateReservationPart, cancelReservation } from "@/server/services/reserve/reservation";
+import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
+import { DrizzleSessionRepository } from "@/server/repositories/auth/session-repository.drizzle";
+
+/**
+ * 予約パート変更エンドポイント。
+ * セッション認証・CSRFトークン検証・バリデーションを行い、予約のパートを更新する。
+ */
+export async function PATCH(
+  request: Request,
+  { params }: { params: { reservationId: string } }
+) {
+  if (!validateCsrfToken(request)) {
+    return NextResponse.json({ message: "CSRFトークンが無効です" }, { status: 403 });
+  }
+
+  const sessionRepo = new DrizzleSessionRepository();
+  const session = await getSession(sessionRepo, request);
+  if (!session) {
+    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { part } = body;
+
+  if (part === undefined || part === null || part === "") {
+    return NextResponse.json(
+      { message: "入力内容に誤りがあります", errors: [{ field: "part", message: "パートを選択してください" }] },
+      { status: 400 }
+    );
+  }
+
+  const reservationRepo = new DrizzleReservationRepository();
+  const result = await updateReservationPart(reservationRepo, {
+    reservationId: params.reservationId,
+    userId: session.userId,
+    part,
+  });
+
+  if (result.status === "not-found") {
+    return NextResponse.json({ message: "予約が見つかりません" }, { status: 404 });
+  }
+  if (result.status === "forbidden") {
+    return NextResponse.json({ message: "この操作は許可されていません" }, { status: 403 });
+  }
+  if (result.status === "filled") {
+    return NextResponse.json(
+      { message: "このパートはすでに埋まっています", errors: [{ field: "part", message: "このパートはすでに埋まっています" }] },
+      { status: 409 }
+    );
+  }
+  if (result.status === "closed") {
+    return NextResponse.json({ message: "このイベントの受付は終了しています" }, { status: 422 });
+  }
+
+  return NextResponse.json({ message: "予約を更新しました" });
+}
+
+/**
+ * 予約キャンセルエンドポイント。
+ * セッション認証・CSRFトークン検証を行い、予約レコードを削除する。
+ */
+export async function DELETE(
+  request: Request,
+  { params }: { params: { reservationId: string } }
+) {
+  if (!validateCsrfToken(request)) {
+    return NextResponse.json({ message: "CSRFトークンが無効です" }, { status: 403 });
+  }
+
+  const sessionRepo = new DrizzleSessionRepository();
+  const session = await getSession(sessionRepo, request);
+  if (!session) {
+    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
+  }
+
+  const reservationRepo = new DrizzleReservationRepository();
+  const result = await cancelReservation(reservationRepo, {
+    reservationId: params.reservationId,
+    userId: session.userId,
+  });
+
+  if (result.status === "not-found") {
+    return NextResponse.json({ message: "予約が見つかりません" }, { status: 404 });
+  }
+  if (result.status === "forbidden") {
+    return NextResponse.json({ message: "この操作は許可されていません" }, { status: 403 });
+  }
+  if (result.status === "closed") {
+    return NextResponse.json({ message: "このイベントの受付は終了しています" }, { status: 422 });
+  }
+
+  return NextResponse.json({ message: "予約をキャンセルしました" });
+}
