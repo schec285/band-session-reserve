@@ -1,19 +1,9 @@
 import { POST } from "@/app/api/reserve/route";
 
-jest.mock("@/server/services/csrf/csrf", () => ({
-  validateCsrfToken: jest.fn(),
-}));
-
-jest.mock("@/server/services/auth/session", () => ({
-  getSession: jest.fn(),
-}));
-
 jest.mock("@/server/services/reserve/reservation", () => ({
   createReservation: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/csrf/csrf";
-import { getSession } from "@/server/services/auth/session";
 import { createReservation } from "@/server/services/reserve/reservation";
 
 const validBody = {
@@ -23,22 +13,16 @@ const validBody = {
   comment: "よろしくお願いします。",
 };
 
-function makeRequest(body: unknown, csrfToken = "valid-csrf-token", withSession = true) {
+function makeRequest(body: unknown) {
   return new Request("http://localhost/api/reserve", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRF-Token": csrfToken,
-      ...(withSession ? { Cookie: "session=valid-session-token" } : {}),
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (validateCsrfToken as jest.Mock).mockReturnValue(true);
-  (getSession as jest.Mock).mockResolvedValue({ userId: "user-uuid" });
   (createReservation as jest.Mock).mockResolvedValue({ status: "ok" });
 });
 
@@ -50,30 +34,6 @@ describe("POST /api/reserve", () => {
 
       expect(res.status).toBe(200);
       expect(json.message).toBe("予約を受け付けました！セッションでお待ちしています 🎵");
-    });
-  });
-
-  describe("異常系 — CSRF", () => {
-    it("403: CSRFトークンが無効", async () => {
-      (validateCsrfToken as jest.Mock).mockReturnValue(false);
-
-      const res = await POST(makeRequest(validBody));
-      const json = await res.json();
-
-      expect(res.status).toBe(403);
-      expect(json.message).toBe("CSRFトークンが無効です");
-    });
-  });
-
-  describe("異常系 — 認証", () => {
-    it("401: 未認証", async () => {
-      (getSession as jest.Mock).mockResolvedValue(null);
-
-      const res = await POST(makeRequest(validBody));
-      const json = await res.json();
-
-      expect(res.status).toBe(401);
-      expect(json.message).toBe("認証が必要です");
     });
   });
 

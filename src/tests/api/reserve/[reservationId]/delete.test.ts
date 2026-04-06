@@ -1,37 +1,21 @@
 import { DELETE } from "@/app/api/reserve/[reservationId]/route";
 
-jest.mock("@/server/services/csrf/csrf", () => ({
-  validateCsrfToken: jest.fn(),
-}));
-
-jest.mock("@/server/services/auth/session", () => ({
-  getSession: jest.fn(),
-}));
-
 jest.mock("@/server/services/reserve/reservation", () => ({
   cancelReservation: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/csrf/csrf";
-import { getSession } from "@/server/services/auth/session";
 import { cancelReservation } from "@/server/services/reserve/reservation";
 
-const validParams = { reservationId: "reservation-uuid" };
+const validParams = Promise.resolve({ reservationId: "reservation-uuid" });
 
-function makeRequest(csrfToken = "valid-csrf-token") {
+function makeRequest() {
   return new Request("http://localhost/api/reserve/reservation-uuid", {
     method: "DELETE",
-    headers: {
-      "X-CSRF-Token": csrfToken,
-      Cookie: "session=valid-session-token",
-    },
   });
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (validateCsrfToken as jest.Mock).mockReturnValue(true);
-  (getSession as jest.Mock).mockResolvedValue({ userId: "user-uuid" });
   (cancelReservation as jest.Mock).mockResolvedValue({ status: "ok" });
 });
 
@@ -43,30 +27,6 @@ describe("DELETE /api/reserve/:reservationId", () => {
 
       expect(res.status).toBe(200);
       expect(json.message).toBe("予約をキャンセルしました");
-    });
-  });
-
-  describe("異常系 — CSRF", () => {
-    it("403: CSRFトークンが無効", async () => {
-      (validateCsrfToken as jest.Mock).mockReturnValue(false);
-
-      const res = await DELETE(makeRequest(), { params: validParams });
-      const json = await res.json();
-
-      expect(res.status).toBe(403);
-      expect(json.message).toBe("CSRFトークンが無効です");
-    });
-  });
-
-  describe("異常系 — 認証", () => {
-    it("401: 未認証", async () => {
-      (getSession as jest.Mock).mockResolvedValue(null);
-
-      const res = await DELETE(makeRequest(), { params: validParams });
-      const json = await res.json();
-
-      expect(res.status).toBe(401);
-      expect(json.message).toBe("認証が必要です");
     });
   });
 

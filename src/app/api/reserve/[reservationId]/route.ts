@@ -1,27 +1,18 @@
 import { NextResponse } from "next/server";
-import { validateCsrfToken } from "@/server/services/csrf/csrf";
-import { getSession } from "@/server/services/auth/session";
 import { updateReservationPart, cancelReservation } from "@/server/services/reserve/reservation";
 import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
-import { DrizzleSessionRepository } from "@/server/repositories/auth/session-repository.drizzle";
 
 /**
  * 予約パート変更エンドポイント。
- * セッション認証・CSRFトークン検証・バリデーションを行い、予約のパートを更新する。
+ * バリデーションを行い、予約のパートを更新する。
+ * TODO: NextAuth導入後にセッション認証を追加する。
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: { reservationId: string } }
+  { params }: { params: Promise<{ reservationId: string }> }
 ) {
-  if (!validateCsrfToken(request)) {
-    return NextResponse.json({ message: "CSRFトークンが無効です" }, { status: 403 });
-  }
-
-  const sessionRepo = new DrizzleSessionRepository();
-  const session = await getSession(sessionRepo, request);
-  if (!session) {
-    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
-  }
+  // TODO: NextAuth の auth() でセッション取得・認証チェックを行う
+  const userId = "todo-replace-with-nextauth-user-id";
 
   const body = await request.json();
   const { part } = body;
@@ -33,10 +24,11 @@ export async function PATCH(
     );
   }
 
+  const { reservationId } = await params;
   const reservationRepo = new DrizzleReservationRepository();
   const result = await updateReservationPart(reservationRepo, {
-    reservationId: params.reservationId,
-    userId: session.userId,
+    reservationId,
+    userId,
     part,
   });
 
@@ -61,26 +53,21 @@ export async function PATCH(
 
 /**
  * 予約キャンセルエンドポイント。
- * セッション認証・CSRFトークン検証を行い、予約レコードを削除する。
+ * 予約レコードを削除する。
+ * TODO: NextAuth導入後にセッション認証を追加する。
  */
 export async function DELETE(
-  request: Request,
-  { params }: { params: { reservationId: string } }
+  _request: Request,
+  { params }: { params: Promise<{ reservationId: string }> }
 ) {
-  if (!validateCsrfToken(request)) {
-    return NextResponse.json({ message: "CSRFトークンが無効です" }, { status: 403 });
-  }
+  // TODO: NextAuth の auth() でセッション取得・認証チェックを行う
+  const userId = "todo-replace-with-nextauth-user-id";
 
-  const sessionRepo = new DrizzleSessionRepository();
-  const session = await getSession(sessionRepo, request);
-  if (!session) {
-    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
-  }
-
+  const { reservationId } = await params;
   const reservationRepo = new DrizzleReservationRepository();
   const result = await cancelReservation(reservationRepo, {
-    reservationId: params.reservationId,
-    userId: session.userId,
+    reservationId,
+    userId,
   });
 
   if (result.status === "not-found") {

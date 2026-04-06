@@ -8,10 +8,11 @@ import { DrizzleEventRepository } from "@/server/repositories/events/event-repos
  */
 export async function GET(
   _request: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
+  const { eventId } = await params;
   const repo = new DrizzleEventRepository();
-  const result = await getEventSongs(repo, params.eventId);
+  const result = await getEventSongs(repo, eventId);
 
   if (result.status === "not-found") {
     return NextResponse.json({ message: "イベントが見つかりません" }, { status: 404 });

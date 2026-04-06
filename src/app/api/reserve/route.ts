@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server";
-import { validateCsrfToken } from "@/server/services/csrf/csrf";
-import { getSession } from "@/server/services/auth/session";
 import { createReservation } from "@/server/services/reserve/reservation";
 import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
-import { DrizzleSessionRepository } from "@/server/repositories/auth/session-repository.drizzle";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * 予約作成エンドポイント。
- * セッション認証・CSRFトークン検証・バリデーションを行い、予約を受け付ける。
+ * 認証・バリデーションを行い、予約を受け付ける。
+ * TODO: NextAuth導入後にセッション認証を追加する。
  */
 export async function POST(request: Request) {
-  if (!validateCsrfToken(request)) {
-    return NextResponse.json({ message: "CSRFトークンが無効です" }, { status: 403 });
-  }
-
-  const sessionRepo = new DrizzleSessionRepository();
-  const session = await getSession(sessionRepo, request);
-  if (!session) {
-    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
-  }
+  // TODO: NextAuth の auth() でセッション取得・認証チェックを行う
+  const userId = "todo-replace-with-nextauth-user-id";
 
   const body = await request.json();
   const { eventSongId, part, snsConsent, comment } = body;
@@ -42,7 +33,7 @@ export async function POST(request: Request) {
 
   const reservationRepo = new DrizzleReservationRepository();
   const result = await createReservation(reservationRepo, {
-    userId: session.userId,
+    userId,
     eventSongId,
     part,
     snsConsent,

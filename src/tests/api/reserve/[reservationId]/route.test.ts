@@ -1,40 +1,24 @@
 import { PATCH } from "@/app/api/reserve/[reservationId]/route";
 
-jest.mock("@/server/services/csrf/csrf", () => ({
-  validateCsrfToken: jest.fn(),
-}));
-
-jest.mock("@/server/services/auth/session", () => ({
-  getSession: jest.fn(),
-}));
-
 jest.mock("@/server/services/reserve/reservation", () => ({
   updateReservationPart: jest.fn(),
 }));
 
-import { validateCsrfToken } from "@/server/services/csrf/csrf";
-import { getSession } from "@/server/services/auth/session";
 import { updateReservationPart } from "@/server/services/reserve/reservation";
 
 const validBody = { part: "drums" };
-const validParams = { reservationId: "reservation-uuid" };
+const validParams = Promise.resolve({ reservationId: "reservation-uuid" });
 
-function makeRequest(body: unknown, csrfToken = "valid-csrf-token") {
+function makeRequest(body: unknown) {
   return new Request("http://localhost/api/reserve/reservation-uuid", {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRF-Token": csrfToken,
-      Cookie: "session=valid-session-token",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  (validateCsrfToken as jest.Mock).mockReturnValue(true);
-  (getSession as jest.Mock).mockResolvedValue({ userId: "user-uuid" });
   (updateReservationPart as jest.Mock).mockResolvedValue({ status: "ok" });
 });
 
@@ -46,30 +30,6 @@ describe("PATCH /api/reserve/:reservationId", () => {
 
       expect(res.status).toBe(200);
       expect(json.message).toBe("予約を更新しました");
-    });
-  });
-
-  describe("異常系 — CSRF", () => {
-    it("403: CSRFトークンが無効", async () => {
-      (validateCsrfToken as jest.Mock).mockReturnValue(false);
-
-      const res = await PATCH(makeRequest(validBody), { params: validParams });
-      const json = await res.json();
-
-      expect(res.status).toBe(403);
-      expect(json.message).toBe("CSRFトークンが無効です");
-    });
-  });
-
-  describe("異常系 — 認証", () => {
-    it("401: 未認証", async () => {
-      (getSession as jest.Mock).mockResolvedValue(null);
-
-      const res = await PATCH(makeRequest(validBody), { params: validParams });
-      const json = await res.json();
-
-      expect(res.status).toBe(401);
-      expect(json.message).toBe("認証が必要です");
     });
   });
 
