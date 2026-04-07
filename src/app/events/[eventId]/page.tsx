@@ -4,6 +4,7 @@ import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
 import { formatDate, formatTime } from "@/lib/utils/date";
+import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
 /**
  * イベント詳細ページ。イベント情報と曲一覧・パート別予約状況を表示する。
@@ -20,7 +21,7 @@ export default async function EventDetailPage({
   if (result.status === "not-found") notFound();
 
   const { event, songs } = result;
-  const isUpcoming = new Date() <= new Date(event.endAt);
+  const status = getEventStatus(event);
 
   return (
     <div className="space-y-6">
@@ -31,12 +32,10 @@ export default async function EventDetailPage({
       {/* イベント情報カード */}
       <div className="rounded-xl border bg-card overflow-hidden">
         {/* ヘッダー帯 */}
-        <div className={`px-6 py-4 ${isUpcoming ? "bg-blue-50 border-b border-blue-100" : "bg-muted/40 border-b border-border"}`}>
+        <div className={`px-6 py-4 ${status === "upcoming" ? "bg-blue-50 border-b border-blue-100" : "bg-muted/40 border-b border-border"}`}>
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
-            <span className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full ${isUpcoming ? "bg-blue-500 text-white" : "bg-muted-foreground/20 text-muted-foreground"}`}>
-              {isUpcoming ? "募集中" : "終了"}
-            </span>
+            <EventStatusBadge status={status} />
           </div>
         </div>
 
