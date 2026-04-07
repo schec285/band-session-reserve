@@ -1,17 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import type { Event } from "@/lib/types/api/events";
 
 /**
- * toLocaleString はサーバー/クライアントで差異が出るため手動でフォーマットする。
+ * 日付を「YYYY年M月D日」形式にフォーマットする。
  */
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${y}年${m}月${day}日 ${hh}:${mm}`;
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+/**
+ * 時刻を「HH:MM」形式にフォーマットする。
+ */
+function formatTime(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 /**
@@ -21,39 +24,48 @@ function getStatus(event: Event): "upcoming" | "ended" {
   return new Date() <= new Date(event.endAt) ? "upcoming" : "ended";
 }
 
-const STATUS_LABEL: Record<ReturnType<typeof getStatus>, string> = {
-  upcoming: "募集中",
-  ended: "終了",
-};
-
-const STATUS_CLASS: Record<ReturnType<typeof getStatus>, string> = {
-  upcoming: "bg-blue-100 text-blue-700",
-  ended: "bg-muted text-muted-foreground",
-};
-
 /**
  * イベント 1 件のカード表示。
- * now は EventList/PastEventsAccordion からサーバー側で生成した ISO 文字列を受け取る。
+ * 日付・時刻・会場をアイコン付きで表示し、ステータスバッジを右上に配置する。
  */
 export function EventCard({ event }: { event: Event }) {
   const status = getStatus(event);
+  const isUpcoming = status === "upcoming";
 
   return (
-    <a href={`/events/${event.id}`}>
-      <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-        <CardHeader className="pb-2">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base">{event.title}</CardTitle>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${STATUS_CLASS[status]}`}>
-              {STATUS_LABEL[status]}
+    <a href={`/events/${event.id}`} className="block group">
+      <div className={`relative rounded-xl border bg-card transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5 overflow-hidden ${isUpcoming ? "border-blue-200" : "border-border"}`}>
+        {/* 左アクセントライン */}
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${isUpcoming ? "bg-blue-500" : "bg-muted-foreground/30"}`} />
+
+        <div className="pl-5 pr-4 py-4">
+          {/* タイトル行 + バッジ */}
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors">
+              {event.title}
+            </h3>
+            <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${isUpcoming ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
+              {isUpcoming ? "募集中" : "終了"}
             </span>
           </div>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-1">
-          <p>{formatDate(event.startAt)}</p>
-          <p>{event.venue}</p>
-        </CardContent>
-      </Card>
+
+          {/* メタ情報 */}
+          <div className="space-y-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
+              <span>{formatDate(event.startAt)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>{formatTime(event.startAt)}〜{formatTime(event.endAt)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span>{event.venue}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </a>
   );
 }

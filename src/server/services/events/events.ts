@@ -2,7 +2,7 @@ import type { IEventRepository } from "@/server/repositories/events/event-reposi
 import type { Event, SongWithReservations } from "@/lib/types/api/events";
 
 type GetEventSongsResult =
-  | { status: "ok"; songs: SongWithReservations[] }
+  | { status: "ok"; event: Event; songs: SongWithReservations[] }
   | { status: "not-found" };
 
 /**
@@ -45,7 +45,19 @@ export async function getEventSongs(
   repo: IEventRepository,
   eventId: string
 ): Promise<GetEventSongsResult> {
-  const songs = await repo.findEventSongsWithReservations(eventId);
-  if (songs === null) return { status: "not-found" };
-  return { status: "ok", songs };
+  const [eventRecord, songs] = await Promise.all([
+    repo.findEventById(eventId),
+    repo.findEventSongsWithReservations(eventId),
+  ]);
+  if (eventRecord === null || songs === null) return { status: "not-found" };
+  const event: Event = {
+    id: eventRecord.id,
+    title: eventRecord.title,
+    startAt: eventRecord.startAt.toISOString(),
+    endAt: eventRecord.endAt.toISOString(),
+    closedAt: eventRecord.closedAt ? eventRecord.closedAt.toISOString() : null,
+    venue: eventRecord.venue,
+    description: eventRecord.description,
+  };
+  return { status: "ok", event, songs };
 }

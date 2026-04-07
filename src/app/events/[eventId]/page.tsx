@@ -1,10 +1,27 @@
 import { notFound } from "next/navigation";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
 
 /**
- * イベント詳細ページ。曲一覧とパート別予約状況を表示する。
+ * 日付を「YYYY年M月D日」形式にフォーマットする。
+ */
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+/**
+ * 時刻を「HH:MM」形式にフォーマットする。
+ */
+function formatTime(dateStr: string): string {
+  const d = new Date(dateStr);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/**
+ * イベント詳細ページ。イベント情報と曲一覧・パート別予約状況を表示する。
  */
 export default async function EventDetailPage({
   params,
@@ -17,13 +34,54 @@ export default async function EventDetailPage({
 
   if (result.status === "not-found") notFound();
 
+  const { event, songs } = result;
+  const isUpcoming = new Date() <= new Date(event.endAt);
+
   return (
-    <div>
-      <a href="/" className="text-sm text-muted-foreground hover:underline mb-6 inline-block">
+    <div className="space-y-6">
+      <a href="/" className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1">
         ← イベント一覧に戻る
       </a>
-      <h1 className="text-2xl font-bold mb-6">曲一覧</h1>
-      <SongList songs={result.songs} />
+
+      {/* イベント情報カード */}
+      <div className="rounded-xl border bg-card overflow-hidden">
+        {/* ヘッダー帯 */}
+        <div className={`px-6 py-4 ${isUpcoming ? "bg-blue-50 border-b border-blue-100" : "bg-muted/40 border-b border-border"}`}>
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
+            <span className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full ${isUpcoming ? "bg-blue-500 text-white" : "bg-muted-foreground/20 text-muted-foreground"}`}>
+              {isUpcoming ? "募集中" : "終了"}
+            </span>
+          </div>
+        </div>
+
+        {/* 詳細情報 */}
+        <div className="px-6 py-4 space-y-3 text-sm">
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <Calendar className="w-4 h-4 shrink-0" />
+            <span className="font-medium text-foreground">{formatDate(event.startAt)}</span>
+          </div>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <Clock className="w-4 h-4 shrink-0" />
+            <span className="font-medium text-foreground">{formatTime(event.startAt)}〜{formatTime(event.endAt)}</span>
+          </div>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <MapPin className="w-4 h-4 shrink-0" />
+            <span className="font-medium text-foreground">{event.venue}</span>
+          </div>
+          {event.description && (
+            <p className="pt-2 text-muted-foreground border-t border-border leading-relaxed">
+              {event.description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 曲一覧 */}
+      <div>
+        <h2 className="text-lg font-semibold mb-3">曲一覧</h2>
+        <SongList songs={songs} />
+      </div>
     </div>
   );
 }

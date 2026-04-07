@@ -7,8 +7,8 @@ import type { Part } from "@drizzle/schema";
  */
 const ALL_PARTS: { value: Part; label: string }[] = [
   { value: "vocal", label: "ボーカル" },
-  { value: "readGuitar", label: "リードG" },
-  { value: "backingGuitar", label: "バッキングG" },
+  { value: "readGuitar", label: "リードギター" },
+  { value: "backingGuitar", label: "バッキングギター" },
   { value: "bass", label: "ベース" },
   { value: "drums", label: "ドラム" },
   { value: "keyboard", label: "キーボード" },

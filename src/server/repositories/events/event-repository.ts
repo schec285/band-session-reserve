@@ -35,6 +35,8 @@ export interface ISongWithReservations {
 export interface IEventRepository {
   /** 全イベントを取得する */
   findAllEvents(): Promise<IEventRecord[]>;
+  /** イベントIDで1件取得する。存在しない場合は null を返す */
+  findEventById(eventId: string): Promise<IEventRecord | null>;
   /**
    * イベントIDで曲一覧とパート別予約状況を取得する。
    * イベントが存在しない場合は null を返す。

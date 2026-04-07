@@ -57,6 +57,7 @@ let mockRepo: Mocked<IEventRepository>;
 beforeEach(() => {
   mockRepo = {
     findAllEvents: vi.fn(),
+    findEventById: vi.fn(),
     findEventSongsWithReservations: vi.fn(),
   };
 });
@@ -141,9 +142,20 @@ describe("getEvents", () => {
 // ---------------------------------------------------------------------------
 
 describe("getEventSongs", () => {
+  const mockEvent = {
+    id: "event-uuid-1",
+    title: "春のセッション",
+    startAt: nearFuture,
+    endAt: new Date(nearFuture.getTime() + 1000 * 60 * 60 * 8),
+    closedAt: null,
+    venue: "渋谷スタジオ A",
+    description: "春のセッションです",
+  };
+
   const mockSongs = [
     {
       id: "song-uuid-1",
+      eventSongId: "event-song-uuid-1",
       title: "千本桜",
       artist: "黒うさP",
       reservations: [
@@ -154,24 +166,33 @@ describe("getEventSongs", () => {
     },
   ];
 
-  it("ok: 曲一覧と予約状況を返す", async () => {
+  it("ok: イベント情報と曲一覧を返す", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEvent);
     mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
 
     const result = await getEventSongs(mockRepo, "event-uuid-1");
 
-    expect(result).toEqual({ status: "ok", songs: mockSongs });
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.songs).toEqual(mockSongs);
+    expect(result.event.id).toBe("event-uuid-1");
+    expect(result.event.title).toBe("春のセッション");
+    expect(typeof result.event.startAt).toBe("string");
+    expect(mockRepo.findEventById).toHaveBeenCalledWith("event-uuid-1");
     expect(mockRepo.findEventSongsWithReservations).toHaveBeenCalledWith("event-uuid-1");
   });
 
   it("ok: 曲が 0 件の場合は空配列を返す", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEvent);
     mockRepo.findEventSongsWithReservations.mockResolvedValue([]);
 
     const result = await getEventSongs(mockRepo, "event-uuid-1");
 
-    expect(result).toEqual({ status: "ok", songs: [] });
+    expect(result).toMatchObject({ status: "ok", songs: [] });
   });
 
   it("not-found: イベントが存在しない場合", async () => {
+    mockRepo.findEventById.mockResolvedValue(null);
     mockRepo.findEventSongsWithReservations.mockResolvedValue(null);
 
     const result = await getEventSongs(mockRepo, "nonexistent-uuid");

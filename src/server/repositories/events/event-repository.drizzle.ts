@@ -28,6 +28,27 @@ export class DrizzleEventRepository implements IEventRepository {
   }
 
   /**
+   * イベントIDで1件取得する。存在しない場合は null を返す。
+   */
+  async findEventById(eventId: string): Promise<IEventRecord | null> {
+    const rows = await db
+      .select({
+        id: events.id,
+        title: events.title,
+        startAt: events.startAt,
+        endAt: events.endAt,
+        closedAt: events.closedAt,
+        venue: events.venue,
+        description: events.description,
+      })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+
+    return rows[0] ?? null;
+  }
+
+  /**
    * イベントIDで曲一覧とパート別予約状況を取得する。
    * events を起点に LEFT JOIN することでイベントの存在有無を判別する。
    * イベントが存在しない場合は null、曲が 0 件の場合は空配列を返す。
