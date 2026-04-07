@@ -1,11 +1,12 @@
+import type { Mock } from "vitest";
 import { POST } from "@/app/api/reserve/route";
 
-jest.mock("@/auth", () => ({
-  auth: jest.fn(),
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
 }));
 
-jest.mock("@/server/services/reserve/reservation", () => ({
-  createReservation: jest.fn(),
+vi.mock("@/server/services/reserve/reservation", () => ({
+  createReservation: vi.fn(),
 }));
 
 import { auth } from "@/auth";
@@ -27,9 +28,9 @@ function makeRequest(body: unknown) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  (auth as jest.Mock).mockResolvedValue({ user: { id: "user-uuid" } });
-  (createReservation as jest.Mock).mockResolvedValue({ status: "ok" });
+  vi.clearAllMocks();
+  (auth as Mock).mockResolvedValue({ user: { id: "user-uuid" } });
+  (createReservation as Mock).mockResolvedValue({ status: "ok" });
 });
 
 describe("POST /api/reserve", () => {
@@ -45,7 +46,7 @@ describe("POST /api/reserve", () => {
 
   describe("異常系 — 認証", () => {
     it("401: 未認証", async () => {
-      (auth as jest.Mock).mockResolvedValue(null);
+      (auth as Mock).mockResolvedValue(null);
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -108,7 +109,7 @@ describe("POST /api/reserve", () => {
 
   describe("異常系 — サービスエラー", () => {
     it("404: イベント曲が存在しない", async () => {
-      (createReservation as jest.Mock).mockResolvedValue({ status: "not-found" });
+      (createReservation as Mock).mockResolvedValue({ status: "not-found" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -118,7 +119,7 @@ describe("POST /api/reserve", () => {
     });
 
     it("409: パートがすでに埋まっている", async () => {
-      (createReservation as jest.Mock).mockResolvedValue({ status: "filled" });
+      (createReservation as Mock).mockResolvedValue({ status: "filled" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
@@ -129,7 +130,7 @@ describe("POST /api/reserve", () => {
     });
 
     it("422: 受付終了", async () => {
-      (createReservation as jest.Mock).mockResolvedValue({ status: "closed" });
+      (createReservation as Mock).mockResolvedValue({ status: "closed" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();

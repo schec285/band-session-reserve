@@ -1,7 +1,8 @@
+import type { Mock } from "vitest";
 import { GET } from "@/app/api/events/[eventId]/songs/route";
 
-jest.mock("@/server/services/events/events", () => ({
-  getEventSongs: jest.fn(),
+vi.mock("@/server/services/events/events", () => ({
+  getEventSongs: vi.fn(),
 }));
 
 import { getEventSongs } from "@/server/services/events/events";
@@ -29,8 +30,8 @@ function makeRequest(eventId: string) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  (getEventSongs as jest.Mock).mockResolvedValue({ status: "ok", songs: mockSongs });
+  vi.clearAllMocks();
+  (getEventSongs as Mock).mockResolvedValue({ status: "ok", songs: mockSongs });
 });
 
 describe("GET /api/events/:eventId/songs", () => {
@@ -44,7 +45,7 @@ describe("GET /api/events/:eventId/songs", () => {
     });
 
     it("200: 曲が 0 件の場合は空配列を返す", async () => {
-      (getEventSongs as jest.Mock).mockResolvedValue({ status: "ok", songs: [] });
+      (getEventSongs as Mock).mockResolvedValue({ status: "ok", songs: [] });
 
       const res = await GET(makeRequest(validParams.eventId), { params: validParams });
       const json = await res.json();
@@ -56,7 +57,7 @@ describe("GET /api/events/:eventId/songs", () => {
 
   describe("異常系", () => {
     it("404: イベントが存在しない", async () => {
-      (getEventSongs as jest.Mock).mockResolvedValue({ status: "not-found" });
+      (getEventSongs as Mock).mockResolvedValue({ status: "not-found" });
 
       const res = await GET(makeRequest("nonexistent-uuid"), { params: { eventId: "nonexistent-uuid" } });
       const json = await res.json();

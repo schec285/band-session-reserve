@@ -1,11 +1,12 @@
+import type { Mock } from "vitest";
 import { POST } from "@/app/api/auth/signup/route";
 
-jest.mock("@/server/repositories/auth/user-repository.drizzle", () => ({
-  DrizzleUserRepository: jest.fn().mockImplementation(() => ({})),
+vi.mock("@/server/repositories/auth/user-repository.drizzle", () => ({
+  DrizzleUserRepository: class {},
 }));
 
-jest.mock("@/server/services/auth/signup", () => ({
-  signUp: jest.fn(),
+vi.mock("@/server/services/auth/signup", () => ({
+  signUp: vi.fn(),
 }));
 
 import { signUp } from "@/server/services/auth/signup";
@@ -25,8 +26,8 @@ function makeRequest(body: unknown) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  (signUp as jest.Mock).mockResolvedValue({ status: "ok" });
+  vi.clearAllMocks();
+  (signUp as Mock).mockResolvedValue({ status: "ok" });
 });
 
 describe("POST /api/auth/signup", () => {
@@ -79,7 +80,7 @@ describe("POST /api/auth/signup", () => {
 
   describe("異常系 — サービスエラー", () => {
     it("409: メールアドレス重複", async () => {
-      (signUp as jest.Mock).mockResolvedValue({ status: "duplicate" });
+      (signUp as Mock).mockResolvedValue({ status: "duplicate" });
 
       const res = await POST(makeRequest(validBody));
       const json = await res.json();

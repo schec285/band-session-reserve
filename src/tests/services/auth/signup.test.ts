@@ -1,9 +1,10 @@
+import type { Mocked } from "vitest";
 import { signUp } from "@/server/services/auth/signup";
 import { IUserRepository } from "@/server/repositories/auth/user-repository";
 
-const mockUserRepo = (): jest.Mocked<IUserRepository> => ({
-  findByEmail: jest.fn(),
-  create: jest.fn(),
+const mockUserRepo = (): Mocked<IUserRepository> => ({
+  findByEmail: vi.fn(),
+  create: vi.fn(),
 });
 
 describe("signUp", () => {

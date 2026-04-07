@@ -1,7 +1,8 @@
+import type { Mock } from "vitest";
 import { GET } from "@/app/api/events/route";
 
-jest.mock("@/server/services/events/events", () => ({
-  getEvents: jest.fn(),
+vi.mock("@/server/services/events/events", () => ({
+  getEvents: vi.fn(),
 }));
 
 import { getEvents } from "@/server/services/events/events";
@@ -32,8 +33,8 @@ function makeRequest() {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  (getEvents as jest.Mock).mockResolvedValue(mockEvents);
+  vi.clearAllMocks();
+  (getEvents as Mock).mockResolvedValue(mockEvents);
 });
 
 describe("GET /api/events", () => {
@@ -47,7 +48,7 @@ describe("GET /api/events", () => {
     });
 
     it("200: イベントが 0 件の場合は空配列を返す", async () => {
-      (getEvents as jest.Mock).mockResolvedValue([]);
+      (getEvents as Mock).mockResolvedValue([]);
 
       const res = await GET(makeRequest());
       const json = await res.json();

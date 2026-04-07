@@ -1,11 +1,12 @@
+import type { Mock } from "vitest";
 import { PATCH } from "@/app/api/reserve/[reservationId]/route";
 
-jest.mock("@/auth", () => ({
-  auth: jest.fn(),
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
 }));
 
-jest.mock("@/server/services/reserve/reservation", () => ({
-  updateReservationPart: jest.fn(),
+vi.mock("@/server/services/reserve/reservation", () => ({
+  updateReservationPart: vi.fn(),
 }));
 
 import { auth } from "@/auth";
@@ -23,9 +24,9 @@ function makeRequest(body: unknown) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  (auth as jest.Mock).mockResolvedValue({ user: { id: "user-uuid" } });
-  (updateReservationPart as jest.Mock).mockResolvedValue({ status: "ok" });
+  vi.clearAllMocks();
+  (auth as Mock).mockResolvedValue({ user: { id: "user-uuid" } });
+  (updateReservationPart as Mock).mockResolvedValue({ status: "ok" });
 });
 
 describe("PATCH /api/reserve/:reservationId", () => {
@@ -41,7 +42,7 @@ describe("PATCH /api/reserve/:reservationId", () => {
 
   describe("異常系 — 認証", () => {
     it("401: 未認証", async () => {
-      (auth as jest.Mock).mockResolvedValue(null);
+      (auth as Mock).mockResolvedValue(null);
 
       const res = await PATCH(makeRequest(validBody), { params: validParams });
       const json = await res.json();
@@ -64,7 +65,7 @@ describe("PATCH /api/reserve/:reservationId", () => {
 
   describe("異常系 — サービスエラー", () => {
     it("403: 他ユーザーの予約を操作しようとした", async () => {
-      (updateReservationPart as jest.Mock).mockResolvedValue({ status: "forbidden" });
+      (updateReservationPart as Mock).mockResolvedValue({ status: "forbidden" });
 
       const res = await PATCH(makeRequest(validBody), { params: validParams });
       const json = await res.json();
@@ -74,7 +75,7 @@ describe("PATCH /api/reserve/:reservationId", () => {
     });
 
     it("404: 予約が存在しない", async () => {
-      (updateReservationPart as jest.Mock).mockResolvedValue({ status: "not-found" });
+      (updateReservationPart as Mock).mockResolvedValue({ status: "not-found" });
 
       const res = await PATCH(makeRequest(validBody), { params: validParams });
       const json = await res.json();
@@ -84,7 +85,7 @@ describe("PATCH /api/reserve/:reservationId", () => {
     });
 
     it("409: 変更後のパートが埋まっている", async () => {
-      (updateReservationPart as jest.Mock).mockResolvedValue({ status: "filled" });
+      (updateReservationPart as Mock).mockResolvedValue({ status: "filled" });
 
       const res = await PATCH(makeRequest(validBody), { params: validParams });
       const json = await res.json();
@@ -95,7 +96,7 @@ describe("PATCH /api/reserve/:reservationId", () => {
     });
 
     it("422: 受付終了", async () => {
-      (updateReservationPart as jest.Mock).mockResolvedValue({ status: "closed" });
+      (updateReservationPart as Mock).mockResolvedValue({ status: "closed" });
 
       const res = await PATCH(makeRequest(validBody), { params: validParams });
       const json = await res.json();

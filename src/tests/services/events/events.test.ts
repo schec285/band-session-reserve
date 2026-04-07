@@ -1,3 +1,4 @@
+import type { Mocked } from "vitest";
 import { getEvents, getEventSongs } from "@/server/services/events/events";
 import type { IEventRepository } from "@/server/repositories/events/event-repository";
 
@@ -51,12 +52,12 @@ const closedEventDistant = {
   description: "",
 };
 
-let mockRepo: jest.Mocked<IEventRepository>;
+let mockRepo: Mocked<IEventRepository>;
 
 beforeEach(() => {
   mockRepo = {
-    findAllEvents: jest.fn(),
-    findEventSongsWithReservations: jest.fn(),
+    findAllEvents: vi.fn(),
+    findEventSongsWithReservations: vi.fn(),
   };
 });
 

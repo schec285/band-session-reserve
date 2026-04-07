@@ -1,3 +1,4 @@
+import type { Mocked } from "vitest";
 import { createReservation } from "@/server/services/reserve/reservation";
 import type { IReservationRepository } from "@/server/repositories/reserve/reservation-repository";
 
@@ -18,13 +19,13 @@ const params = {
   snsConsent: true,
 };
 
-let mockRepo: jest.Mocked<IReservationRepository>;
+let mockRepo: Mocked<IReservationRepository>;
 
 beforeEach(() => {
   mockRepo = {
-    findEventSongWithEvent: jest.fn(),
-    findByEventSongIdAndPart: jest.fn(),
-    create: jest.fn(),
+    findEventSongWithEvent: vi.fn(),
+    findByEventSongIdAndPart: vi.fn(),
+    create: vi.fn(),
   };
   mockRepo.findEventSongWithEvent.mockResolvedValue(openEventSong);
   mockRepo.findByEventSongIdAndPart.mockResolvedValue(null);

@@ -1,3 +1,4 @@
+import type { Mocked } from "vitest";
 import { cancelReservation } from "@/server/services/reserve/reservation";
 import type { IReservationRepository } from "@/server/repositories/reserve/reservation-repository";
 
@@ -23,16 +24,16 @@ const params = {
   userId: "user-uuid",
 };
 
-let mockRepo: jest.Mocked<IReservationRepository>;
+let mockRepo: Mocked<IReservationRepository>;
 
 beforeEach(() => {
   mockRepo = {
-    findEventSongWithEvent: jest.fn(),
-    findByEventSongIdAndPart: jest.fn(),
-    findById: jest.fn(),
-    updatePart: jest.fn(),
-    create: jest.fn(),
-    deleteById: jest.fn(),
+    findEventSongWithEvent: vi.fn(),
+    findByEventSongIdAndPart: vi.fn(),
+    findById: vi.fn(),
+    updatePart: vi.fn(),
+    create: vi.fn(),
+    deleteById: vi.fn(),
   };
   mockRepo.findById.mockResolvedValue(existingReservation);
   mockRepo.findEventSongWithEvent.mockResolvedValue(openEventSong);
