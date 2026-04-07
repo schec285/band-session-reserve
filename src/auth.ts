@@ -19,6 +19,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     sessionsTable: sessions,
   }),
   session: { strategy: "database" },
+  pages: {
+    signIn: "/auth/signin",
+  },
   providers: [
     Google,
     Credentials({
