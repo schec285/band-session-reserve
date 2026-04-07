@@ -14,9 +14,12 @@ interface Props {
 
 /**
  * ISO 8601 文字列を datetime-local input 用の文字列（YYYY-MM-DDTHH:mm）に変換する。
+ * UTC をブラウザのローカルタイムに変換してから切り出す。
  */
 function toDatetimeLocal(iso: string): string {
-  return iso.slice(0, 16);
+  const d = new Date(iso);
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
 }
 
 /**
