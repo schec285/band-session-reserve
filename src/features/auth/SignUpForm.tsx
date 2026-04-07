@@ -1,0 +1,100 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+/**
+ * ユーザー登録フォーム。
+ * 登録成功後はサインインページへリダイレクトする。
+ */
+export function SignUpForm() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    setLoading(false);
+
+    if (!res.ok) {
+      const json = await res.json();
+      setError(json.message ?? "登録に失敗しました");
+      return;
+    }
+
+    router.push("/auth/signin");
+  }
+
+  return (
+    <Card className="w-full max-w-sm mx-auto">
+      <CardHeader>
+        <CardTitle>新規登録</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+          <div className="space-y-1">
+            <Label htmlFor="name">名前</Label>
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="email">メールアドレス</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="password">パスワード（8文字以上）</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "登録中..." : "登録する"}
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            すでにアカウントをお持ちの方は{" "}
+            <a href="/auth/signin" className="underline">
+              サインイン
+            </a>
+          </p>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
