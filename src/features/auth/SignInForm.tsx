@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +41,10 @@ export function SignInForm() {
     }
 
     const callbackUrl = searchParams.get("callbackUrl") ?? "/";
-    router.push(callbackUrl);
-    router.refresh();
+    startTransition(() => {
+      router.push(callbackUrl);
+      router.refresh();
+    });
   }
 
   return (
@@ -76,8 +79,8 @@ export function SignInForm() {
               autoComplete="current-password"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "サインイン中..." : "サインイン"}
+          <Button type="submit" className="w-full" disabled={loading || isPending}>
+            {loading || isPending ? "サインイン中..." : "サインイン"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             アカウントをお持ちでない方は{" "}

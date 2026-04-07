@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ interface Props {
  */
 export function AdminSongList({ songs }: Props) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
@@ -46,7 +47,7 @@ export function AdminSongList({ songs }: Props) {
     if (res.ok) {
       setTitle("");
       setArtist("");
-      router.refresh();
+      startTransition(() => router.refresh());
     } else {
       const json = await res.json();
       setErrors(json.errors ?? [{ field: "", message: json.message }]);
@@ -105,8 +106,8 @@ export function AdminSongList({ songs }: Props) {
             <p className="text-destructive text-sm">{fieldError("")}</p>
           )}
 
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "追加中..." : "追加する"}
+          <Button type="submit" disabled={submitting || isPending}>
+            {submitting || isPending ? "追加中..." : "追加する"}
           </Button>
         </form>
       </div>

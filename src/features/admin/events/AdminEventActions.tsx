@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -14,6 +15,7 @@ interface Props {
  */
 export function AdminEventActions({ eventId }: Props) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   async function handleDelete() {
     if (!confirm("このイベントを削除しますか？")) return;
@@ -21,7 +23,7 @@ export function AdminEventActions({ eventId }: Props) {
     const res = await fetch(`/api/admin/events/${eventId}`, { method: "DELETE" });
 
     if (res.ok) {
-      router.refresh();
+      startTransition(() => router.refresh());
     } else {
       const json = await res.json();
       alert(json.message ?? "削除に失敗しました");
@@ -36,8 +38,8 @@ export function AdminEventActions({ eventId }: Props) {
       >
         編集
       </Link>
-      <Button variant="destructive" size="sm" onClick={handleDelete}>
-        削除
+      <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
+        {isPending ? "削除中..." : "削除"}
       </Button>
     </div>
   );

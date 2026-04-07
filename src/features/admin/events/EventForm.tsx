@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ function toDatetimeLocal(iso: string): string {
 export function EventForm({ event }: Props) {
   const router = useRouter();
   const isEdit = !!event;
+  const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState(event?.title ?? "");
   const [startAt, setStartAt] = useState(event ? toDatetimeLocal(event.startAt) : "");
@@ -68,8 +69,10 @@ export function EventForm({ event }: Props) {
     setSubmitting(false);
 
     if (res.ok) {
-      router.push("/admin/events");
-      router.refresh();
+      startTransition(() => {
+        router.push("/admin/events");
+        router.refresh();
+      });
     } else {
       const json = await res.json();
       setErrors(json.errors ?? [{ field: "", message: json.message }]);
@@ -167,13 +170,13 @@ export function EventForm({ event }: Props) {
       )}
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={submitting}>
-          {submitting ? "保存中..." : isEdit ? "更新する" : "作成する"}
+        <Button type="submit" disabled={submitting || isPending}>
+          {submitting || isPending ? "保存中..." : isEdit ? "更新する" : "作成する"}
         </Button>
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/admin/events")}
+          onClick={() => startTransition(() => router.push("/admin/events"))}
         >
           キャンセル
         </Button>

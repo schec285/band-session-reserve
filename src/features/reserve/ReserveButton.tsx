@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +18,7 @@ export function ReserveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,13 +46,13 @@ export function ReserveButton({
       return;
     }
 
-    router.refresh();
+    startTransition(() => router.refresh());
   }
 
   return (
     <div>
       <Button size="sm" variant="outline" onClick={handleReserve} disabled={loading}>
-        {loading ? "予約中..." : "予約する"}
+        {loading || isPending ? "予約中..." : "予約する"}
       </Button>
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>

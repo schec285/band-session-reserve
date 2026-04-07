@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -41,6 +41,7 @@ interface Props {
  */
 export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [selectedSongId, setSelectedSongId] = useState("");
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
@@ -72,7 +73,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     if (res.ok) {
       setSelectedSongId("");
       setSelectedParts([]);
-      router.refresh();
+      startTransition(() => router.refresh());
     } else {
       const json = await res.json();
       setError(json.message ?? "追加に失敗しました");
@@ -87,7 +88,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     });
 
     if (res.ok) {
-      router.refresh();
+      startTransition(() => router.refresh());
     } else {
       const json = await res.json();
       alert(json.message ?? "削除に失敗しました");
@@ -167,8 +168,8 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
 
         {error && <p className="text-destructive text-sm">{error}</p>}
 
-        <Button size="sm" onClick={handleAdd} disabled={adding}>
-          {adding ? "追加中..." : "追加する"}
+        <Button size="sm" onClick={handleAdd} disabled={adding || isPending}>
+          {adding || isPending ? "追加中..." : "追加する"}
         </Button>
       </div>
     </div>
