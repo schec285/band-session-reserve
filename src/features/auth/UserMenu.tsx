@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { UserCircle } from "lucide-react";
+import { UserCircle, ShieldCheck } from "lucide-react";
 
 /**
  * ヘッダー右端のユーザーアイコンメニュー。
@@ -41,7 +41,20 @@ export function UserMenu() {
     );
   }
 
+  const isAdmin = session.user?.role === "admin";
+
   return (
+    <div className="flex items-center gap-2">
+      {isAdmin && (
+        <button
+          onClick={() => router.push("/admin")}
+          aria-label="管理者ページ"
+          className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border hover:bg-accent transition-colors"
+        >
+          <ShieldCheck className="w-4 h-4" />
+          管理者
+        </button>
+      )}
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((v) => !v)}
@@ -80,6 +93,7 @@ export function UserMenu() {
           </nav>
         </div>
       )}
+    </div>
     </div>
   );
 }
