@@ -32,6 +32,18 @@ export interface ISongWithReservations {
   reservations: IReservationInfo[];
 }
 
+/**
+ * イベント作成時の入力型。
+ */
+export interface ICreateEventInput {
+  title: string;
+  startAt: Date;
+  endAt: Date;
+  closedAt: Date | null;
+  venue: string;
+  description: string;
+}
+
 export interface IEventRepository {
   /** 全イベントを取得する */
   findAllEvents(): Promise<IEventRecord[]>;
@@ -43,4 +55,10 @@ export interface IEventRepository {
    * イベントが存在するが曲が 0 件の場合は空配列を返す。
    */
   findEventSongsWithReservations(eventId: string): Promise<ISongWithReservations[] | null>;
+  /** イベントを作成し、作成したレコードを返す */
+  createEvent(input: ICreateEventInput): Promise<IEventRecord>;
+  /** イベントを更新し、更新後のレコードを返す。存在しない場合は null を返す */
+  updateEvent(eventId: string, input: ICreateEventInput): Promise<IEventRecord | null>;
+  /** イベントを削除する。存在しない場合は false を返す */
+  deleteEvent(eventId: string): Promise<boolean>;
 }

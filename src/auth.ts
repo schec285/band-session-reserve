@@ -49,23 +49,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
         if (!isValid) return null;
 
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
+        return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
       },
     }),
   ],
   callbacks: {
     /**
-     * JWT にユーザー ID を追加する。
+     * JWT にユーザー ID と role を追加する。
      */
     async jwt({ token, user }) {
-      if (user) token.sub = user.id;
+      if (user) {
+        token.sub = user.id;
+        token.role = user.role;
+      }
       return token;
     },
     /**
-     * セッションオブジェクトにユーザー ID を追加する。
+     * セッションオブジェクトにユーザー ID と role を追加する。
      */
     async session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      if (token.role) session.user.role = token.role;
       return session;
     },
   },

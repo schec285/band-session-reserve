@@ -21,6 +21,18 @@ export function proxy(request: NextRequest) {
     return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
   }
 
+  // 管理者 API ルート（Cookie なしなら 401）
+  const isAdminApi = pathname.startsWith("/api/admin");
+  if (isAdminApi && !isAuthenticated) {
+    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
+  }
+
+  // 管理者ページ（Cookie なしならサインインへリダイレクト）
+  const isAdminPage = pathname.startsWith("/admin");
+  if (isAdminPage && !isAuthenticated) {
+    return NextResponse.redirect(new URL("/auth/signin?callbackUrl=/admin", request.url));
+  }
+
   // 認証済みユーザーがサインイン/サインアップページにアクセスした場合はトップへ
   const authPaths = ["/auth/signin", "/auth/signup"];
   const isAuthPath = authPaths.some((p) => pathname.startsWith(p));
