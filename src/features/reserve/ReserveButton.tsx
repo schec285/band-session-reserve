@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 /**
  * パートの予約ボタン。
- * 未認証の場合はサインインページへリダイレクトする。
+ * API が 401 を返した場合は現在 URL を callbackUrl として付与したうえでサインインページへリダイレクトする。
  * 予約成功後はページを再読み込みして最新の予約状況を反映する。
  */
 export function ReserveButton({
@@ -17,17 +16,12 @@ export function ReserveButton({
   eventSongId: string;
   part: string;
 }) {
-  const { status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleReserve() {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -38,6 +32,12 @@ export function ReserveButton({
     });
 
     setLoading(false);
+
+    if (res.status === 401) {
+      const callbackUrl = encodeURIComponent(pathname);
+      router.push(`/auth/signin?callbackUrl=${callbackUrl}`);
+      return;
+    }
 
     if (!res.ok) {
       const json = await res.json();

@@ -8,10 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // NextAuth のセッション Cookie（開発時と本番で名前が異なる）
+  // NextAuth v5 (Auth.js) のセッション Cookie（開発時と本番で名前が異なる）
   const sessionCookie =
-    request.cookies.get("next-auth.session-token") ||
-    request.cookies.get("__Secure-next-auth.session-token");
+    request.cookies.get("authjs.session-token") ||
+    request.cookies.get("__Secure-authjs.session-token");
 
   const isAuthenticated = !!sessionCookie;
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,10 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 /**
  * メール/パスワードによるサインインフォーム。
- * 認証成功後はトップページへリダイレクトする。
+ * callbackUrl クエリパラメータが存在する場合はサインイン成功後にそのURLへリダイレクトする。
+ * 存在しない場合はトップページへリダイレクトする。
  */
 export function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,8 @@ export function SignInForm() {
       return;
     }
 
-    router.push("/");
+    const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+    router.push(callbackUrl);
     router.refresh();
   }
 
