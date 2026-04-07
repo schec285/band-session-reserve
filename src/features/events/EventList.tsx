@@ -8,8 +8,8 @@ import { PastEventsAccordion } from "./PastEventsAccordion";
  */
 export function EventList({ events }: { events: Event[] }) {
   const now = new Date().toISOString();
-  const open = events.filter((e) => (e.closedAt ?? e.endAt) > now);
-  const closed = events.filter((e) => (e.closedAt ?? e.endAt) <= now);
+  const open = events.filter((e) => e.endAt > now);
+  const closed = events.filter((e) => e.endAt <= now);
 
   if (open.length === 0 && closed.length === 0) {
     return <p className="text-sm text-muted-foreground">まだイベントはありません</p>;
