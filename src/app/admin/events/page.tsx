@@ -5,19 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AdminEventActions } from "@/features/admin/events/AdminEventActions";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
-
-/**
- * 日付を「YYYY年M月D日 HH:mm」形式にフォーマットする。
- */
-function formatDatetime(iso: string): string {
-  const d = new Date(iso);
-  const y = d.getFullYear();
-  const mo = d.getMonth() + 1;
-  const day = d.getDate();
-  const h = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  return `${y}年${mo}月${day}日 ${h}:${mi}`;
-}
+import { formatDatetime } from "@/lib/utils/date";
 
 /**
  * 管理者用イベント一覧ページ。

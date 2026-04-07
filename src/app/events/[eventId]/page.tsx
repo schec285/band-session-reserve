@@ -3,22 +3,7 @@ import { Calendar, Clock, MapPin } from "lucide-react";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
-
-/**
- * 日付を「YYYY年M月D日」形式にフォーマットする。
- */
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-}
-
-/**
- * 時刻を「HH:MM」形式にフォーマットする。
- */
-function formatTime(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
+import { formatDate, formatTime } from "@/lib/utils/date";
 
 /**
  * イベント詳細ページ。イベント情報と曲一覧・パート別予約状況を表示する。

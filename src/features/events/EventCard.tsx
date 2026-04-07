@@ -1,22 +1,7 @@
 import { Calendar, Clock, MapPin } from "lucide-react";
 import type { Event } from "@/lib/types/api/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
-
-/**
- * 日付を「YYYY年M月D日」形式にフォーマットする。
- */
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-}
-
-/**
- * 時刻を「HH:MM」形式にフォーマットする。
- */
-function formatTime(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
+import { formatDate, formatTime } from "@/lib/utils/date";
 
 /**
  * イベント 1 件のカード表示。
