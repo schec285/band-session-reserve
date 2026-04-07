@@ -40,6 +40,25 @@ export function EventList({ events }: { events: Event[] }) {
 }
 
 /**
+ * イベントの開催ステータスを判定する。
+ */
+function getStatus(event: Event): "upcoming" | "ended" {
+  const now = new Date();
+  const end = new Date(event.endAt);
+  return now <= end ? "upcoming" : "ended";
+}
+
+const STATUS_LABEL: Record<ReturnType<typeof getStatus>, string> = {
+  upcoming: "募集中",
+  ended: "終了",
+};
+
+const STATUS_CLASS: Record<ReturnType<typeof getStatus>, string> = {
+  upcoming: "bg-blue-100 text-blue-700",
+  ended: "bg-muted text-muted-foreground",
+};
+
+/**
  * イベント 1 件のカード表示。
  */
 function EventCard({ event }: { event: Event }) {
@@ -51,11 +70,18 @@ function EventCard({ event }: { event: Event }) {
     minute: "2-digit",
   });
 
+  const status = getStatus(event);
+
   return (
     <a href={`/events/${event.id}`}>
       <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{event.title}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base">{event.title}</CardTitle>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${STATUS_CLASS[status]}`}>
+              {STATUS_LABEL[status]}
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1">
           <p>{startAt}</p>
