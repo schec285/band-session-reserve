@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ReserveButton } from "@/features/reserve/ReserveButton";
 import type { SongWithReservations } from "@/lib/types/api/events";
 
 /**
@@ -25,7 +26,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                   {r.username ? (
                     <span>{r.username}</span>
                   ) : (
-                    <span className="text-muted-foreground">空き</span>
+                    <ReserveButton eventSongId={song.eventSongId} part={r.part} />
                   )}
                 </div>
               ))}

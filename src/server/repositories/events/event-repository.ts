@@ -26,6 +26,7 @@ export interface IReservationInfo {
  */
 export interface ISongWithReservations {
   id: string;
+  eventSongId: string;
   title: string;
   artist: string;
   reservations: IReservationInfo[];

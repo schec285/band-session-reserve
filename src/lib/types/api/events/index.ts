@@ -38,9 +38,11 @@ export type ReservationInfo = z.infer<typeof ReservationInfoSchema>;
 
 /**
  * 予約状況付き曲 1 件のスキーマ。
+ * eventSongId は予約作成時に使用する。
  */
 export const SongWithReservationsSchema = z.object({
   id: z.string(),
+  eventSongId: z.string(),
   title: z.string(),
   artist: z.string(),
   reservations: z.array(ReservationInfoSchema),

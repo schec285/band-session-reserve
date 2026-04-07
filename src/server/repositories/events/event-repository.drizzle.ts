@@ -80,6 +80,7 @@ export class DrizzleEventRepository implements IEventRepository {
 
       return {
         id: songRow.songId,
+        eventSongId: songRow.eventSongId,
         title: songRow.title,
         artist: songRow.artist,
         reservations: reservationList,
