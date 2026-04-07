@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { reservations, eventSongs, events } from "../../../../drizzle/schema";
+import { reservations, eventSongs, events } from "@drizzle/schema";
 import type { IEventSongRecord, IReservationRecord, IReservationRepository } from "./reservation-repository";
 
 /**

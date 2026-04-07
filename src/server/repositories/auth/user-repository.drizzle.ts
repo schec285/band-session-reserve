@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { users } from "../../../../drizzle/schema";
+import { users } from "@drizzle/schema";
 import { eq } from "drizzle-orm";
 import { IUserRepository } from "./user-repository";
 

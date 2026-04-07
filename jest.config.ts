@@ -14,6 +14,7 @@ const config: Config = {
       },
       moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
+        "^@drizzle/(.*)$": "<rootDir>/drizzle/$1",
       },
     },
     {
@@ -25,6 +26,7 @@ const config: Config = {
       },
       moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
+        "^@drizzle/(.*)$": "<rootDir>/drizzle/$1",
       },
       setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
     },

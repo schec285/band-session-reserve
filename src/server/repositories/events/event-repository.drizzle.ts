@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { events, eventSongs, songs, reservations, users } from "../../../../drizzle/schema";
+import { events, eventSongs, songs, reservations, users } from "@drizzle/schema";
 import type { IEventRecord, ISongWithReservations, IEventRepository } from "./event-repository";
 
 /**
