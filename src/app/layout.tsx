@@ -3,11 +3,13 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { SessionProvider } from "@/features/auth/SessionProvider";
+import { UserMenu } from "@/features/auth/UserMenu";
+import { Footer } from "@/features/layout/Footer";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "バンドセッション予約",
+  title: "OTONOWA",
   description: "バンドセッションの参加予約システム",
 };
 
@@ -18,16 +20,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja" className={cn("font-sans", geist.variable)}>
-      <body className="min-h-screen bg-background">
+      <body className="min-h-screen flex flex-col bg-background">
         <SessionProvider>
-          <header className="border-b">
-            <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
-              <a href="/" className="font-bold text-lg">
-                🎸 BandSession
+          <header className="border-b sticky top-0 bg-background z-40">
+            <div className="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between">
+              <a href="/" className="font-bold text-xl tracking-tight">
+                OTONOWA
               </a>
+              <UserMenu />
             </div>
           </header>
-          <main className="max-w-2xl mx-auto px-6 py-8">{children}</main>
+          <main className="flex-1 max-w-2xl w-full mx-auto px-6 py-8">{children}</main>
+          <Footer />
         </SessionProvider>
       </body>
     </html>
