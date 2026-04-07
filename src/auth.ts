@@ -3,22 +3,21 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
-import { users, accounts, sessions } from "@drizzle/schema";
+import { users, accounts } from "@drizzle/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 /**
  * NextAuth の設定。
  * Google OAuth と メール/パスワード認証をサポートする。
- * セッションはDBに保存するステートフル方式。
+ * セッションは JWT 方式。
  */
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
-    sessionsTable: sessions,
   }),
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/signin",
   },
@@ -56,10 +55,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     /**
-     * セッションオブジェクトにユーザーIDを追加する。
+     * JWT にユーザー ID を追加する。
      */
-    async session({ session, user }) {
-      session.user.id = user.id;
+    async jwt({ token, user }) {
+      if (user) token.sub = user.id;
+      return token;
+    },
+    /**
+     * セッションオブジェクトにユーザー ID を追加する。
+     */
+    async session({ session, token }) {
+      if (token.sub) session.user.id = token.sub;
       return session;
     },
   },
