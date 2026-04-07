@@ -1,9 +1,14 @@
 import { DELETE } from "@/app/api/reserve/[reservationId]/route";
 
+jest.mock("@/auth", () => ({
+  auth: jest.fn(),
+}));
+
 jest.mock("@/server/services/reserve/reservation", () => ({
   cancelReservation: jest.fn(),
 }));
 
+import { auth } from "@/auth";
 import { cancelReservation } from "@/server/services/reserve/reservation";
 
 const validParams = Promise.resolve({ reservationId: "reservation-uuid" });
@@ -16,6 +21,7 @@ function makeRequest() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (auth as jest.Mock).mockResolvedValue({ user: { id: "user-uuid" } });
   (cancelReservation as jest.Mock).mockResolvedValue({ status: "ok" });
 });
 
@@ -27,6 +33,18 @@ describe("DELETE /api/reserve/:reservationId", () => {
 
       expect(res.status).toBe(200);
       expect(json.message).toBe("予約をキャンセルしました");
+    });
+  });
+
+  describe("異常系 — 認証", () => {
+    it("401: 未認証", async () => {
+      (auth as jest.Mock).mockResolvedValue(null);
+
+      const res = await DELETE(makeRequest(), { params: validParams });
+      const json = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(json.message).toBe("認証が必要です");
     });
   });
 

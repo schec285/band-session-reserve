@@ -1,9 +1,14 @@
 import { PATCH } from "@/app/api/reserve/[reservationId]/route";
 
+jest.mock("@/auth", () => ({
+  auth: jest.fn(),
+}));
+
 jest.mock("@/server/services/reserve/reservation", () => ({
   updateReservationPart: jest.fn(),
 }));
 
+import { auth } from "@/auth";
 import { updateReservationPart } from "@/server/services/reserve/reservation";
 
 const validBody = { part: "drums" };
@@ -19,6 +24,7 @@ function makeRequest(body: unknown) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (auth as jest.Mock).mockResolvedValue({ user: { id: "user-uuid" } });
   (updateReservationPart as jest.Mock).mockResolvedValue({ status: "ok" });
 });
 
@@ -30,6 +36,18 @@ describe("PATCH /api/reserve/:reservationId", () => {
 
       expect(res.status).toBe(200);
       expect(json.message).toBe("予約を更新しました");
+    });
+  });
+
+  describe("異常系 — 認証", () => {
+    it("401: 未認証", async () => {
+      (auth as jest.Mock).mockResolvedValue(null);
+
+      const res = await PATCH(makeRequest(validBody), { params: validParams });
+      const json = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(json.message).toBe("認証が必要です");
     });
   });
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { createReservation } from "@/server/services/reserve/reservation";
 import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
 
@@ -7,11 +8,12 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 /**
  * 予約作成エンドポイント。
  * 認証・バリデーションを行い、予約を受け付ける。
- * TODO: NextAuth導入後にセッション認証を追加する。
  */
 export async function POST(request: Request) {
-  // TODO: NextAuth の auth() でセッション取得・認証チェックを行う
-  const userId = "todo-replace-with-nextauth-user-id";
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
+  }
 
   const body = await request.json();
   const { eventSongId, part, snsConsent, comment } = body;
@@ -33,7 +35,7 @@ export async function POST(request: Request) {
 
   const reservationRepo = new DrizzleReservationRepository();
   const result = await createReservation(reservationRepo, {
-    userId,
+    userId: session.user.id,
     eventSongId,
     part,
     snsConsent,

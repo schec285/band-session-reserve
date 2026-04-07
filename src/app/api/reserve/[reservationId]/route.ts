@@ -1,18 +1,20 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { updateReservationPart, cancelReservation } from "@/server/services/reserve/reservation";
 import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
 
 /**
  * 予約パート変更エンドポイント。
  * バリデーションを行い、予約のパートを更新する。
- * TODO: NextAuth導入後にセッション認証を追加する。
  */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ reservationId: string }> }
 ) {
-  // TODO: NextAuth の auth() でセッション取得・認証チェックを行う
-  const userId = "todo-replace-with-nextauth-user-id";
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
+  }
 
   const body = await request.json();
   const { part } = body;
@@ -28,7 +30,7 @@ export async function PATCH(
   const reservationRepo = new DrizzleReservationRepository();
   const result = await updateReservationPart(reservationRepo, {
     reservationId,
-    userId,
+    userId: session.user.id,
     part,
   });
 
@@ -54,20 +56,21 @@ export async function PATCH(
 /**
  * 予約キャンセルエンドポイント。
  * 予約レコードを削除する。
- * TODO: NextAuth導入後にセッション認証を追加する。
  */
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ reservationId: string }> }
 ) {
-  // TODO: NextAuth の auth() でセッション取得・認証チェックを行う
-  const userId = "todo-replace-with-nextauth-user-id";
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "認証が必要です" }, { status: 401 });
+  }
 
   const { reservationId } = await params;
   const reservationRepo = new DrizzleReservationRepository();
   const result = await cancelReservation(reservationRepo, {
     reservationId,
-    userId,
+    userId: session.user.id,
   });
 
   if (result.status === "not-found") {

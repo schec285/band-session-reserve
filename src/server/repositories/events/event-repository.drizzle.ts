@@ -63,7 +63,7 @@ export class DrizzleEventRepository implements IEventRepository {
       .select({
         eventSongId: reservations.eventSongId,
         part: reservations.part,
-        username: users.username,
+        username: users.name,
       })
       .from(reservations)
       .innerJoin(users, eq(reservations.userId, users.id))
