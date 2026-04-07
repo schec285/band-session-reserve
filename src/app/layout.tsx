@@ -23,14 +23,14 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-background">
         <SessionProvider>
           <header className="border-b sticky top-0 bg-background z-40">
-            <div className="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
               <a href="/" className="font-bold text-xl tracking-tight">
                 OTONOWA
               </a>
               <UserMenu />
             </div>
           </header>
-          <main className="flex-1 max-w-2xl w-full mx-auto px-6 py-8">{children}</main>
+          <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-8">{children}</main>
           <Footer />
         </SessionProvider>
       </body>

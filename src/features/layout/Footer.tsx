@@ -11,7 +11,7 @@ export function Footer() {
 
   return (
     <footer className="border-t mt-auto">
-      <div className="max-w-2xl mx-auto px-6 py-6 flex flex-col items-center gap-4">
+      <div className="max-w-4xl mx-auto px-6 py-6 flex flex-col items-center gap-4">
         <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
           {links.map((link) => (
             <a
