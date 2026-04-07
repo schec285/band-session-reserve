@@ -1,5 +1,6 @@
 import { Calendar, Clock, MapPin } from "lucide-react";
 import type { Event } from "@/lib/types/api/events";
+import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
 /**
  * 日付を「YYYY年M月D日」形式にフォーマットする。
@@ -18,18 +19,11 @@ function formatTime(dateStr: string): string {
 }
 
 /**
- * イベントの開催ステータスを判定する。
- */
-function getStatus(event: Event): "upcoming" | "ended" {
-  return new Date() <= new Date(event.endAt) ? "upcoming" : "ended";
-}
-
-/**
  * イベント 1 件のカード表示。
  * 日付・時刻・会場をアイコン付きで表示し、ステータスバッジを右上に配置する。
  */
 export function EventCard({ event }: { event: Event }) {
-  const status = getStatus(event);
+  const status = getEventStatus(event);
   const isUpcoming = status === "upcoming";
 
   return (
@@ -44,9 +38,7 @@ export function EventCard({ event }: { event: Event }) {
             <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors">
               {event.title}
             </h3>
-            <span className={`shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${isUpcoming ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>
-              {isUpcoming ? "募集中" : "終了"}
-            </span>
+            <EventStatusBadge status={status} />
           </div>
 
           {/* メタ情報 */}

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import Link from "next/link";
+import { AdminNav } from "@/features/admin/AdminNav";
 
 /**
  * 管理者画面レイアウト。
@@ -18,28 +18,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex gap-8">
-      <nav className="w-48 shrink-0">
-        <ul className="space-y-1">
-          <li>
-            <Link
-              href="/admin/events"
-              className="block px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors"
-            >
-              イベント管理
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/admin/songs"
-              className="block px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors"
-            >
-              曲管理
-            </Link>
-          </li>
-        </ul>
-      </nav>
-      <div className="flex-1 min-w-0">{children}</div>
+    <div className="flex flex-col gap-6">
+      <AdminNav />
+      <div>{children}</div>
     </div>
   );
 }
