@@ -53,10 +53,6 @@ export function EntryConfirmDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!snsConsent) {
-      setError("SNS掲載への同意が必要です");
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
