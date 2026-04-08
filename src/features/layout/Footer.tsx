@@ -4,9 +4,10 @@
  */
 export function Footer() {
   const links = [
-    { label: "公式HP", href: "#" },
-    { label: "X (Twitter)", href: "#" },
+    { label: "ホームページ", href: "https://musicsessionotonowa.com/" },
+    { label: "X (Twitter)", href: "https://x.com/otonowa150435?s=21" },
     { label: "Instagram", href: "#" },
+    { label: "TikTok", href: "https://www.tiktok.com/@otonowa2?_r=1&_t=ZS-93RpBS7c3jW" },
   ];
 
   return (
