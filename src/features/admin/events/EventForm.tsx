@@ -110,7 +110,7 @@ export function EventForm({ event }: Props) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor="startAt">開始日時</Label>
           <Input
