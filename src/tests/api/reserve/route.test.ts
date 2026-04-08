@@ -134,6 +134,54 @@ describe("POST /api/reserve", () => {
       );
     });
 
+    it("400: entries[0].part が不正な値", async () => {
+      const body = {
+        ...validBody,
+        entries: [{ eventSongId: VALID_UUID, part: "invalidPart" }],
+      };
+      const res = await POST(makeRequest(body));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("入力内容に誤りがあります");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({ field: "entries.0.part" })
+      );
+    });
+
+    it("400: 同一曲内で禁止されたパートの組み合わせ", async () => {
+      const body = {
+        ...validBody,
+        entries: [
+          { eventSongId: VALID_UUID, part: "readGuitar" },
+          { eventSongId: VALID_UUID, part: "backingGuitar" },
+        ],
+      };
+      const res = await POST(makeRequest(body));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("入力内容に誤りがあります");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({
+          field: "entries",
+          message: "リードギターとバッキングギターは同じ曲で同時に選択できません",
+        })
+      );
+    });
+
+    it("200: 禁止組み合わせでも曲が異なれば通る", async () => {
+      const body = {
+        ...validBody,
+        entries: [
+          { eventSongId: VALID_UUID, part: "readGuitar" },
+          { eventSongId: VALID_UUID_2, part: "backingGuitar" },
+        ],
+      };
+      const res = await POST(makeRequest(body));
+      expect(res.status).toBe(200);
+    });
+
     it("400: snsConsent が未指定", async () => {
       const { snsConsent: _, ...bodyWithoutSnsConsent } = validBody;
       const res = await POST(makeRequest(bodyWithoutSnsConsent));
