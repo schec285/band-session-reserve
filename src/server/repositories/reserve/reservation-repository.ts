@@ -25,12 +25,12 @@ export interface IReservationRepository {
   updatePart(reservationId: string, part: string): Promise<void>;
   /** 予約を削除する */
   deleteById(reservationId: string): Promise<void>;
-  /** 予約を新規作成する */
-  create(data: {
+  /** 複数の予約をトランザクションで一括作成する */
+  createMany(data: Array<{
     userId: string;
     eventSongId: string;
     part: string;
     snsConsent: boolean;
     comment?: string;
-  }): Promise<void>;
+  }>): Promise<void>;
 }

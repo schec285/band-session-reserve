@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { createReservation } from "@/server/services/reserve/reservation";
+import { createReservations } from "@/server/services/reserve/reservation";
 import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 
 /**
- * 予約作成エンドポイント。
- * 認証・バリデーションを行い、予約を受け付ける。
+ * 予約一括作成エンドポイント。
+ * 1件以上のエントリーを受け取り、全件成功した場合のみ保存する。
+ * いずれか1件でも失敗した場合は全件キャンセルする。
  */
 export async function POST(request: Request) {
   const session = await auth();
@@ -16,30 +16,22 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { eventSongId, part, snsConsent, comment } = body;
+  const parsed = CreateReservationsSchema.safeParse(body);
 
-  if (!eventSongId || !UUID_REGEX.test(eventSongId)) {
-    return NextResponse.json({ message: "イベント曲IDが不正です" }, { status: 400 });
-  }
-
-  const errors: { field: string; message: string }[] = [];
-  if (part === undefined || part === null || part === "") {
-    errors.push({ field: "part", message: "パートを選択してください" });
-  }
-  if (snsConsent === undefined || snsConsent === null) {
-    errors.push({ field: "snsConsent", message: "選択してください" });
-  }
-  if (errors.length > 0) {
+  if (!parsed.success) {
+    const errors = parsed.error.issues.map((e) => ({
+      field: e.path.join("."),
+      message: e.message,
+    }));
     return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
   }
 
-  const reservationRepo = new DrizzleReservationRepository();
-  const result = await createReservation(reservationRepo, {
+  const repo = new DrizzleReservationRepository();
+  const result = await createReservations(repo, {
     userId: session.user.id,
-    eventSongId,
-    part,
-    snsConsent,
-    comment,
+    entries: parsed.data.entries,
+    snsConsent: parsed.data.snsConsent,
+    comment: parsed.data.comment,
   });
 
   if (result.status === "not-found") {

@@ -1,41 +1,45 @@
 import type { IReservationRepository } from "@/server/repositories/reserve/reservation-repository";
 
-type CreateReservationResult =
+type CreateReservationsResult =
   | { status: "ok" }
   | { status: "not-found" }
   | { status: "filled" }
   | { status: "closed" };
 
 /**
- * 予約を作成する。
- * イベント曲の存在確認・受付状況・パートの空き確認を行い、予約を保存する。
+ * 複数の予約を一括作成する。
+ * 全エントリーのバリデーション（存在確認・受付状況・空き確認）を先に行い、
+ * 1件でも失敗した場合は全件キャンセルする。全件通過後に createMany で一括保存する。
  */
-export async function createReservation(
+export async function createReservations(
   repo: IReservationRepository,
   params: {
     userId: string;
-    eventSongId: string;
-    part: string;
+    entries: Array<{ eventSongId: string; part: string }>;
     snsConsent: boolean;
     comment?: string;
   }
-): Promise<CreateReservationResult> {
-  const eventSong = await repo.findEventSongWithEvent(params.eventSongId);
-  if (!eventSong) return { status: "not-found" };
+): Promise<CreateReservationsResult> {
+  for (const entry of params.entries) {
+    const eventSong = await repo.findEventSongWithEvent(entry.eventSongId);
+    if (!eventSong) return { status: "not-found" };
 
-  const deadline = eventSong.event.closedAt ?? eventSong.event.startAt;
-  if (deadline <= new Date()) return { status: "closed" };
+    const deadline = eventSong.event.closedAt ?? eventSong.event.startAt;
+    if (deadline <= new Date()) return { status: "closed" };
 
-  const existing = await repo.findByEventSongIdAndPart(params.eventSongId, params.part);
-  if (existing) return { status: "filled" };
+    const existing = await repo.findByEventSongIdAndPart(entry.eventSongId, entry.part);
+    if (existing) return { status: "filled" };
+  }
 
-  await repo.create({
-    userId: params.userId,
-    eventSongId: params.eventSongId,
-    part: params.part,
-    snsConsent: params.snsConsent,
-    comment: params.comment,
-  });
+  await repo.createMany(
+    params.entries.map((entry) => ({
+      userId: params.userId,
+      eventSongId: entry.eventSongId,
+      part: entry.part,
+      snsConsent: params.snsConsent,
+      comment: params.comment,
+    }))
+  );
 
   return { status: "ok" };
 }

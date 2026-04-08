@@ -88,21 +88,26 @@ export class DrizzleReservationRepository implements IReservationRepository {
   }
 
   /**
-   * 予約を新規作成する。
+   * 複数の予約をトランザクションで一括作成する。
    */
-  async create(data: {
+  async createMany(data: Array<{
     userId: string;
     eventSongId: string;
     part: string;
     snsConsent: boolean;
     comment?: string;
-  }): Promise<void> {
-    await db.insert(reservations).values({
-      userId: data.userId,
-      eventSongId: data.eventSongId,
-      part: data.part as typeof reservations.part._.data,
-      snsConsent: data.snsConsent,
-      comment: data.comment,
+  }>): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.insert(reservations).values(
+        data.map((d) => ({
+          userId: d.userId,
+          eventSongId: d.eventSongId,
+          part: d.part as typeof reservations.part._.data,
+          snsConsent: d.snsConsent,
+          comment: d.comment,
+        }))
+      );
     });
   }
+
 }
