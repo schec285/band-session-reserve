@@ -10,16 +10,16 @@ npm run dev        # 開発サーバー起動
 npm run build      # 本番ビルド
 npm run start      # 本番サーバー起動
 npm run lint       # Next.js 経由で ESLint を実行
-npm test           # テスト実行（Jest）
+npm test           # テスト実行（Vitest）
 npm run test:watch # ウォッチモード
 npm run test:api   # APIテストのみ
 ```
 
-**テストフレームワーク**: Jest + ts-jest + node-mocks-http
+**テストフレームワーク**: Vitest + node-mocks-http
 
 - APIテスト: `node` 環境（`src/tests/api/**/*.test.ts`）
 - サービステスト: `node` 環境（`src/tests/services/**/*.test.ts`）
-- 設定ファイル: `jest.config.ts`
+- 設定ファイル: `vitest.config.ts`
 
 **テストファイルの配置**: `src/tests/` 配下にソースのパスを反映した構造で配置する。
 
@@ -47,9 +47,10 @@ src/
 
 **実装順序**:
 1. 型定義（`src/lib/types/`）
-2. APIルートのテスト作成（`src/tests/api/**/*.test.ts`）
-3. APIルート実装（`src/app/api/**/*.ts`）
-4. フロントエンド実装
+2. リポジトリ実装（`src/server/repositories/`）※TDD対象外・依存元として先に用意
+3. サービスのテスト作成（`src/tests/services/**/*.test.ts`）→ サービス実装（`src/server/services/`）※リポジトリをモック
+4. APIルートのテスト作成（`src/tests/api/**/*.test.ts`）→ APIルート実装（`src/app/api/**/*.ts`）
+5. フロントエンド実装
 
 ## アーキテクチャ
 
