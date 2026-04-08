@@ -1,4 +1,3 @@
-import { ReserveButton } from "@/features/reserve/ReserveButton";
 import type { SongWithReservations } from "@/lib/types/api/events";
 import type { Part } from "@drizzle/schema";
 
@@ -17,7 +16,7 @@ const ALL_PARTS: { value: Part; label: string }[] = [
 
 /**
  * 曲一覧とパート別予約状況を横並びテーブルで表示するコンポーネント。
- * 募集していないパートはグレー、空きは予約ボタン、埋まりは予約者名を表示する。
+ * 募集していないパートはグレー、空きは「空き」表示、埋まりは予約者名を表示する。
  */
 export function SongList({ songs }: { songs: SongWithReservations[] }) {
   if (songs.length === 0) {
@@ -30,7 +29,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
         {/* ヘッダー行 */}
         <thead>
           <tr className="bg-muted/50 border-b">
-            <th className="text-left px-4 py-3 font-medium w-40 sticky left-0 bg-muted/50 z-10">
+            <th className="text-left px-4 py-3 font-medium w-40 sticky left-0 bg-muted z-10">
               曲
             </th>
             {ALL_PARTS.map(({ value, label }) => (
@@ -53,7 +52,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                 {/* 曲名・アーティスト列（スクロール時に固定） */}
                 <td
                   className={`px-4 py-3 sticky left-0 z-10 ${
-                    i % 2 === 1 ? "bg-muted/20" : "bg-background"
+                    i % 2 === 1 ? "bg-muted" : "bg-background"
                   }`}
                 >
                   <p className="font-semibold leading-tight">{song.title}</p>
@@ -68,7 +67,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
 
                   if (!isRecruiting) {
                     return (
-                      <td key={value} className="bg-muted/40 px-3 py-3 text-center">
+                      <td key={value} className="bg-muted/80 px-3 py-3 text-center">
                         <span className="text-muted-foreground/40 text-xs">─</span>
                       </td>
                     );
@@ -84,7 +83,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
 
                   return (
                     <td key={value} className="px-3 py-3 text-center">
-                      <ReserveButton eventSongId={song.eventSongId} part={value} />
+                      <span className="text-xs text-muted-foreground">空き</span>
                     </td>
                   );
                 })}
