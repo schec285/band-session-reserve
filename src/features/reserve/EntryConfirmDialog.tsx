@@ -59,8 +59,13 @@ export function EntryConfirmDialog({
     }
     setLoading(true);
     setError(null);
-    await onSubmit({ snsConsent, comment: comment.trim() });
-    setLoading(false);
+    try {
+      await onSubmit({ snsConsent, comment: comment.trim() });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "エントリーに失敗しました");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleClose() {
