@@ -19,8 +19,18 @@ export type ReserveEntry = z.infer<typeof ReserveEntrySchema>;
  */
 export const CreateReservationsSchema = z.object({
   entries: z.array(ReserveEntrySchema).min(1, "エントリーは1件以上必要です"),
-  snsConsent: z.boolean({ required_error: "選択してください" }),
+  snsConsent: z.boolean({ error: "選択してください" }),
   comment: z.string().optional(),
 });
 
 export type CreateReservationsInput = z.infer<typeof CreateReservationsSchema>;
+
+/**
+ * PATCH /api/reserve/[reservationId] のリクエストボディスキーマ。
+ * 変更後のパートを指定する。
+ */
+export const UpdateReservationPartSchema = z.object({
+  part: z.string({ error: "パートを選択してください" }).min(1, "パートを選択してください"),
+});
+
+export type UpdateReservationPartInput = z.infer<typeof UpdateReservationPartSchema>;
