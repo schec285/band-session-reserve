@@ -61,22 +61,10 @@ export default async function EventDetailPage({
         </div>
       </div>
 
-      {/* エントリーボタン（開催予定のみ） */}
-      {status === "upcoming" && (
-        <div>
-          <a
-            href={`/events/${event.id}/entry`}
-            className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-          >
-            エントリーする
-          </a>
-        </div>
-      )}
-
       {/* 曲一覧 */}
       <div>
         <h2 className="text-lg font-semibold mb-3">曲一覧</h2>
-        <SongList songs={songs} />
+        <SongList songs={songs} eventId={eventId} />
       </div>
     </div>
   );
