@@ -64,7 +64,7 @@ export default async function EventDetailPage({
       {/* 曲一覧 */}
       <div>
         <h2 className="text-lg font-semibold mb-3">曲一覧</h2>
-        <SongList songs={songs} eventId={eventId} />
+        <SongList songs={songs} />
       </div>
     </div>
   );
