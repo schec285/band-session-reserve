@@ -21,11 +21,16 @@ type EventFieldsInput = {
 
 /**
  * 日時バリデーションを追加するラッパー。
+ * - startAt > 現在日時
  * - startAt < endAt
  * - closedAt <= startAt（closedAt が未設定の場合はスキップ）
  */
 const withEventDateValidations = <T extends z.ZodType<EventFieldsInput>>(schema: T) =>
   schema
+    .refine((data) => new Date(data.startAt) > new Date(), {
+      message: "開始日時は現在日時より後に設定してください",
+      path: ["startAt"],
+    })
     .refine((data) => new Date(data.startAt) < new Date(data.endAt), {
       message: "終了日時は開始日時より後に設定してください",
       path: ["endAt"],

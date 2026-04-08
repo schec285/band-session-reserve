@@ -86,6 +86,18 @@ describe("POST /api/admin/events", () => {
       expect(json.errors).toContainEqual({ field: "title", message: "タイトルは必須です" });
     });
 
+    it("400: startAt が現在日時より前", async () => {
+      const past = new Date(Date.now() - 1000 * 60 * 60).toISOString();
+      const res = await POST(makeRequest({ ...validBody, startAt: past }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({
+        field: "startAt",
+        message: "開始日時は現在日時より後に設定してください",
+      });
+    });
+
     it("400: endAt が startAt より前", async () => {
       const res = await POST(makeRequest({ ...validBody, endAt: future, startAt: futureEnd }));
       const json = await res.json();
