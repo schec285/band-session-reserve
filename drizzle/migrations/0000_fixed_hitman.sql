@@ -19,8 +19,8 @@ CREATE TABLE "event_songs" (
 	"event_id" uuid NOT NULL,
 	"song_id" uuid NOT NULL,
 	"parts" "part"[] NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "events" (
@@ -30,21 +30,22 @@ CREATE TABLE "events" (
 	"end_at" timestamp with time zone NOT NULL,
 	"closed_at" timestamp with time zone,
 	"venue" varchar(255) NOT NULL,
+	"venue_fee" integer DEFAULT 0 NOT NULL,
 	"description" text DEFAULT '' NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100),
 	"email" varchar(255) NOT NULL,
-	"email_verified" timestamp,
+	"email_verified" timestamp with time zone,
 	"image" varchar(255),
 	"password_hash" varchar(255),
 	"role" varchar(50) DEFAULT 'member' NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
@@ -52,8 +53,8 @@ CREATE TABLE "songs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"artist" varchar(255) NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "reservations" (
@@ -63,8 +64,8 @@ CREATE TABLE "reservations" (
 	"part" "part" NOT NULL,
 	"sns_consent" boolean DEFAULT false NOT NULL,
 	"comment" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
