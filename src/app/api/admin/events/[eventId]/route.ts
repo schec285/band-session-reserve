@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { updateEvent, deleteEvent } from "@/server/services/admin/events";
-import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
+import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { UpdateEventSchema } from "@/lib/types/api/admin/events";
 
 /**
@@ -42,7 +42,7 @@ export async function PUT(
     return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
   }
 
-  const repo = new DrizzleEventRepository();
+  const repo = new DrizzleAdminEventRepository();
   const result = await updateEvent(repo, eventId, parsed.data);
 
   if (result.status === "not-found") {
@@ -64,7 +64,7 @@ export async function DELETE(
   if (error) return error;
 
   const { eventId } = await params;
-  const repo = new DrizzleEventRepository();
+  const repo = new DrizzleAdminEventRepository();
   const result = await deleteEvent(repo, eventId);
 
   if (result.status === "not-found") {

@@ -1,6 +1,6 @@
 import type { Mocked } from "vitest";
 import { getEvents, getEventSongs } from "@/server/services/events/events";
-import type { IEventRepository } from "@/server/repositories/events/event-repository";
+import type { IEventRecord, IEventRepository } from "@/server/repositories/events/event-repository";
 
 const now = new Date();
 const nearFuture  = new Date(now.getTime() + 1000 * 60 * 60 * 24);       // 1日後
@@ -9,7 +9,7 @@ const recentPast  = new Date(now.getTime() - 1000 * 60 * 60 * 24);       // 1日
 const distantPast = new Date(now.getTime() - 1000 * 60 * 60 * 24 * 10);  // 10日前
 
 /** 募集中イベント（startAt が未来・closedAt null） */
-const openEventNear = {
+const openEventNear: IEventRecord = {
   id: "open-near",
   title: "近いイベント",
   startAt: nearFuture,
@@ -20,7 +20,7 @@ const openEventNear = {
 };
 
 /** 募集中イベント（startAt がさらに未来・closedAt null） */
-const openEventFar = {
+const openEventFar: IEventRecord = {
   id: "open-far",
   title: "遠いイベント",
   startAt: farFuture,
@@ -31,7 +31,7 @@ const openEventFar = {
 };
 
 /** 終了済みイベント（closedAt が過去） */
-const closedEventRecent = {
+const closedEventRecent: IEventRecord = {
   id: "closed-recent",
   title: "最近終わったイベント",
   startAt: recentPast,
@@ -42,7 +42,7 @@ const closedEventRecent = {
 };
 
 /** 終了済みイベント（startAt が過去・closedAt null） */
-const closedEventDistant = {
+const closedEventDistant: IEventRecord = {
   id: "closed-distant",
   title: "昔のイベント",
   startAt: distantPast,

@@ -1,4 +1,4 @@
-import type { IEventRepository } from "@/server/repositories/events/event-repository";
+import type { IAdminEventRepository } from "@/server/repositories/admin/event-repository";
 import type { AdminEventResponse, CreateEventInput, UpdateEventInput } from "@/lib/types/api/admin/events";
 
 type CreateEventResult = { status: "ok"; event: AdminEventResponse };
@@ -12,7 +12,23 @@ type DeleteEventResult =
   | { status: "not-found" };
 
 /**
- * IEventRecord を AdminEventResponse（ISO 8601 文字列）に変換する。
+ * 編集フォームに渡す曲情報。
+ * parts は予約状況から part 名のみ抽出したリスト。
+ */
+export type AdminEventSongInfo = {
+  eventSongId: string;
+  songId: string;
+  title: string;
+  artist: string;
+  parts: string[];
+};
+
+type GetEventForEditResult =
+  | { status: "ok"; event: AdminEventResponse; songs: AdminEventSongInfo[] }
+  | { status: "not-found" };
+
+/**
+ * IAdminEventRecord を AdminEventResponse（ISO 8601 文字列）に変換する。
  */
 function toResponse(record: {
   id: string;
@@ -40,7 +56,7 @@ function toResponse(record: {
  * イベントを作成する。
  */
 export async function createEvent(
-  repo: IEventRepository,
+  repo: IAdminEventRepository,
   input: CreateEventInput
 ): Promise<CreateEventResult> {
   const record = await repo.createEvent({
@@ -49,7 +65,7 @@ export async function createEvent(
     endAt: new Date(input.endAt),
     closedAt: input.closedAt ? new Date(input.closedAt) : null,
     venue: input.venue,
-    venueFee: input.venueFee,
+    venueFee: input.venueFee ?? 0,
     description: input.description,
   });
 
@@ -60,7 +76,7 @@ export async function createEvent(
  * イベントを更新する。存在しない場合は status: "not-found" を返す。
  */
 export async function updateEvent(
-  repo: IEventRepository,
+  repo: IAdminEventRepository,
   eventId: string,
   input: UpdateEventInput
 ): Promise<UpdateEventResult> {
@@ -70,7 +86,7 @@ export async function updateEvent(
     endAt: new Date(input.endAt),
     closedAt: input.closedAt ? new Date(input.closedAt) : null,
     venue: input.venue,
-    venueFee: input.venueFee,
+    venueFee: input.venueFee ?? 0,
     description: input.description,
   });
 
@@ -82,10 +98,37 @@ export async function updateEvent(
  * イベントを削除する。存在しない場合は status: "not-found" を返す。
  */
 export async function deleteEvent(
-  repo: IEventRepository,
+  repo: IAdminEventRepository,
   eventId: string
 ): Promise<DeleteEventResult> {
   const deleted = await repo.deleteEvent(eventId);
   if (!deleted) return { status: "not-found" };
   return { status: "ok" };
+}
+
+/**
+ * 編集ページ用にイベント情報と曲一覧を取得する。
+ * 曲ごとの reservations から part 名のみ抽出して返す。
+ * イベントが存在しない場合は status: "not-found" を返す。
+ */
+export async function getEventForEdit(
+  repo: IAdminEventRepository,
+  eventId: string
+): Promise<GetEventForEditResult> {
+  const [eventRecord, songRecords] = await Promise.all([
+    repo.findEventById(eventId),
+    repo.findEventSongsWithReservations(eventId),
+  ]);
+
+  if (!eventRecord || songRecords === null) return { status: "not-found" };
+
+  const songs: AdminEventSongInfo[] = songRecords.map((s) => ({
+    eventSongId: s.eventSongId,
+    songId: s.id,
+    title: s.title,
+    artist: s.artist,
+    parts: s.reservations.map((r) => r.part),
+  }));
+
+  return { status: "ok", event: toResponse(eventRecord), songs };
 }

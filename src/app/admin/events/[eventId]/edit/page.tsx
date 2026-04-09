@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
+import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
+import { getEventForEdit } from "@/server/services/admin/events";
 import { EventForm } from "@/features/admin/events/EventForm";
 import { AdminEventSongManager } from "@/features/admin/songs/AdminEventSongManager";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
@@ -14,33 +15,15 @@ export default async function EditEventPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const eventRepo = new DrizzleEventRepository();
-  const record = await eventRepo.findEventById(eventId);
+  const adminEventRepo = new DrizzleAdminEventRepository();
+  const result = await getEventForEdit(adminEventRepo, eventId);
 
-  if (!record) notFound();
+  if (result.status === "not-found") notFound();
 
-  const event = {
-    id: record.id,
-    title: record.title,
-    startAt: record.startAt.toISOString(),
-    endAt: record.endAt.toISOString(),
-    closedAt: record.closedAt ? record.closedAt.toISOString() : null,
-    venue: record.venue,
-    venueFee: record.venueFee,
-    description: record.description,
-  };
+  const { event, songs: eventSongs } = result;
 
   const songRepo = new DrizzleSongRepository();
   const allSongs = await getAllSongs(songRepo);
-
-  const eventSongsRaw = await eventRepo.findEventSongsWithReservations(eventId);
-  const eventSongs = (eventSongsRaw ?? []).map((s) => ({
-    eventSongId: s.eventSongId,
-    songId: s.id,
-    title: s.title,
-    artist: s.artist,
-    parts: s.reservations.map((r) => r.part),
-  }));
 
   return (
     <div className="space-y-10">

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createEvent } from "@/server/services/admin/events";
-import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
+import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { CreateEventSchema } from "@/lib/types/api/admin/events";
 
 /**
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
   }
 
-  const repo = new DrizzleEventRepository();
+  const repo = new DrizzleAdminEventRepository();
   const result = await createEvent(repo, parsed.data);
 
   return NextResponse.json({ event: result.event }, { status: 201 });

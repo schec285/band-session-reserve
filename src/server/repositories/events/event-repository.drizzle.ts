@@ -1,10 +1,11 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { events, eventSongs, songs, reservations, users } from "@drizzle/schema";
-import type { IEventRecord, ISongWithReservations, IEventRepository, ICreateEventInput } from "./event-repository";
+import type { IEventRecord, ISongWithReservations, IEventRepository } from "./event-repository";
 
 /**
  * Drizzle ORM を使った IEventRepository の実装。
+ * 一般ユーザー向けの読み取り専用操作のみを提供する。
  */
 export class DrizzleEventRepository implements IEventRepository {
   /**
@@ -12,7 +13,7 @@ export class DrizzleEventRepository implements IEventRepository {
    * 並び順はサービス層で制御するため、ここでは順序を保証しない。
    */
   async findAllEvents(): Promise<IEventRecord[]> {
-    const rows = await db
+    return db
       .select({
         id: events.id,
         title: events.title,
@@ -20,12 +21,9 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
-        venueFee: events.venueFee,
         description: events.description,
       })
       .from(events);
-
-    return rows;
   }
 
   /**
@@ -40,7 +38,6 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
-        venueFee: events.venueFee,
         description: events.description,
       })
       .from(events)
@@ -80,7 +77,7 @@ export class DrizzleEventRepository implements IEventRepository {
     );
     if (validSongRows.length === 0) return [];
 
-    // クエリ 2: 対象 event_songs の予約一覧（username 付き）を取得
+    // クエリ 2: 対象 event_songs の予約一覧（username・userId 付き）を取得
     const eventSongIds = validSongRows.map((r) => r.eventSongId);
     const reservationRows = await db
       .select({
@@ -110,77 +107,5 @@ export class DrizzleEventRepository implements IEventRepository {
         reservations: reservationList,
       };
     });
-  }
-
-  /**
-   * イベントを作成し、作成したレコードを返す。
-   */
-  async createEvent(input: ICreateEventInput): Promise<IEventRecord> {
-    const rows = await db
-      .insert(events)
-      .values({
-        title: input.title,
-        startAt: input.startAt,
-        endAt: input.endAt,
-        closedAt: input.closedAt,
-        venue: input.venue,
-        venueFee: input.venueFee ?? 0,
-        description: input.description,
-      })
-      .returning({
-        id: events.id,
-        title: events.title,
-        startAt: events.startAt,
-        endAt: events.endAt,
-        closedAt: events.closedAt,
-        venue: events.venue,
-        venueFee: events.venueFee,
-        description: events.description,
-      });
-
-    return rows[0];
-  }
-
-  /**
-   * イベントを更新し、更新後のレコードを返す。存在しない場合は null を返す。
-   */
-  async updateEvent(eventId: string, input: ICreateEventInput): Promise<IEventRecord | null> {
-    const rows = await db
-      .update(events)
-      .set({
-        title: input.title,
-        startAt: input.startAt,
-        endAt: input.endAt,
-        closedAt: input.closedAt,
-        venue: input.venue,
-        venueFee: input.venueFee ?? 0,
-        description: input.description,
-        updatedAt: new Date(),
-      })
-      .where(eq(events.id, eventId))
-      .returning({
-        id: events.id,
-        title: events.title,
-        startAt: events.startAt,
-        endAt: events.endAt,
-        closedAt: events.closedAt,
-        venue: events.venue,
-        venueFee: events.venueFee,
-        description: events.description,
-      });
-
-    return rows[0] ?? null;
-  }
-
-  /**
-   * イベントを削除する。存在しない場合は false を返す。
-   */
-  async deleteEvent(eventId: string): Promise<boolean> {
-    const rows = await db
-      .delete(events)
-      .where(eq(events.id, eventId))
-      .returning({ id: events.id });
-
-    return rows.length > 0;
   }
 }

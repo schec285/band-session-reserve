@@ -1,6 +1,6 @@
 import type { Mocked } from "vitest";
-import { createEvent, updateEvent, deleteEvent } from "@/server/services/admin/events";
-import type { IEventRepository } from "@/server/repositories/events/event-repository";
+import { createEvent, updateEvent, deleteEvent, getEventForEdit } from "@/server/services/admin/events";
+import type { IAdminEventRepository } from "@/server/repositories/admin/event-repository";
 
 const now = new Date();
 const future = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7日後
@@ -14,6 +14,7 @@ const mockEventRecord = {
   endAt: futureEnd,
   closedAt: null,
   venue: "渋谷スタジオ A",
+  venueFee: 3000,
   description: "春のセッションです",
 };
 
@@ -23,10 +24,25 @@ const validInput = {
   endAt: futureEnd.toISOString(),
   closedAt: null,
   venue: "渋谷スタジオ A",
+  venueFee: 3000,
   description: "春のセッションです",
 };
 
-let mockRepo: Mocked<IEventRepository>;
+const mockSongs = [
+  {
+    id: "song-uuid-1",
+    eventSongId: "event-song-uuid-1",
+    title: "千本桜",
+    artist: "黒うさP",
+    reservations: [
+      { part: "vocal",      username: "yamada_taro" },
+      { part: "drums",      username: null },
+      { part: "bass",       username: null },
+    ],
+  },
+];
+
+let mockRepo: Mocked<IAdminEventRepository>;
 
 beforeEach(() => {
   mockRepo = {
@@ -53,6 +69,7 @@ describe("createEvent", () => {
     if (result.status !== "ok") return;
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.title).toBe("春のセッション");
+    expect(result.event.venueFee).toBe(3000);
     expect(typeof result.event.startAt).toBe("string");
     expect(typeof result.event.endAt).toBe("string");
     expect(result.event.closedAt).toBeNull();
@@ -82,6 +99,7 @@ describe("createEvent", () => {
       endAt: new Date(validInput.endAt),
       closedAt: null,
       venue: validInput.venue,
+      venueFee: 3000,
       description: validInput.description,
     });
   });
@@ -128,6 +146,7 @@ describe("updateEvent", () => {
       endAt: new Date(validInput.endAt),
       closedAt: null,
       venue: validInput.venue,
+      venueFee: 3000,
       description: validInput.description,
     });
   });
@@ -153,5 +172,48 @@ describe("deleteEvent", () => {
     const result = await deleteEvent(mockRepo, "nonexistent-uuid");
 
     expect(result.status).toBe("not-found");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getEventForEdit
+// ---------------------------------------------------------------------------
+
+describe("getEventForEdit", () => {
+  it("ok: イベント情報と曲一覧（parts に変換済み）を返す", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEventRecord);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+
+    const result = await getEventForEdit(mockRepo, "event-uuid-1");
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.event.id).toBe("event-uuid-1");
+    expect(result.event.venueFee).toBe(3000);
+    expect(typeof result.event.startAt).toBe("string");
+    expect(result.songs[0]).toEqual({
+      eventSongId: "event-song-uuid-1",
+      songId: "song-uuid-1",
+      title: "千本桜",
+      artist: "黒うさP",
+      parts: ["vocal", "drums", "bass"],
+    });
+  });
+
+  it("ok: 曲が 0 件の場合は songs が空配列", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEventRecord);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue([]);
+
+    const result = await getEventForEdit(mockRepo, "event-uuid-1");
+
+    expect(result).toMatchObject({ status: "ok", songs: [] });
+  });
+
+  it("not-found: イベントが存在しない場合", async () => {
+    mockRepo.findEventById.mockResolvedValue(null);
+
+    const result = await getEventForEdit(mockRepo, "nonexistent-uuid");
+
+    expect(result).toEqual({ status: "not-found" });
   });
 });
