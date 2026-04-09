@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Calendar, Clock, MapPin } from "lucide-react";
+import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
@@ -15,8 +16,9 @@ export default async function EventDetailPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
+  const session = await auth();
   const repo = new DrizzleEventRepository();
-  const result = await getEventSongs(repo, eventId);
+  const result = await getEventSongs(repo, eventId, session?.user?.id);
 
   if (result.status === "not-found") notFound();
 

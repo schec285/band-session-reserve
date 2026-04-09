@@ -147,7 +147,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
           <tbody>
             {songs.map((song, i) => {
               const reservationMap = new Map(
-                song.reservations.map((r) => [r.part, r.username])
+                song.reservations.map((r) => [r.part, { username: r.username, isOwner: r.isOwner }])
               );
 
               return (
@@ -164,9 +164,11 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
 
                   {/* パートセル */}
                   {PART_ORDER.map((part) => {
-                    const isRecruiting = reservationMap.has(part);
-                    const username = reservationMap.get(part);
+                    const reservation = reservationMap.get(part);
+                    const isRecruiting = reservation !== undefined;
+                    const username = reservation?.username ?? null;
                     const isFilled = username != null;
+                    const isOwner = reservation?.isOwner ?? false;
 
                     if (!isRecruiting) {
                       return (
@@ -178,7 +180,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
 
                     if (isFilled) {
                       return (
-                        <td key={part} className="px-3 py-3 text-center">
+                        <td key={part} className={`px-3 py-3 text-center ${isOwner ? "bg-yellow-100" : ""}`}>
                           <span className="text-sm font-medium">{username}</span>
                         </td>
                       );
