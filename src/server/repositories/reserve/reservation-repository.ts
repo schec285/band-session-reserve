@@ -19,6 +19,8 @@ export interface IReservationRepository {
   findEventSongWithEvent(eventSongId: string): Promise<IEventSongRecord | null>;
   /** eventSongId とパートで既存の予約を検索する */
   findByEventSongIdAndPart(eventSongId: string, part: string): Promise<{ id: string } | null>;
+  /** userId と eventSongId でその曲における既存予約一覧を取得する */
+  findByUserIdAndEventSongId(userId: string, eventSongId: string): Promise<IReservationRecord[]>;
   /** 予約IDで予約を取得する */
   findById(reservationId: string): Promise<IReservationRecord | null>;
   /** 予約のパートを更新する */
