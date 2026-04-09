@@ -26,6 +26,7 @@ export default async function EditEventPage({
     endAt: record.endAt.toISOString(),
     closedAt: record.closedAt ? record.closedAt.toISOString() : null,
     venue: record.venue,
+    venueFee: record.venueFee,
     description: record.description,
   };
 

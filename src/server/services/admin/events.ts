@@ -21,6 +21,7 @@ function toResponse(record: {
   endAt: Date;
   closedAt: Date | null;
   venue: string;
+  venueFee: number;
   description: string;
 }): AdminEventResponse {
   return {
@@ -30,6 +31,7 @@ function toResponse(record: {
     endAt: record.endAt.toISOString(),
     closedAt: record.closedAt ? record.closedAt.toISOString() : null,
     venue: record.venue,
+    venueFee: record.venueFee,
     description: record.description,
   };
 }
@@ -47,6 +49,7 @@ export async function createEvent(
     endAt: new Date(input.endAt),
     closedAt: input.closedAt ? new Date(input.closedAt) : null,
     venue: input.venue,
+    venueFee: input.venueFee,
     description: input.description,
   });
 
@@ -67,6 +70,7 @@ export async function updateEvent(
     endAt: new Date(input.endAt),
     closedAt: input.closedAt ? new Date(input.closedAt) : null,
     venue: input.venue,
+    venueFee: input.venueFee,
     description: input.description,
   });
 

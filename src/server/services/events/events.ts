@@ -33,6 +33,7 @@ export async function getEvents(repo: IEventRepository): Promise<Event[]> {
     endAt: e.endAt.toISOString(),
     closedAt: e.closedAt ? e.closedAt.toISOString() : null,
     venue: e.venue,
+    venueFee: e.venueFee,
     description: e.description,
   }));
 }
@@ -57,6 +58,7 @@ export async function getEventSongs(
     endAt: eventRecord.endAt.toISOString(),
     closedAt: eventRecord.closedAt ? eventRecord.closedAt.toISOString() : null,
     venue: eventRecord.venue,
+    venueFee: eventRecord.venueFee,
     description: eventRecord.description,
   };
   return { status: "ok", event, songs };

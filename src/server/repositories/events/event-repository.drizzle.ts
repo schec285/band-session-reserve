@@ -20,6 +20,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
+        venueFee: events.venueFee,
         description: events.description,
       })
       .from(events);
@@ -39,6 +40,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
+        venueFee: events.venueFee,
         description: events.description,
       })
       .from(events)
@@ -121,6 +123,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: input.endAt,
         closedAt: input.closedAt,
         venue: input.venue,
+        venueFee: input.venueFee ?? 0,
         description: input.description,
       })
       .returning({
@@ -130,6 +133,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
+        venueFee: events.venueFee,
         description: events.description,
       });
 
@@ -148,6 +152,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: input.endAt,
         closedAt: input.closedAt,
         venue: input.venue,
+        venueFee: input.venueFee ?? 0,
         description: input.description,
         updatedAt: new Date(),
       })
@@ -159,6 +164,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
+        venueFee: events.venueFee,
         description: events.description,
       });
 

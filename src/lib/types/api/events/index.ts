@@ -11,6 +11,7 @@ export const EventSchema = z.object({
   endAt: z.string(),
   closedAt: z.string().nullable(),
   venue: z.string(),
+  venueFee: z.number(),
   description: z.string(),
 });
 

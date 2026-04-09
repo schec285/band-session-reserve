@@ -9,6 +9,7 @@ export interface IEventRecord {
   endAt: Date;
   closedAt: Date | null;
   venue: string;
+  venueFee: number;
   description: string;
 }
 
@@ -41,6 +42,7 @@ export interface ICreateEventInput {
   endAt: Date;
   closedAt: Date | null;
   venue: string;
+  venueFee?: number;
   description: string;
 }
 

@@ -38,6 +38,7 @@ export function EventForm({ event }: Props) {
     event?.closedAt ? toDatetimeLocal(event.closedAt) : ""
   );
   const [venue, setVenue] = useState(event?.venue ?? "");
+  const [venueFee, setVenueFee] = useState<number>(event?.venueFee ?? 0);
   const [description, setDescription] = useState(event?.description ?? "");
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +58,7 @@ export function EventForm({ event }: Props) {
       endAt: new Date(endAt).toISOString(),
       closedAt: closedAt ? new Date(closedAt).toISOString() : null,
       venue,
+      venueFee,
       description,
     };
 
@@ -107,6 +109,21 @@ export function EventForm({ event }: Props) {
         />
         {fieldError("venue") && (
           <p className="text-destructive text-sm">{fieldError("venue")}</p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="venueFee">会場費</Label>
+        <Input
+          id="venueFee"
+          type="number"
+          min={0}
+          step={1}
+          value={venueFee}
+          onChange={(e) => setVenueFee(Number(e.target.value))}
+        />
+        {fieldError("venueFee") && (
+          <p className="text-destructive text-sm">{fieldError("venueFee")}</p>
         )}
       </div>
 
