@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:api": "vitest run src/tests/api",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node node_modules/tsx/dist/cli.mjs drizzle/seed/dev/seed.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",
