@@ -47,6 +47,12 @@ export async function POST(request: Request) {
   if (result.status === "closed") {
     return NextResponse.json({ message: "このイベントの受付は終了しています" } satisfies ErrorResponse, { status: 422 });
   }
+  if (result.status === "forbidden-combination") {
+    return NextResponse.json(
+      { message: "同じ曲で登録できないパートの組み合わせです", errors: [{ field: "part", message: "同じ曲で登録できないパートの組み合わせです" }] } satisfies ErrorResponse,
+      { status: 422 }
+    );
+  }
 
   return NextResponse.json({ message: "予約を受け付けました！セッションでお待ちしています 🎵" } satisfies ErrorResponse);
 }

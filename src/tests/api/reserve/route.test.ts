@@ -226,5 +226,16 @@ describe("POST /api/reserve", () => {
       expect(res.status).toBe(422);
       expect(json.message).toBe("このイベントの受付は終了しています");
     });
+
+    it("422: 禁止パート組み合わせ（既存予約との組み合わせNG）", async () => {
+      (createReservations as Mock).mockResolvedValue({ status: "forbidden-combination" });
+
+      const res = await POST(makeRequest(validBody));
+      const json = await res.json();
+
+      expect(res.status).toBe(422);
+      expect(json.message).toBe("同じ曲で登録できないパートの組み合わせです");
+      expect(json.errors).toContainEqual({ field: "part", message: "同じ曲で登録できないパートの組み合わせです" });
+    });
   });
 });
