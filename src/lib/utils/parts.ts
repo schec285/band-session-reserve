@@ -26,10 +26,13 @@ export const PART_LABELS: Record<Part, string> = {
  */
 export const FORBIDDEN_SAME_SONG_PAIRS: [Part, Part][] = [
   ["readGuitar", "backingGuitar"],
-  ["drums", "bass"],
-  ["drums", "readGuitar"],
-  ["drums", "backingGuitar"],
+  ["readGuitar", "bass"],
+  ["readGuitar", "drums"],
+  ["readGuitar", "keyboard"],
+  ["backingGuitar", "bass"],
+  ["backingGuitar", "keyboard"],
+  ["backingGuitar", "drums"],
+  ["bass", "drums"],
+  ["bass", "keyboard"],
   ["drums", "keyboard"],
-  ["bass", "readGuitar"],
-  ["bass", "backingGuitar"],
 ];
