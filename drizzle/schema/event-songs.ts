@@ -16,6 +16,6 @@ export const eventSongs = pgTable("event_songs", {
     .notNull()
     .references(() => songs.id),
   parts: partEnum("parts").array().notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 });

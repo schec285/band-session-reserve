@@ -54,6 +54,26 @@ export class DrizzleReservationRepository implements IReservationRepository {
   }
 
   /**
+   * userId と eventSongId でその曲における既存予約一覧を取得する。
+   */
+  async findByUserIdAndEventSongId(userId: string, eventSongId: string): Promise<IReservationRecord[]> {
+    return db
+      .select({
+        id: reservations.id,
+        userId: reservations.userId,
+        eventSongId: reservations.eventSongId,
+        part: reservations.part,
+      })
+      .from(reservations)
+      .where(
+        and(
+          eq(reservations.userId, userId),
+          eq(reservations.eventSongId, eventSongId)
+        )
+      );
+  }
+
+  /**
    * 予約IDで予約を取得する。
    * 存在しない場合は null を返す。
    */

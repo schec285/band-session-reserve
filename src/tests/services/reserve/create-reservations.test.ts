@@ -33,6 +33,7 @@ beforeEach(() => {
   mockRepo = {
     findEventSongWithEvent: vi.fn(),
     findByEventSongIdAndPart: vi.fn(),
+    findByUserIdAndEventSongId: vi.fn(),
     findById: vi.fn(),
     updatePart: vi.fn(),
     deleteById: vi.fn(),
@@ -44,6 +45,7 @@ beforeEach(() => {
     return null;
   });
   mockRepo.findByEventSongIdAndPart.mockResolvedValue(null);
+  mockRepo.findByUserIdAndEventSongId.mockResolvedValue([]);
   mockRepo.createMany.mockResolvedValue(undefined);
 });
 
@@ -123,6 +125,58 @@ describe("createReservations", () => {
 
       expect(result).toEqual({ status: "closed" });
       expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("異常系 — forbidden-combination", () => {
+    it("forbidden-combination: 既存予約と禁止組み合わせになるパートは登録できない", async () => {
+      mockRepo.findByUserIdAndEventSongId.mockResolvedValue([
+        { id: "res-existing", userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "readGuitar" },
+      ]);
+
+      const result = await createReservations(mockRepo, {
+        ...baseParams,
+        entries: [{ eventSongId: "event-song-uuid-1", part: "backingGuitar" }],
+      });
+
+      expect(result).toEqual({ status: "forbidden-combination" });
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+
+    it("forbidden-combination: 複数件のうち1件でも禁止組み合わせなら全件キャンセル", async () => {
+      mockRepo.findByUserIdAndEventSongId.mockImplementation(async (userId, eventSongId) => {
+        if (eventSongId === "event-song-uuid-1") {
+          return [{ id: "res-existing", userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "readGuitar" }];
+        }
+        return [];
+      });
+
+      const result = await createReservations(mockRepo, {
+        ...baseParams,
+        entries: [
+          entry2,
+          { eventSongId: "event-song-uuid-1", part: "backingGuitar" },
+        ],
+      });
+
+      expect(result).toEqual({ status: "forbidden-combination" });
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+
+    it("ok: 禁止組み合わせでも曲が異なれば通る", async () => {
+      mockRepo.findByUserIdAndEventSongId.mockImplementation(async (userId, eventSongId) => {
+        if (eventSongId === "event-song-uuid-1") {
+          return [{ id: "res-existing", userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "readGuitar" }];
+        }
+        return [];
+      });
+
+      const result = await createReservations(mockRepo, {
+        ...baseParams,
+        entries: [{ eventSongId: "event-song-uuid-2", part: "backingGuitar" }],
+      });
+
+      expect(result).toEqual({ status: "ok" });
     });
   });
 

@@ -1,10 +1,12 @@
 import type { IReservationRepository } from "@/server/repositories/reserve/reservation-repository";
+import { FORBIDDEN_SAME_SONG_PAIRS } from "@/lib/utils/parts";
 
 type CreateReservationsResult =
   | { status: "ok" }
   | { status: "not-found" }
   | { status: "filled" }
-  | { status: "closed" };
+  | { status: "closed" }
+  | { status: "forbidden-combination" };
 
 /**
  * 複数の予約を一括作成する。
@@ -26,6 +28,14 @@ export async function createReservations(
 
     const deadline = eventSong.event.closedAt ?? eventSong.event.startAt;
     if (deadline <= new Date()) return { status: "closed" };
+
+    const existingByUser = await repo.findByUserIdAndEventSongId(params.userId, entry.eventSongId);
+    const hasForbidden = existingByUser.some((r) =>
+      FORBIDDEN_SAME_SONG_PAIRS.some(
+        ([a, b]) => (r.part === a && entry.part === b) || (r.part === b && entry.part === a)
+      )
+    );
+    if (hasForbidden) return { status: "forbidden-combination" };
 
     const existing = await repo.findByEventSongIdAndPart(entry.eventSongId, entry.part);
     if (existing) return { status: "filled" };
