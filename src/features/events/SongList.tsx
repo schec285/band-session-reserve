@@ -6,6 +6,8 @@ import { useRouter, usePathname } from "next/navigation";
 import type { SongWithReservations } from "@/lib/types/api/events";
 import type { Part } from "@drizzle/schema";
 
+import { X } from "lucide-react";
+
 import { PART_LABELS } from "@/lib/utils/parts";
 import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<{ reservationId: string; songTitle: string; part: string } | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   const isLoggedIn = !!session;
 
@@ -127,7 +130,9 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
 
   async function handleCancelConfirm() {
     if (!cancelTarget) return;
+    setCanceling(true);
     const res = await fetch(`/api/reserve/${cancelTarget.reservationId}`, { method: "DELETE" });
+    setCanceling(false);
     setCancelTarget(null);
     if (!res.ok) {
       const json = await res.json();
@@ -200,11 +205,11 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                           <span className="text-sm font-medium">{username}</span>
                           {isOwner && (
                             <button
-                              onClick={() => setCancelTarget({ reservationId, songTitle: song.title, part: PART_LABELS[part] })}
-                              className="ml-1.5 text-xs text-red-500 hover:text-red-700 underline"
+                              onClick={() => setCancelTarget({ reservationId: reservationId!, songTitle: song.title, part: PART_LABELS[part] })}
+                              className="ml-1.5 text-red-500 hover:text-red-700"
                               aria-label={`${song.title} ${PART_LABELS[part]} をキャンセル`}
                             >
-                              取消
+                              <X size={14} />
                             </button>
                           )}
                         </td>
@@ -293,15 +298,17 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setCancelTarget(null)}
-                className="px-4 py-2 text-sm rounded-md border hover:bg-muted"
+                disabled={canceling}
+                className="px-4 py-2 text-sm rounded-md border hover:bg-muted disabled:opacity-50"
               >
                 戻る
               </button>
               <button
                 onClick={handleCancelConfirm}
-                className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
+                disabled={canceling}
+                className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
               >
-                キャンセルする
+                {canceling ? "キャンセル中..." : "キャンセルする"}
               </button>
             </div>
           </div>
