@@ -6,8 +6,6 @@ import { useRouter, usePathname } from "next/navigation";
 import type { SongWithReservations } from "@/lib/types/api/events";
 import type { Part } from "@drizzle/schema";
 
-import { X } from "lucide-react";
-
 import { PART_LABELS } from "@/lib/utils/parts";
 import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import { Button } from "@/components/ui/button";
@@ -206,10 +204,10 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                           {isOwner && (
                             <button
                               onClick={() => setCancelTarget({ reservationId: reservationId!, songTitle: song.title, part: PART_LABELS[part] })}
-                              className="ml-1.5 text-red-500 hover:text-red-700"
+                              className="ml-1.5 text-xs text-red-500 hover:text-red-700 underline"
                               aria-label={`${song.title} ${PART_LABELS[part]} をキャンセル`}
                             >
-                              <X size={14} />
+                              取消
                             </button>
                           )}
                         </td>
