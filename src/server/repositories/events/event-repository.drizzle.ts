@@ -81,6 +81,7 @@ export class DrizzleEventRepository implements IEventRepository {
     const eventSongIds = validSongRows.map((r) => r.eventSongId);
     const reservationRows = await db
       .select({
+        reservationId: reservations.id,
         eventSongId: reservations.eventSongId,
         part: reservations.part,
         username: users.name,
@@ -96,7 +97,12 @@ export class DrizzleEventRepository implements IEventRepository {
 
       const reservationList = songRow.parts.map((part) => {
         const existing = songReservations.find((r) => r.part === part);
-        return { part, username: existing?.username ?? null, userId: existing?.userId ?? null };
+        return {
+          part,
+          username: existing?.username ?? null,
+          userId: existing?.userId ?? null,
+          reservationId: existing?.reservationId ?? null,
+        };
       });
 
       return {

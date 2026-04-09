@@ -38,6 +38,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<{ reservationId: string; songTitle: string; part: string } | null>(null);
 
   const isLoggedIn = !!session;
 
@@ -124,6 +125,20 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
     startTransition(() => router.refresh());
   }
 
+  async function handleCancelConfirm() {
+    if (!cancelTarget) return;
+    const res = await fetch(`/api/reserve/${cancelTarget.reservationId}`, { method: "DELETE" });
+    setCancelTarget(null);
+    if (!res.ok) {
+      const json = await res.json();
+      setSuccessMessage(null);
+      alert(json.message ?? "キャンセルに失敗しました");
+      return;
+    }
+    setSuccessMessage("エントリーをキャンセルしました");
+    startTransition(() => router.refresh());
+  }
+
   return (
     <div className="space-y-4">
       {/* 曲一覧テーブル */}
@@ -147,7 +162,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
           <tbody>
             {songs.map((song, i) => {
               const reservationMap = new Map(
-                song.reservations.map((r) => [r.part, { username: r.username, isOwner: r.isOwner }])
+                song.reservations.map((r) => [r.part, { username: r.username, isOwner: r.isOwner, reservationId: r.reservationId }])
               );
 
               return (
@@ -169,6 +184,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                     const username = reservation?.username ?? null;
                     const isFilled = username != null;
                     const isOwner = reservation?.isOwner ?? false;
+                    const reservationId = reservation?.reservationId ?? null;
 
                     if (!isRecruiting) {
                       return (
@@ -182,6 +198,15 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                       return (
                         <td key={part} className={`px-3 py-3 text-center ${isOwner ? "bg-yellow-100" : ""}`}>
                           <span className="text-sm font-medium">{username}</span>
+                          {isOwner && (
+                            <button
+                              onClick={() => setCancelTarget({ reservationId, songTitle: song.title, part: PART_LABELS[part] })}
+                              className="ml-1.5 text-xs text-red-500 hover:text-red-700 underline"
+                              aria-label={`${song.title} ${PART_LABELS[part]} をキャンセル`}
+                            >
+                              取消
+                            </button>
+                          )}
                         </td>
                       );
                     }
@@ -253,6 +278,35 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
         onClose={() => setDialogOpen(false)}
         onSubmit={handleConfirmSubmit}
       />
+
+      {/* キャンセル確認ダイアログ */}
+      {cancelTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-background rounded-xl border shadow-lg p-6 w-full max-w-sm space-y-4">
+            <h3 className="text-base font-semibold">エントリーのキャンセル</h3>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{cancelTarget.songTitle}</span>
+              {" / "}
+              <span className="font-medium text-foreground">{cancelTarget.part}</span>
+              {" のエントリーをキャンセルしますか？"}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setCancelTarget(null)}
+                className="px-4 py-2 text-sm rounded-md border hover:bg-muted"
+              >
+                戻る
+              </button>
+              <button
+                onClick={handleCancelConfirm}
+                className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
+              >
+                キャンセルする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

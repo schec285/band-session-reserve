@@ -34,6 +34,7 @@ export const ReservationInfoSchema = z.object({
   part: z.string(),
   username: z.string().nullable(),
   isOwner: z.boolean(),
+  reservationId: z.string().nullable(),
 });
 
 export type ReservationInfo = z.infer<typeof ReservationInfoSchema>;

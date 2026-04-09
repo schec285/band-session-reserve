@@ -68,10 +68,11 @@ export async function getEventSongs(
     eventSongId: song.eventSongId,
     title: song.title,
     artist: song.artist,
-    reservations: song.reservations.map(({ part, username, userId }) => ({
+    reservations: song.reservations.map(({ part, username, userId, reservationId }) => ({
       part,
       username,
       isOwner: currentUserId !== undefined && userId === currentUserId,
+      reservationId,
     })),
   }));
   return { status: "ok", event, songs };

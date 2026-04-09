@@ -4,6 +4,7 @@ import { updateReservationPart, cancelReservation } from "@/server/services/rese
 import { DrizzleReservationRepository } from "@/server/repositories/reserve/reservation-repository.drizzle";
 import { UpdateReservationPartSchema } from "@/lib/types/api/reserve";
 import type { ErrorResponse } from "@/lib/types/api";
+import type { CancelReservationResponse } from "@/lib/types/api/reserve";
 
 /**
  * 予約パート変更エンドポイント。
@@ -86,5 +87,5 @@ export async function DELETE(
     return NextResponse.json({ message: "このイベントの受付は終了しています" } satisfies ErrorResponse, { status: 422 });
   }
 
-  return NextResponse.json({ message: "予約をキャンセルしました" } satisfies ErrorResponse);
+  return NextResponse.json({ message: "予約をキャンセルしました" } satisfies CancelReservationResponse);
 }

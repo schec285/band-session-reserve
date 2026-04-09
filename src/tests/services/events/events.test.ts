@@ -162,9 +162,9 @@ describe("getEventSongs", () => {
       title: "千本桜",
       artist: "黒うさP",
       reservations: [
-        { part: "readGuitar",    username: "yamada_taro", userId: currentUserId },
-        { part: "backingGuitar", username: null,          userId: null },
-        { part: "drums",         username: "sato_hanako", userId: otherUserId },
+        { part: "readGuitar",    username: "yamada_taro", userId: currentUserId, reservationId: "reservation-uuid-1" },
+        { part: "backingGuitar", username: null,          userId: null,          reservationId: null },
+        { part: "drums",         username: "sato_hanako", userId: otherUserId,   reservationId: "reservation-uuid-2" },
       ],
     },
   ];
@@ -208,6 +208,20 @@ describe("getEventSongs", () => {
     if (result.status !== "ok") return;
     const reservations = result.songs[0].reservations;
     expect(reservations.every((r) => r.isOwner === false)).toBe(true);
+  });
+
+  it("ok: 予約済みパートは reservationId を持ち、空きパートは null を返す", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEvent);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+
+    const result = await getEventSongs(mockRepo, "event-uuid-1", currentUserId);
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    const reservations = result.songs[0].reservations;
+    expect(reservations[0]).toMatchObject({ part: "readGuitar",    reservationId: "reservation-uuid-1" });
+    expect(reservations[1]).toMatchObject({ part: "backingGuitar", reservationId: null });
+    expect(reservations[2]).toMatchObject({ part: "drums",         reservationId: "reservation-uuid-2" });
   });
 
   it("ok: レスポンスに userId が含まれない", async () => {

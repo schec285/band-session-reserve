@@ -57,3 +57,8 @@ export const UpdateReservationPartSchema = z.object({
 });
 
 export type UpdateReservationPartInput = z.infer<typeof UpdateReservationPartSchema>;
+
+/**
+ * DELETE /api/reserve/[reservationId] の成功レスポンス型。
+ */
+export type CancelReservationResponse = { message: string };
