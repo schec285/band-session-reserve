@@ -152,6 +152,9 @@ describe("getEventSongs", () => {
     description: "春のセッションです",
   };
 
+  const currentUserId = "user-uuid-current";
+  const otherUserId   = "user-uuid-other";
+
   const mockSongs = [
     {
       id: "song-uuid-1",
@@ -159,9 +162,9 @@ describe("getEventSongs", () => {
       title: "千本桜",
       artist: "黒うさP",
       reservations: [
-        { part: "readGuitar",    username: "yamada_taro" },
-        { part: "backingGuitar", username: null },
-        { part: "drums",         username: "sato_hanako" },
+        { part: "readGuitar",    username: "yamada_taro", userId: currentUserId },
+        { part: "backingGuitar", username: null,          userId: null },
+        { part: "drums",         username: "sato_hanako", userId: otherUserId },
       ],
     },
   ];
@@ -174,12 +177,50 @@ describe("getEventSongs", () => {
 
     expect(result.status).toBe("ok");
     if (result.status !== "ok") return;
-    expect(result.songs).toEqual(mockSongs);
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.title).toBe("春のセッション");
     expect(typeof result.event.startAt).toBe("string");
     expect(mockRepo.findEventById).toHaveBeenCalledWith("event-uuid-1");
     expect(mockRepo.findEventSongsWithReservations).toHaveBeenCalledWith("event-uuid-1");
+  });
+
+  it("ok: currentUserId を渡すと自分の予約に isOwner: true、他は false を返す", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEvent);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+
+    const result = await getEventSongs(mockRepo, "event-uuid-1", currentUserId);
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    const reservations = result.songs[0].reservations;
+    expect(reservations[0]).toMatchObject({ part: "readGuitar",    isOwner: true });
+    expect(reservations[1]).toMatchObject({ part: "backingGuitar", isOwner: false });
+    expect(reservations[2]).toMatchObject({ part: "drums",         isOwner: false });
+  });
+
+  it("ok: currentUserId を渡さない場合は全エントリーの isOwner が false", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEvent);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+
+    const result = await getEventSongs(mockRepo, "event-uuid-1");
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    const reservations = result.songs[0].reservations;
+    expect(reservations.every((r) => r.isOwner === false)).toBe(true);
+  });
+
+  it("ok: レスポンスに userId が含まれない", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEvent);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+
+    const result = await getEventSongs(mockRepo, "event-uuid-1", currentUserId);
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    result.songs[0].reservations.forEach((r) => {
+      expect(r).not.toHaveProperty("userId");
+    });
   });
 
   it("ok: 曲が 0 件の場合は空配列を返す", async () => {

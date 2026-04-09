@@ -1,10 +1,15 @@
 import type { Mock } from "vitest";
 import { GET } from "@/app/api/events/[eventId]/songs/route";
 
+vi.mock("@/auth", () => ({
+  auth: vi.fn(),
+}));
+
 vi.mock("@/server/services/events/events", () => ({
   getEventSongs: vi.fn(),
 }));
 
+import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 
 const mockSongs = [
@@ -13,12 +18,12 @@ const mockSongs = [
     title: "千本桜",
     artist: "黒うさP",
     reservations: [
-      { part: "readGuitar",    username: "yamada_taro" },
-      { part: "backingGuitar", username: null },
-      { part: "bass",          username: null },
-      { part: "drums",         username: "sato_hanako" },
-      { part: "keyboard",      username: null },
-      { part: "vocal",         username: null },
+      { part: "readGuitar",    username: "yamada_taro", isOwner: false },
+      { part: "backingGuitar", username: null,          isOwner: false },
+      { part: "bass",          username: null,          isOwner: false },
+      { part: "drums",         username: "sato_hanako", isOwner: false },
+      { part: "keyboard",      username: null,          isOwner: false },
+      { part: "vocal",         username: null,          isOwner: false },
     ],
   },
 ];
@@ -31,6 +36,7 @@ function makeRequest(eventId: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  (auth as Mock).mockResolvedValue(null);
   (getEventSongs as Mock).mockResolvedValue({ status: "ok", songs: mockSongs });
 });
 
@@ -52,6 +58,30 @@ describe("GET /api/events/:eventId/songs", () => {
 
       expect(res.status).toBe(200);
       expect(json.songs).toEqual([]);
+    });
+
+    it("200: ログイン中の場合は session.user.id を getEventSongs に渡す", async () => {
+      (auth as Mock).mockResolvedValue({ user: { id: "user-uuid-1" } });
+
+      await GET(makeRequest(validParams.eventId), { params: validParams });
+
+      expect(getEventSongs).toHaveBeenCalledWith(
+        expect.anything(),
+        validParams.eventId,
+        "user-uuid-1"
+      );
+    });
+
+    it("200: 未認証の場合は currentUserId を undefined で渡す", async () => {
+      (auth as Mock).mockResolvedValue(null);
+
+      await GET(makeRequest(validParams.eventId), { params: validParams });
+
+      expect(getEventSongs).toHaveBeenCalledWith(
+        expect.anything(),
+        validParams.eventId,
+        undefined
+      );
     });
   });
 

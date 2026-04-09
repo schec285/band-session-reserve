@@ -40,17 +40,21 @@ export async function getEvents(repo: IEventRepository): Promise<Event[]> {
 
 /**
  * 指定イベントの曲一覧とパート別予約状況を取得する。
+ * currentUserId を渡すと、自分の予約エントリーに isOwner: true を付与する。
+ * 未認証（currentUserId が undefined）の場合は全エントリーが isOwner: false になる。
+ * userId はレスポンスに含めず、内部判定のみに使用する。
  * イベントが存在しない場合は status: "not-found" を返す。
  */
 export async function getEventSongs(
   repo: IEventRepository,
-  eventId: string
+  eventId: string,
+  currentUserId?: string
 ): Promise<GetEventSongsResult> {
-  const [eventRecord, songs] = await Promise.all([
+  const [eventRecord, songRecords] = await Promise.all([
     repo.findEventById(eventId),
     repo.findEventSongsWithReservations(eventId),
   ]);
-  if (eventRecord === null || songs === null) return { status: "not-found" };
+  if (eventRecord === null || songRecords === null) return { status: "not-found" };
   const event: Event = {
     id: eventRecord.id,
     title: eventRecord.title,
@@ -61,5 +65,16 @@ export async function getEventSongs(
     venueFee: eventRecord.venueFee,
     description: eventRecord.description,
   };
+  const songs: SongWithReservations[] = songRecords.map((song) => ({
+    id: song.id,
+    eventSongId: song.eventSongId,
+    title: song.title,
+    artist: song.artist,
+    reservations: song.reservations.map(({ part, username, userId }) => ({
+      part,
+      username,
+      isOwner: currentUserId !== undefined && userId === currentUserId,
+    })),
+  }));
   return { status: "ok", event, songs };
 }

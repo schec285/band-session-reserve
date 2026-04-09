@@ -16,10 +16,12 @@ export interface IEventRecord {
 /**
  * パート別予約状況 1 件を表すレコード型。
  * username が null の場合は空き、文字列の場合は予約済みを表す。
+ * userId はサービス層での isOwner 判定に使用し、APIレスポンスには含めない。
  */
 export interface IReservationInfo {
   part: string;
   username: string | null;
+  userId: string | null;
 }
 
 /**

@@ -29,10 +29,12 @@ export type GetEventsResponse = z.infer<typeof GetEventsResponseSchema>;
 /**
  * パート別予約状況 1 件のスキーマ。
  * username が null の場合は空き、文字列の場合は予約済みを表す。
+ * isOwner が true の場合はログイン中のユーザー自身の予約を表す。
  */
 export const ReservationInfoSchema = z.object({
   part: z.string(),
   username: z.string().nullable(),
+  isOwner: z.boolean(),
 });
 
 export type ReservationInfo = z.infer<typeof ReservationInfoSchema>;

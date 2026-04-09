@@ -87,6 +87,7 @@ export class DrizzleEventRepository implements IEventRepository {
         eventSongId: reservations.eventSongId,
         part: reservations.part,
         username: users.name,
+        userId: reservations.userId,
       })
       .from(reservations)
       .innerJoin(users, eq(reservations.userId, users.id))
@@ -98,7 +99,7 @@ export class DrizzleEventRepository implements IEventRepository {
 
       const reservationList = songRow.parts.map((part) => {
         const existing = songReservations.find((r) => r.part === part);
-        return { part, username: existing?.username ?? null };
+        return { part, username: existing?.username ?? null, userId: existing?.userId ?? null };
       });
 
       return {
