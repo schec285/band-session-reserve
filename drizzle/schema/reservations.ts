@@ -17,6 +17,7 @@ export const reservations = pgTable("reservations", {
     .references(() => eventSongs.id, { onDelete: "cascade" }),
   part: partEnum("part").notNull(),
   snsConsent: boolean("sns_consent").notNull().default(false),
+  isTransferable: boolean("is_transferable").notNull().default(false),
   comment: text("comment"),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
