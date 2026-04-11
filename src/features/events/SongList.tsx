@@ -173,7 +173,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
               );
 
               return (
-                <tr key={song.id} className={i % 2 === 1 ? "bg-muted/20" : "bg-background"}>
+                <tr key={song.eventSongId} className={i % 2 === 1 ? "bg-muted/20" : "bg-background"}>
                   {/* 曲名・アーティスト列（スクロール時に固定） */}
                   <td
                     className={`px-4 py-3 sticky left-0 z-10 ${
