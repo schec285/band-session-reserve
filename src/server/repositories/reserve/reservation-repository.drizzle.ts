@@ -91,12 +91,12 @@ export class DrizzleReservationRepository implements IReservationRepository {
   }
 
   /**
-   * 予約のパートを更新する。
+   * 予約のパートと譲渡可否を更新する。
    */
-  async updatePart(reservationId: string, part: string): Promise<void> {
+  async updatePartAndTransferable(reservationId: string, part: string, isTransferable: boolean): Promise<void> {
     await db
       .update(reservations)
-      .set({ part: part as typeof reservations.part._.data, updatedAt: new Date() })
+      .set({ part: part as typeof reservations.part._.data, isTransferable, updatedAt: new Date() })
       .where(eq(reservations.id, reservationId));
   }
 
@@ -115,6 +115,7 @@ export class DrizzleReservationRepository implements IReservationRepository {
     eventSongId: string;
     part: string;
     snsConsent: boolean;
+    isTransferable: boolean;
     comment?: string;
   }>): Promise<void> {
     await db.transaction(async (tx) => {
@@ -124,6 +125,7 @@ export class DrizzleReservationRepository implements IReservationRepository {
           eventSongId: d.eventSongId,
           part: d.part as typeof reservations.part._.data,
           snsConsent: d.snsConsent,
+          isTransferable: d.isTransferable,
           comment: d.comment,
         }))
       );

@@ -18,8 +18,8 @@ const openEventSong2 = {
   event: { startAt: future, closedAt: null },
 };
 
-const entry1 = { eventSongId: "event-song-uuid-1", part: "vocal" };
-const entry2 = { eventSongId: "event-song-uuid-2", part: "bass" };
+const entry1 = { eventSongId: "event-song-uuid-1", part: "vocal", isTransferable: false };
+const entry2 = { eventSongId: "event-song-uuid-2", part: "bass", isTransferable: false };
 
 const baseParams = {
   userId: "user-uuid",
@@ -35,7 +35,7 @@ beforeEach(() => {
     findByEventSongIdAndPart: vi.fn(),
     findByUserIdAndEventSongId: vi.fn(),
     findById: vi.fn(),
-    updatePart: vi.fn(),
+    updatePartAndTransferable: vi.fn(),
     deleteById: vi.fn(),
     createMany: vi.fn(),
   };
@@ -56,7 +56,7 @@ describe("createReservations", () => {
 
       expect(result).toEqual({ status: "ok" });
       expect(mockRepo.createMany).toHaveBeenCalledWith([
-        { userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "vocal", snsConsent: true, comment: undefined },
+        { userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "vocal", snsConsent: true, isTransferable: false, comment: undefined },
       ]);
     });
 
@@ -65,8 +65,20 @@ describe("createReservations", () => {
 
       expect(result).toEqual({ status: "ok" });
       expect(mockRepo.createMany).toHaveBeenCalledWith([
-        { userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "vocal", snsConsent: true, comment: undefined },
-        { userId: "user-uuid", eventSongId: "event-song-uuid-2", part: "bass", snsConsent: true, comment: undefined },
+        { userId: "user-uuid", eventSongId: "event-song-uuid-1", part: "vocal", snsConsent: true, isTransferable: false, comment: undefined },
+        { userId: "user-uuid", eventSongId: "event-song-uuid-2", part: "bass", snsConsent: true, isTransferable: false, comment: undefined },
+      ]);
+    });
+
+    it("ok: isTransferable: true のエントリーが createMany にそのまま渡る", async () => {
+      const result = await createReservations(mockRepo, {
+        ...baseParams,
+        entries: [{ ...entry1, isTransferable: true }],
+      });
+
+      expect(result).toEqual({ status: "ok" });
+      expect(mockRepo.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ isTransferable: true }),
       ]);
     });
 

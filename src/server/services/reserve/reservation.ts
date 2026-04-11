@@ -17,7 +17,7 @@ export async function createReservations(
   repo: IReservationRepository,
   params: {
     userId: string;
-    entries: Array<{ eventSongId: string; part: string }>;
+    entries: Array<{ eventSongId: string; part: string; isTransferable: boolean }>;
     snsConsent: boolean;
     comment?: string;
   }
@@ -47,6 +47,7 @@ export async function createReservations(
       eventSongId: entry.eventSongId,
       part: entry.part,
       snsConsent: params.snsConsent,
+      isTransferable: entry.isTransferable,
       comment: params.comment,
     }))
   );
@@ -71,6 +72,7 @@ export async function updateReservationPart(
     reservationId: string;
     userId: string;
     part: string;
+    isTransferable: boolean;
   }
 ): Promise<UpdateReservationPartResult> {
   const reservation = await repo.findById(params.reservationId);
@@ -86,7 +88,7 @@ export async function updateReservationPart(
   const existing = await repo.findByEventSongIdAndPart(reservation.eventSongId, params.part);
   if (existing) return { status: "filled" };
 
-  await repo.updatePart(params.reservationId, params.part);
+  await repo.updatePartAndTransferable(params.reservationId, params.part, params.isTransferable);
   return { status: "ok" };
 }
 

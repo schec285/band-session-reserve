@@ -17,7 +17,7 @@ const VALID_UUID_2 = "8d0f7780-8536-51ef-a55c-f18fd2a01bf8";
 
 const validBody = {
   entries: [
-    { eventSongId: VALID_UUID, part: "vocal" },
+    { eventSongId: VALID_UUID, part: "vocal", isTransferable: false },
   ],
   snsConsent: true,
   comment: "よろしくお願いします。",
@@ -51,8 +51,8 @@ describe("POST /api/reserve", () => {
       const body = {
         ...validBody,
         entries: [
-          { eventSongId: VALID_UUID, part: "vocal" },
-          { eventSongId: VALID_UUID_2, part: "bass" },
+          { eventSongId: VALID_UUID, part: "vocal", isTransferable: false },
+          { eventSongId: VALID_UUID_2, part: "bass", isTransferable: true },
         ],
       };
       const res = await POST(makeRequest(body));
@@ -66,7 +66,7 @@ describe("POST /api/reserve", () => {
         expect.anything(),
         {
           userId: "user-uuid",
-          entries: [{ eventSongId: VALID_UUID, part: "vocal" }],
+          entries: [{ eventSongId: VALID_UUID, part: "vocal", isTransferable: false }],
           snsConsent: true,
           comment: "よろしくお願いします。",
         }
@@ -134,10 +134,25 @@ describe("POST /api/reserve", () => {
       );
     });
 
+    it("400: entries[0].isTransferable が未指定", async () => {
+      const body = {
+        ...validBody,
+        entries: [{ eventSongId: VALID_UUID, part: "vocal" }],
+      };
+      const res = await POST(makeRequest(body));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("入力内容に誤りがあります");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({ field: "entries.0.isTransferable" })
+      );
+    });
+
     it("400: entries[0].part が不正な値", async () => {
       const body = {
         ...validBody,
-        entries: [{ eventSongId: VALID_UUID, part: "invalidPart" }],
+        entries: [{ eventSongId: VALID_UUID, part: "invalidPart", isTransferable: false }],
       };
       const res = await POST(makeRequest(body));
       const json = await res.json();
@@ -153,8 +168,8 @@ describe("POST /api/reserve", () => {
       const body = {
         ...validBody,
         entries: [
-          { eventSongId: VALID_UUID, part: "readGuitar" },
-          { eventSongId: VALID_UUID, part: "backingGuitar" },
+          { eventSongId: VALID_UUID, part: "readGuitar", isTransferable: false },
+          { eventSongId: VALID_UUID, part: "backingGuitar", isTransferable: false },
         ],
       };
       const res = await POST(makeRequest(body));
@@ -174,8 +189,8 @@ describe("POST /api/reserve", () => {
       const body = {
         ...validBody,
         entries: [
-          { eventSongId: VALID_UUID, part: "readGuitar" },
-          { eventSongId: VALID_UUID_2, part: "backingGuitar" },
+          { eventSongId: VALID_UUID, part: "readGuitar", isTransferable: false },
+          { eventSongId: VALID_UUID_2, part: "backingGuitar", isTransferable: false },
         ],
       };
       const res = await POST(makeRequest(body));

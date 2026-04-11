@@ -12,7 +12,7 @@ vi.mock("@/server/services/reserve/reservation", () => ({
 import { auth } from "@/auth";
 import { updateReservationPart } from "@/server/services/reserve/reservation";
 
-const validBody = { part: "drums" };
+const validBody = { part: "drums", isTransferable: false };
 const validParams = Promise.resolve({ reservationId: "reservation-uuid" });
 
 function makeRequest(body: unknown) {
@@ -38,6 +38,15 @@ describe("PATCH /api/reserve/:reservationId", () => {
       expect(res.status).toBe(200);
       expect(json.message).toBe("予約を更新しました");
     });
+
+    it("updateReservationPart に isTransferable が渡る", async () => {
+      await PATCH(makeRequest({ part: "drums", isTransferable: true }), { params: validParams });
+
+      expect(updateReservationPart).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ part: "drums", isTransferable: true })
+      );
+    });
   });
 
   describe("異常系 — 認証", () => {
@@ -54,12 +63,23 @@ describe("PATCH /api/reserve/:reservationId", () => {
 
   describe("異常系 — バリデーション", () => {
     it("400: part が未指定", async () => {
-      const res = await PATCH(makeRequest({}), { params: validParams });
+      const res = await PATCH(makeRequest({ isTransferable: false }), { params: validParams });
       const json = await res.json();
 
       expect(res.status).toBe(400);
       expect(json.message).toBe("入力内容に誤りがあります");
       expect(json.errors).toContainEqual({ field: "part", message: "パートを選択してください" });
+    });
+
+    it("400: isTransferable が未指定", async () => {
+      const res = await PATCH(makeRequest({ part: "drums" }), { params: validParams });
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("入力内容に誤りがあります");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({ field: "isTransferable" })
+      );
     });
   });
 

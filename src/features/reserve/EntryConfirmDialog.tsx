@@ -16,7 +16,7 @@ export type EntryItem = {
 
 /**
  * エントリー最終確認ダイアログ。
- * 選択した曲・パートを曲ごとにまとめて表示し、SNS同意・コメント入力を行って送信を確定する。
+ * 選択した曲・パートを曲ごとにまとめて表示し、パートごとの譲渡可否・SNS同意・コメント入力を行って送信を確定する。
  */
 export function EntryConfirmDialog({
   open,
@@ -27,10 +27,11 @@ export function EntryConfirmDialog({
   open: boolean;
   entries: EntryItem[];
   onClose: () => void;
-  onSubmit: (params: { snsConsent: boolean; comment: string }) => Promise<void>;
+  onSubmit: (params: { snsConsent: boolean; comment: string; transferableKeys: Set<string> }) => Promise<void>;
 }) {
   const [snsConsent, setSnsConsent] = useState(true);
   const [comment, setComment] = useState("");
+  const [transferable, setTransferable] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,12 +52,24 @@ export function EntryConfirmDialog({
     return map;
   }, new Map());
 
+  function toggleTransferable(key: string) {
+    setTransferable((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      await onSubmit({ snsConsent, comment: comment.trim() });
+      await onSubmit({ snsConsent, comment: comment.trim(), transferableKeys: transferable });
     } catch (e) {
       setError(e instanceof Error ? e.message : "エントリーに失敗しました");
     } finally {
@@ -68,6 +81,7 @@ export function EntryConfirmDialog({
     if (loading) return;
     setSnsConsent(true);
     setComment("");
+    setTransferable(new Set());
     setError(null);
     onClose();
   }
@@ -94,15 +108,27 @@ export function EntryConfirmDialog({
                       <span className="text-sm">{songArtist}</span>
                     </div>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {parts.map((part) => (
-                      <span
-                        key={part}
-                        className="inline-block rounded bg-blue-100 text-blue-700 text-xs px-2 py-0.5"
-                      >
-                        {PART_LABELS[part]}
-                      </span>
-                    ))}
+                  <div className="mt-2 space-y-1.5">
+                    {parts.map((part) => {
+                      const key = `${eventSongId}:${part}`;
+                      const isTransferable = transferable.has(key);
+                      return (
+                        <div key={part} className="flex items-center justify-between gap-2">
+                          <span className="inline-block rounded bg-blue-100 text-blue-700 text-xs px-2 py-0.5">
+                            {PART_LABELS[part]}
+                          </span>
+                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={isTransferable}
+                              onChange={() => toggleTransferable(key)}
+                              className="h-3.5 w-3.5 cursor-pointer"
+                            />
+                            譲渡可能
+                          </label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </li>
               ))}

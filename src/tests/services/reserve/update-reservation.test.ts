@@ -23,6 +23,7 @@ const params = {
   reservationId: "reservation-uuid",
   userId: "user-uuid",
   part: "drums",
+  isTransferable: false,
 };
 
 let mockRepo: Mocked<IReservationRepository>;
@@ -32,21 +33,29 @@ beforeEach(() => {
     findEventSongWithEvent: vi.fn(),
     findByEventSongIdAndPart: vi.fn(),
     findById: vi.fn(),
-    updatePart: vi.fn(),
-    create: vi.fn(),
+    updatePartAndTransferable: vi.fn(),
+    deleteById: vi.fn(),
+    createMany: vi.fn(),
   };
   mockRepo.findById.mockResolvedValue(existingReservation);
   mockRepo.findEventSongWithEvent.mockResolvedValue(openEventSong);
   mockRepo.findByEventSongIdAndPart.mockResolvedValue(null);
-  mockRepo.updatePart.mockResolvedValue(undefined);
+  mockRepo.updatePartAndTransferable.mockResolvedValue(undefined);
 });
 
 describe("updateReservationPart", () => {
-  it("ok: 更新成功・updatePart が呼ばれる", async () => {
+  it("ok: 更新成功・updatePartAndTransferable が呼ばれる", async () => {
     const result = await updateReservationPart(mockRepo, params);
 
     expect(result).toEqual({ status: "ok" });
-    expect(mockRepo.updatePart).toHaveBeenCalledWith("reservation-uuid", "drums");
+    expect(mockRepo.updatePartAndTransferable).toHaveBeenCalledWith("reservation-uuid", "drums", false);
+  });
+
+  it("ok: isTransferable: true で更新成功", async () => {
+    const result = await updateReservationPart(mockRepo, { ...params, isTransferable: true });
+
+    expect(result).toEqual({ status: "ok" });
+    expect(mockRepo.updatePartAndTransferable).toHaveBeenCalledWith("reservation-uuid", "drums", true);
   });
 
   it("not-found: 予約が存在しない", async () => {

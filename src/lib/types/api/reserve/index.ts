@@ -5,11 +5,12 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 /**
  * エントリー1件分のスキーマ。
- * eventSongId（UUID）とパートを持つ。
+ * eventSongId（UUID）とパート、譲渡可否を持つ。
  */
 export const ReserveEntrySchema = z.object({
   eventSongId: z.string().regex(UUID_REGEX, "イベント曲IDが不正です"),
   part: PartSchema,
+  isTransferable: z.boolean({ error: "選択してください" }),
 });
 
 export type ReserveEntry = z.infer<typeof ReserveEntrySchema>;
@@ -50,10 +51,11 @@ export type CreateReservationsInput = z.infer<typeof CreateReservationsSchema>;
 
 /**
  * PATCH /api/reserve/[reservationId] のリクエストボディスキーマ。
- * 変更後のパートを指定する。
+ * 変更後のパートと譲渡可否を指定する。
  */
 export const UpdateReservationPartSchema = z.object({
   part: z.string({ error: "パートを選択してください" }).min(1, "パートを選択してください"),
+  isTransferable: z.boolean({ error: "選択してください" }),
 });
 
 export type UpdateReservationPartInput = z.infer<typeof UpdateReservationPartSchema>;

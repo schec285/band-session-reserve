@@ -82,15 +82,18 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
   async function handleConfirmSubmit({
     snsConsent,
     comment,
+    transferableKeys,
   }: {
     snsConsent: boolean;
     comment: string;
+    transferableKeys: Set<string>;
   }) {
     const entries = Array.from(selected).map((key) => {
       const colonIndex = key.indexOf(":");
       return {
         eventSongId: key.slice(0, colonIndex),
         part: key.slice(colonIndex + 1),
+        isTransferable: transferableKeys.has(key),
       };
     });
 

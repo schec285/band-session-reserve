@@ -36,6 +36,7 @@ export async function PATCH(
     reservationId,
     userId: session.user.id,
     part: parsed.data.part,
+    isTransferable: parsed.data.isTransferable,
   });
 
   if (result.status === "not-found") {
