@@ -12,6 +12,7 @@ export const PartSchema = z.enum(partEnum.enumValues);
  */
 export const PART_LABELS: Record<Part, string> = {
   vocal: "ボーカル",
+  chorus: "コーラス",
   readGuitar: "リードギター",
   backingGuitar: "バッキングギター",
   bass: "ベース",
@@ -25,6 +26,7 @@ export const PART_LABELS: Record<Part, string> = {
  * 物理的に1人では演奏できない組み合わせを定義する。
  */
 export const FORBIDDEN_SAME_SONG_PAIRS: [Part, Part][] = [
+  ["vocal", "chorus"],
   ["readGuitar", "backingGuitar"],
   ["readGuitar", "bass"],
   ["readGuitar", "drums"],

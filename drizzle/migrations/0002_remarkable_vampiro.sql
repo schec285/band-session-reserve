@@ -1,0 +1,1 @@
+ALTER TYPE "public"."part" ADD VALUE 'chorus' BEFORE 'other';

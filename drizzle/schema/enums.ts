@@ -11,6 +11,7 @@ export const partEnum = pgEnum("part", [
   "drums",
   "keyboard",
   "vocal",
+  "chorus",
   "other",
 ]);
 

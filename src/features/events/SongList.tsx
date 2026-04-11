@@ -16,6 +16,7 @@ import { EntryConfirmDialog, type EntryItem } from "@/features/reserve/EntryConf
  */
 const PART_ORDER: Part[] = [
   "vocal",
+  "chorus",
   "readGuitar",
   "backingGuitar",
   "bass",

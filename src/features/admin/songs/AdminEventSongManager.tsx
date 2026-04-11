@@ -3,25 +3,17 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { PART_LABELS } from "@/lib/utils/parts";
+import type { Part } from "@drizzle/schema";
 
-const PART_LABELS: Record<string, string> = {
-  readGuitar: "リードギター",
-  backingGuitar: "バッキングギター",
-  bass: "ベース",
-  drums: "ドラム",
-  keyboard: "キーボード",
-  vocal: "ボーカル",
-  other: "その他",
-};
-
-const ALL_PARTS = Object.keys(PART_LABELS);
+const ALL_PARTS = Object.keys(PART_LABELS) as Part[];
 
 interface EventSong {
   eventSongId: string;
   songId: string;
   title: string;
   artist: string;
-  parts: string[];
+  parts: Part[];
 }
 
 interface Song {
