@@ -27,11 +27,11 @@ const PART_ORDER: Part[] = [
 
 /**
  * 曲一覧とパート別予約状況を横並びテーブルで表示するコンポーネント。
- * ログイン済みの場合は空きパートにチェックボックスを表示し、右下のエントリーするボタンから確認ダイアログを経て一括エントリーができる。
- * 未ログインの場合は空きパートを「空き」表示のみとし、サインインへ誘導する。
+ * ログイン済みかつ募集中の場合は空きパートにチェックボックスを表示し、右下のエントリーするボタンから確認ダイアログを経て一括エントリーができる。
+ * 未ログインまたは募集終了の場合は空きパートを「空き」表示のみとし、未ログインのときはサインインへ誘導する。
  * 自分のエントリーは名前をリンク風に表示し、クリックで管理モーダルを開く。
  */
-export function SongList({ songs }: { songs: SongWithReservations[] }) {
+export function SongList({ songs, isClosed = false }: { songs: SongWithReservations[]; isClosed?: boolean }) {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -49,6 +49,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
   const [manageLoading, setManageLoading] = useState(false);
 
   const isLoggedIn = !!session;
+  const canEntry = isLoggedIn && !isClosed;
 
   const selectedSongCount = new Set(
     Array.from(selected).map((key) => key.slice(0, key.indexOf(":")))
@@ -239,9 +240,17 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                               aria-label={`${song.title} ${PART_LABELS[part]} を管理`}
                             >
                               {username}
+                              {reservation.isTransferable && (
+                                <span className="ml-1 text-xs text-green-600 font-normal">(譲渡可)</span>
+                              )}
                             </button>
                           ) : (
-                            <span className="text-sm font-medium">{username}</span>
+                            <span className="text-sm font-medium">
+                              {username}
+                              {reservation.isTransferable && (
+                                <span className="ml-1 text-xs text-green-600 font-normal">(譲渡可)</span>
+                              )}
+                            </span>
                           )}
                         </td>
                       );
@@ -252,7 +261,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
 
                     return (
                       <td key={part} className="px-3 py-3 text-center">
-                        {isLoggedIn ? (
+                        {canEntry ? (
                           <input
                             type="checkbox"
                             aria-label={`${song.title} ${PART_LABELS[part]}`}
@@ -274,7 +283,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
       </div>
 
       {/* 未ログイン時の誘導 */}
-      {!isLoggedIn && (
+      {!isLoggedIn && !isClosed && (
         <p className="text-sm text-muted-foreground">
           エントリーするには{" "}
           <a
@@ -292,7 +301,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
       )}
 
       {/* エントリーするボタン（右下） */}
-      {isLoggedIn && (
+      {canEntry && (
         <div className="flex justify-end">
           <Button
             onClick={() => setDialogOpen(true)}
