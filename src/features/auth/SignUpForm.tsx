@@ -32,7 +32,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
     if (flash) clearFlash();
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
