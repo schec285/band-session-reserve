@@ -55,26 +55,24 @@ export async function createReservations(
   return { status: "ok" };
 }
 
-type UpdateReservationPartResult =
+type UpdateTransferableResult =
   | { status: "ok" }
   | { status: "not-found" }
   | { status: "forbidden" }
-  | { status: "filled" }
   | { status: "closed" };
 
 /**
- * 予約のパートを変更する。
- * 予約の存在確認・所有権確認・受付状況・パートの空き確認を行い、更新する。
+ * 予約の譲渡可否を変更する。
+ * 予約の存在確認・所有権確認・受付状況を確認し、isTransferable を更新する。
  */
-export async function updateReservationPart(
+export async function updateTransferable(
   repo: IReservationRepository,
   params: {
     reservationId: string;
     userId: string;
-    part: string;
     isTransferable: boolean;
   }
-): Promise<UpdateReservationPartResult> {
+): Promise<UpdateTransferableResult> {
   const reservation = await repo.findById(params.reservationId);
   if (!reservation) return { status: "not-found" };
   if (reservation.userId !== params.userId) return { status: "forbidden" };
@@ -85,10 +83,7 @@ export async function updateReservationPart(
   const deadline = eventSong.event.closedAt ?? eventSong.event.startAt;
   if (deadline <= new Date()) return { status: "closed" };
 
-  const existing = await repo.findByEventSongIdAndPart(reservation.eventSongId, params.part);
-  if (existing) return { status: "filled" };
-
-  await repo.updatePartAndTransferable(params.reservationId, params.part, params.isTransferable);
+  await repo.updateTransferable(params.reservationId, params.isTransferable);
   return { status: "ok" };
 }
 

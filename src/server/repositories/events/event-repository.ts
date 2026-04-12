@@ -24,6 +24,7 @@ export interface IReservationInfo {
   username: string | null;
   userId: string | null;
   reservationId: string | null;
+  isTransferable: boolean;
 }
 
 /**

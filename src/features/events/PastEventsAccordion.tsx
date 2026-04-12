@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import type { Event } from "@/lib/types/api/events";
+import type { Event } from "@/lib/types/domain/events";
 import { EventCard } from "./EventCard";
 
 /**

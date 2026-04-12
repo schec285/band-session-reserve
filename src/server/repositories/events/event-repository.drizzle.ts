@@ -86,6 +86,7 @@ export class DrizzleEventRepository implements IEventRepository {
         part: reservations.part,
         username: users.name,
         userId: reservations.userId,
+        isTransferable: reservations.isTransferable,
       })
       .from(reservations)
       .innerJoin(users, eq(reservations.userId, users.id))
@@ -102,6 +103,7 @@ export class DrizzleEventRepository implements IEventRepository {
           username: existing?.username ?? null,
           userId: existing?.userId ?? null,
           reservationId: existing?.reservationId ?? null,
+          isTransferable: existing?.isTransferable ?? false,
         };
       });
 

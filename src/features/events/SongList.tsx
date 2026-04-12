@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
-import type { SongWithReservations } from "@/lib/types/api/events";
+import type { SongWithReservations } from "@/lib/types/domain/events";
 import type { Part } from "@drizzle/schema";
 
 import { PART_LABELS } from "@/lib/utils/parts";
@@ -29,6 +29,7 @@ const PART_ORDER: Part[] = [
  * 曲一覧とパート別予約状況を横並びテーブルで表示するコンポーネント。
  * ログイン済みの場合は空きパートにチェックボックスを表示し、右下のエントリーするボタンから確認ダイアログを経て一括エントリーができる。
  * 未ログインの場合は空きパートを「空き」表示のみとし、サインインへ誘導する。
+ * 自分のエントリーは名前をリンク風に表示し、クリックで管理モーダルを開く。
  */
 export function SongList({ songs }: { songs: SongWithReservations[] }) {
   const { data: session } = useSession();
@@ -39,8 +40,13 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [cancelTarget, setCancelTarget] = useState<{ reservationId: string; songTitle: string; part: string } | null>(null);
-  const [canceling, setCanceling] = useState(false);
+  const [manageTarget, setManageTarget] = useState<{
+    reservationId: string;
+    songTitle: string;
+    part: string;
+    isTransferable: boolean;
+  } | null>(null);
+  const [manageLoading, setManageLoading] = useState(false);
 
   const isLoggedIn = !!session;
 
@@ -130,18 +136,36 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
     startTransition(() => router.refresh());
   }
 
-  async function handleCancelConfirm() {
-    if (!cancelTarget) return;
-    setCanceling(true);
-    const res = await fetch(`/api/reserve/${cancelTarget.reservationId}`, { method: "DELETE" });
-    setCanceling(false);
-    setCancelTarget(null);
+  async function handleToggleTransferable() {
+    if (!manageTarget) return;
+    setManageLoading(true);
+    const res = await fetch(`/api/reserve/${manageTarget.reservationId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isTransferable: !manageTarget.isTransferable }),
+    });
+    setManageLoading(false);
     if (!res.ok) {
       const json = await res.json();
-      setSuccessMessage(null);
+      alert(json.message ?? "更新に失敗しました");
+      return;
+    }
+    setManageTarget(null);
+    setSuccessMessage(!manageTarget.isTransferable ? "譲渡可能に設定しました" : "譲渡不可に設定しました");
+    startTransition(() => router.refresh());
+  }
+
+  async function handleCancel() {
+    if (!manageTarget) return;
+    setManageLoading(true);
+    const res = await fetch(`/api/reserve/${manageTarget.reservationId}`, { method: "DELETE" });
+    setManageLoading(false);
+    if (!res.ok) {
+      const json = await res.json();
       alert(json.message ?? "キャンセルに失敗しました");
       return;
     }
+    setManageTarget(null);
     setSuccessMessage("エントリーをキャンセルしました");
     startTransition(() => router.refresh());
   }
@@ -169,7 +193,7 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
           <tbody>
             {songs.map((song, i) => {
               const reservationMap = new Map(
-                song.reservations.map((r) => [r.part, { username: r.username, isOwner: r.isOwner, reservationId: r.reservationId }])
+                song.reservations.map((r) => [r.part, r])
               );
 
               return (
@@ -191,7 +215,6 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                     const username = reservation?.username ?? null;
                     const isFilled = username != null;
                     const isOwner = reservation?.isOwner ?? false;
-                    const reservationId = reservation?.reservationId ?? null;
 
                     if (!isRecruiting) {
                       return (
@@ -204,15 +227,21 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
                     if (isFilled) {
                       return (
                         <td key={part} className={`px-3 py-3 text-center ${isOwner ? "bg-yellow-100" : ""}`}>
-                          <span className="text-sm font-medium">{username}</span>
-                          {isOwner && (
+                          {isOwner ? (
                             <button
-                              onClick={() => setCancelTarget({ reservationId: reservationId!, songTitle: song.title, part: PART_LABELS[part] })}
-                              className="ml-1.5 text-xs text-red-500 hover:text-red-700 underline"
-                              aria-label={`${song.title} ${PART_LABELS[part]} をキャンセル`}
+                              onClick={() => setManageTarget({
+                                reservationId: reservation.reservationId!,
+                                songTitle: song.title,
+                                part: PART_LABELS[part],
+                                isTransferable: reservation.isTransferable,
+                              })}
+                              className="text-sm font-medium underline underline-offset-2 text-blue-700 hover:text-blue-900"
+                              aria-label={`${song.title} ${PART_LABELS[part]} を管理`}
                             >
-                              取消
+                              {username}
                             </button>
+                          ) : (
+                            <span className="text-sm font-medium">{username}</span>
                           )}
                         </td>
                       );
@@ -286,31 +315,52 @@ export function SongList({ songs }: { songs: SongWithReservations[] }) {
         onSubmit={handleConfirmSubmit}
       />
 
-      {/* キャンセル確認ダイアログ */}
-      {cancelTarget && (
+      {/* エントリー管理モーダル */}
+      {manageTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-background rounded-xl border shadow-lg p-6 w-full max-w-sm space-y-4">
-            <h3 className="text-base font-semibold">エントリーのキャンセル</h3>
+            <h3 className="text-base font-semibold">エントリーの管理</h3>
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{cancelTarget.songTitle}</span>
+              <span className="font-medium text-foreground">{manageTarget.songTitle}</span>
               {" / "}
-              <span className="font-medium text-foreground">{cancelTarget.part}</span>
-              {" のエントリーをキャンセルしますか？"}
+              <span className="font-medium text-foreground">{manageTarget.part}</span>
             </p>
-            <div className="flex justify-end gap-2">
+
+            {/* 譲渡可能トグル */}
+            <div className="rounded-lg border p-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">譲渡可能</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  現在：{manageTarget.isTransferable ? "譲渡可能" : "譲渡不可"}
+                </p>
+              </div>
               <button
-                onClick={() => setCancelTarget(null)}
-                disabled={canceling}
-                className="px-4 py-2 text-sm rounded-md border hover:bg-muted disabled:opacity-50"
+                onClick={handleToggleTransferable}
+                disabled={manageLoading}
+                className={`px-3 py-1.5 text-xs rounded-md border transition-colors disabled:opacity-50 ${
+                  manageTarget.isTransferable
+                    ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200"
+                    : "border-border hover:bg-muted"
+                }`}
               >
-                戻る
+                {manageTarget.isTransferable ? "譲渡不可にする" : "譲渡可能にする"}
               </button>
+            </div>
+
+            <div className="flex justify-between items-center pt-1">
               <button
-                onClick={handleCancelConfirm}
-                disabled={canceling}
+                onClick={handleCancel}
+                disabled={manageLoading}
                 className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
               >
-                {canceling ? "キャンセル中..." : "キャンセルする"}
+                {manageLoading ? "処理中..." : "エントリーをキャンセル"}
+              </button>
+              <button
+                onClick={() => setManageTarget(null)}
+                disabled={manageLoading}
+                className="px-4 py-2 text-sm rounded-md border hover:bg-muted disabled:opacity-50"
+              >
+                閉じる
               </button>
             </div>
           </div>

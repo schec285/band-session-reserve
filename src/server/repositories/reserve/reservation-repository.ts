@@ -23,8 +23,8 @@ export interface IReservationRepository {
   findByUserIdAndEventSongId(userId: string, eventSongId: string): Promise<IReservationRecord[]>;
   /** 予約IDで予約を取得する */
   findById(reservationId: string): Promise<IReservationRecord | null>;
-  /** 予約のパートと譲渡可否を更新する */
-  updatePartAndTransferable(reservationId: string, part: string, isTransferable: boolean): Promise<void>;
+  /** 予約の譲渡可否を更新する */
+  updateTransferable(reservationId: string, isTransferable: boolean): Promise<void>;
   /** 予約を削除する */
   deleteById(reservationId: string): Promise<void>;
   /** 複数の予約をトランザクションで一括作成する */

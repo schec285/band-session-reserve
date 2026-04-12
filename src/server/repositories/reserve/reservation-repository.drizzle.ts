@@ -91,12 +91,12 @@ export class DrizzleReservationRepository implements IReservationRepository {
   }
 
   /**
-   * 予約のパートと譲渡可否を更新する。
+   * 予約の譲渡可否を更新する。
    */
-  async updatePartAndTransferable(reservationId: string, part: string, isTransferable: boolean): Promise<void> {
+  async updateTransferable(reservationId: string, isTransferable: boolean): Promise<void> {
     await db
       .update(reservations)
-      .set({ part: part as typeof reservations.part._.data, isTransferable, updatedAt: new Date() })
+      .set({ isTransferable, updatedAt: new Date() })
       .where(eq(reservations.id, reservationId));
   }
 

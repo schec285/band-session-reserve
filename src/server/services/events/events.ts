@@ -1,5 +1,5 @@
 import type { IEventRepository } from "@/server/repositories/events/event-repository";
-import type { Event, SongWithReservations } from "@/lib/types/api/events";
+import type { Event, SongWithReservations } from "@/lib/types/domain/events";
 
 type GetEventSongsResult =
   | { status: "ok"; event: Event; songs: SongWithReservations[] }
@@ -68,11 +68,12 @@ export async function getEventSongs(
     eventSongId: song.eventSongId,
     title: song.title,
     artist: song.artist,
-    reservations: song.reservations.map(({ part, username, userId, reservationId }) => ({
+    reservations: song.reservations.map(({ part, username, userId, reservationId, isTransferable }) => ({
       part,
       username,
       isOwner: currentUserId !== undefined && userId === currentUserId,
       reservationId,
+      isTransferable,
     })),
   }));
   return { status: "ok", event, songs };

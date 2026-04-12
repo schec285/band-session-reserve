@@ -7,7 +7,7 @@
 | メソッド | パス | 概要 | 認証要否 |
 |---|---|---|---|
 | POST | [`/api/reserve`](#post-apireserve) | セッション予約を受け付ける | 要 |
-| PATCH | [`/api/reserve/:reservationId`](#patch-apireservereservationid) | 予約のパートを変更する | 要 |
+| PUT | [`/api/reserve/:reservationId`](#put-apireservereservationid) | 予約の譲渡可否を変更する | 要 |
 | DELETE | [`/api/reserve/:reservationId`](#delete-apireservereservationid) | 予約をキャンセルする | 要 |
 
 ---
@@ -114,11 +114,11 @@ Content-Type: application/json
 
 ---
 
-## PATCH `/api/reserve/:reservationId`
+## PUT `/api/reserve/:reservationId`
 
 ### 概要
 
-予約済みのパートを変更する。
+予約の譲渡可否を変更する。
 
 ### リクエストヘッダー
 
@@ -138,13 +138,13 @@ Content-Type: application/json
 
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
-| `part` | string | ✓ | 変更後のパート |
+| `isTransferable` | boolean | ✓ | 譲渡可否（`true`: 譲渡可能 / `false`: 譲渡不可） |
 
 #### リクエスト例
 
 ```json
 {
-  "part": "vocal"
+  "isTransferable": true
 }
 ```
 
@@ -162,13 +162,13 @@ Content-Type: application/json
 
 | 条件 | `message` |
 |---|---|
-| `part` が未指定または不正値 | `"入力内容に誤りがあります"` |
+| `isTransferable` が未指定または不正値 | `"入力内容に誤りがあります"` |
 
 ```json
 {
   "message": "入力内容に誤りがあります",
   "errors": [
-    { "field": "part", "message": "パートを選択してください" }
+    { "field": "isTransferable", "message": "選択してください" }
   ]
 }
 ```
@@ -190,17 +190,6 @@ Content-Type: application/json
 ```json
 {
   "message": "予約が見つかりません"
-}
-```
-
-#### 409 Conflict — 変更後のパートが埋まっている
-
-```json
-{
-  "message": "このパートはすでに埋まっています",
-  "errors": [
-    { "field": "part", "message": "このパートはすでに埋まっています" }
-  ]
 }
 ```
 

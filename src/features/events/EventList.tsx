@@ -1,4 +1,4 @@
-import type { Event } from "@/lib/types/api/events";
+import type { Event } from "@/lib/types/domain/events";
 import { EventCard } from "./EventCard";
 import { PastEventsAccordion } from "./PastEventsAccordion";
 

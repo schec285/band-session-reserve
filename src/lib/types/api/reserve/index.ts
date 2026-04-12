@@ -50,15 +50,14 @@ export const CreateReservationsSchema = z.object({
 export type CreateReservationsInput = z.infer<typeof CreateReservationsSchema>;
 
 /**
- * PATCH /api/reserve/[reservationId] のリクエストボディスキーマ。
- * 変更後のパートと譲渡可否を指定する。
+ * PUT /api/reserve/[reservationId] のリクエストボディスキーマ。
+ * 譲渡可否のみを変更する。
  */
-export const UpdateReservationPartSchema = z.object({
-  part: z.string({ error: "パートを選択してください" }).min(1, "パートを選択してください"),
+export const UpdateTransferableSchema = z.object({
   isTransferable: z.boolean({ error: "選択してください" }),
 });
 
-export type UpdateReservationPartInput = z.infer<typeof UpdateReservationPartSchema>;
+export type UpdateTransferableInput = z.infer<typeof UpdateTransferableSchema>;
 
 /**
  * DELETE /api/reserve/[reservationId] の成功レスポンス型。

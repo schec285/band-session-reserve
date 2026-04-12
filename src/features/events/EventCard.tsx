@@ -1,5 +1,5 @@
 import { Calendar, Clock, MapPin } from "lucide-react";
-import type { Event } from "@/lib/types/api/events";
+import type { Event } from "@/lib/types/domain/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDate, formatTime } from "@/lib/utils/date";
 
