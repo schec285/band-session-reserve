@@ -9,6 +9,7 @@ import type { Part } from "@drizzle/schema";
 import { PART_LABELS } from "@/lib/utils/parts";
 import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import { Button } from "@/components/ui/button";
+import { Toast } from "@/components/ui/Toast";
 import { EntryConfirmDialog, type EntryItem } from "@/features/reserve/EntryConfirmDialog";
 
 /**
@@ -297,7 +298,11 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
       )}
 
       {successMessage && (
-        <p className="text-sm text-green-600">{successMessage}</p>
+        <Toast
+          message={successMessage}
+          variant="success"
+          onClose={() => setSuccessMessage(null)}
+        />
       )}
 
       {/* エントリーするボタン（右下） */}
