@@ -1,5 +1,6 @@
 import type { IAdminEventRepository } from "@/server/repositories/admin/event-repository";
 import type { AdminEventResponse, CreateEventInput, UpdateEventInput } from "@/lib/types/api/admin/events";
+import type { Part } from "@drizzle/schema";
 
 type CreateEventResult = { status: "ok"; event: AdminEventResponse };
 
@@ -20,7 +21,7 @@ export type AdminEventSongInfo = {
   songId: string;
   title: string;
   artist: string;
-  parts: string[];
+  parts: Part[];
 };
 
 type GetEventForEditResult =
@@ -127,7 +128,7 @@ export async function getEventForEdit(
     songId: s.id,
     title: s.title,
     artist: s.artist,
-    parts: s.reservations.map((r) => r.part),
+    parts: s.reservations.map((r) => r.part as Part),
   }));
 
   return { status: "ok", event: toResponse(eventRecord), songs };
