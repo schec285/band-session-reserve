@@ -111,13 +111,13 @@ describe("getEvents", () => {
     expect(result).toEqual([]);
   });
 
-  it("日時フィールドを ISO 8601 文字列に変換して返す", async () => {
+  it("日時フィールドを JST（+09:00）付き ISO 8601 文字列に変換して返す", async () => {
     mockRepo.findAllEvents.mockResolvedValue([openEventNear]);
 
     const result = await getEvents(mockRepo);
 
-    expect(typeof result[0].startAt).toBe("string");
-    expect(typeof result[0].endAt).toBe("string");
+    expect(result[0].startAt).toMatch(/\+09:00$/);
+    expect(result[0].endAt).toMatch(/\+09:00$/);
   });
 
   it("closedAt が null の場合は null のまま返す", async () => {
@@ -128,12 +128,12 @@ describe("getEvents", () => {
     expect(result[0].closedAt).toBeNull();
   });
 
-  it("closedAt が Date の場合は ISO 8601 文字列に変換して返す", async () => {
+  it("closedAt が Date の場合は JST（+09:00）付き ISO 8601 文字列に変換して返す", async () => {
     mockRepo.findAllEvents.mockResolvedValue([closedEventRecent]);
 
     const result = await getEvents(mockRepo);
 
-    expect(typeof result[0].closedAt).toBe("string");
+    expect(result[0].closedAt).toMatch(/\+09:00$/);
   });
 });
 
@@ -179,7 +179,7 @@ describe("getEventSongs", () => {
     if (result.status !== "ok") return;
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.title).toBe("春のセッション");
-    expect(typeof result.event.startAt).toBe("string");
+    expect(result.event.startAt).toMatch(/\+09:00$/);
     expect(mockRepo.findEventById).toHaveBeenCalledWith("event-uuid-1");
     expect(mockRepo.findEventSongsWithReservations).toHaveBeenCalledWith("event-uuid-1");
   });

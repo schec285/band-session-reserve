@@ -1,5 +1,6 @@
 import type { IEventRepository } from "@/server/repositories/events/event-repository";
 import type { Event, SongWithReservations } from "@/lib/types/domain/events";
+import { toJST } from "@/lib/utils/date";
 
 type GetEventSongsResult =
   | { status: "ok"; event: Event; songs: SongWithReservations[] }
@@ -29,9 +30,9 @@ export async function getEvents(repo: IEventRepository): Promise<Event[]> {
   return [...open, ...closed].map((e) => ({
     id: e.id,
     title: e.title,
-    startAt: e.startAt.toISOString(),
-    endAt: e.endAt.toISOString(),
-    closedAt: e.closedAt ? e.closedAt.toISOString() : null,
+    startAt: toJST(e.startAt),
+    endAt: toJST(e.endAt),
+    closedAt: e.closedAt ? toJST(e.closedAt) : null,
     venue: e.venue,
     description: e.description,
   }));
@@ -57,9 +58,9 @@ export async function getEventSongs(
   const event: Event = {
     id: eventRecord.id,
     title: eventRecord.title,
-    startAt: eventRecord.startAt.toISOString(),
-    endAt: eventRecord.endAt.toISOString(),
-    closedAt: eventRecord.closedAt ? eventRecord.closedAt.toISOString() : null,
+    startAt: toJST(eventRecord.startAt),
+    endAt: toJST(eventRecord.endAt),
+    closedAt: eventRecord.closedAt ? toJST(eventRecord.closedAt) : null,
     venue: eventRecord.venue,
     description: eventRecord.description,
   };

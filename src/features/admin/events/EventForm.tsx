@@ -6,20 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AdminEventResponse } from "@/lib/types/api/admin/events";
+import { toDatetimeLocal } from "@/lib/utils/date";
 
 interface Props {
   /** 編集時は既存イベントを渡す。新規作成時は undefined */
   event?: AdminEventResponse;
-}
-
-/**
- * ISO 8601 文字列を datetime-local input 用の文字列（YYYY-MM-DDTHH:mm）に変換する。
- * UTC をブラウザのローカルタイムに変換してから切り出す。
- */
-function toDatetimeLocal(iso: string): string {
-  const d = new Date(iso);
-  const offset = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
 }
 
 /**
@@ -54,9 +45,9 @@ export function EventForm({ event }: Props) {
 
     const body = {
       title,
-      startAt: new Date(startAt).toISOString(),
-      endAt: new Date(endAt).toISOString(),
-      closedAt: closedAt ? new Date(closedAt).toISOString() : null,
+      startAt: `${startAt}:00+09:00`,
+      endAt: `${endAt}:00+09:00`,
+      closedAt: closedAt ? `${closedAt}:00+09:00` : null,
       venue,
       venueFee,
       description,

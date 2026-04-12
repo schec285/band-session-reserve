@@ -7,9 +7,9 @@ import { PastEventsAccordion } from "./PastEventsAccordion";
  * 開催予定と開催終了（アコーディオン）のセクションに分けて表示する。
  */
 export function EventList({ events }: { events: Event[] }) {
-  const now = new Date().toISOString();
-  const open = events.filter((e) => e.endAt > now);
-  const closed = events.filter((e) => e.endAt <= now);
+  const now = new Date();
+  const open = events.filter((e) => new Date(e.endAt) > now);
+  const closed = events.filter((e) => new Date(e.endAt) <= now);
 
   if (open.length === 0 && closed.length === 0) {
     return <p className="text-sm text-muted-foreground">まだイベントはありません</p>;

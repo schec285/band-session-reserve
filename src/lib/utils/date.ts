@@ -1,21 +1,58 @@
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const TZ = "Asia/Tokyo";
+
 /**
- * 日付を「YYYY年M月D日」形式にフォーマットする。
+ * UTC の Date オブジェクトを JST の ISO 8601 文字列（+09:00 付き）に変換する。
+ * サービス層でのレスポンス生成に使用する。
+ */
+export function toJST(date: Date): string {
+  const jst = new Date(date.getTime() + JST_OFFSET_MS);
+  return jst.toISOString().slice(0, 19) + "+09:00";
+}
+
+/**
+ * ISO 8601 文字列を datetime-local input 用の文字列（YYYY-MM-DDTHH:mm）に変換する。
+ * UTC・+09:00 どちらの形式でも JST に変換してから切り出す。
+ */
+export function toDatetimeLocal(iso: string): string {
+  const jst = new Date(new Date(iso).getTime() + JST_OFFSET_MS);
+  return jst.toISOString().slice(0, 16);
+}
+
+/**
+ * Date を JST の各パーツ（year, month, day, hour, minute）に分解する。
+ */
+function getJSTParts(date: Date): Record<string, string> {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return Object.fromEntries(formatter.formatToParts(date).map((p) => [p.type, p.value]));
+}
+
+/**
+ * ISO 8601 文字列を JST で「YYYY年M月D日」形式にフォーマットする。
  */
 export function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  const p = getJSTParts(new Date(iso));
+  return `${p.year}年${p.month}月${p.day}日`;
 }
 
 /**
- * 時刻を「HH:mm」形式にフォーマットする。
+ * ISO 8601 文字列を JST で「HH:mm」形式にフォーマットする。
  */
 export function formatTime(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const p = getJSTParts(new Date(iso));
+  return `${p.hour}:${p.minute}`;
 }
 
 /**
- * 日時を「YYYY年M月D日 HH:mm」形式にフォーマットする。
+ * ISO 8601 文字列を JST で「YYYY年M月D日 HH:mm」形式にフォーマットする。
  */
 export function formatDatetime(iso: string): string {
   return `${formatDate(iso)} ${formatTime(iso)}`;

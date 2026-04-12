@@ -70,8 +70,8 @@ describe("createEvent", () => {
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.title).toBe("春のセッション");
     expect(result.event.venueFee).toBe(3000);
-    expect(typeof result.event.startAt).toBe("string");
-    expect(typeof result.event.endAt).toBe("string");
+    expect(result.event.startAt).toMatch(/\+09:00$/);
+    expect(result.event.endAt).toMatch(/\+09:00$/);
     expect(result.event.closedAt).toBeNull();
   });
 
@@ -85,7 +85,7 @@ describe("createEvent", () => {
 
     expect(result.status).toBe("ok");
     if (result.status !== "ok") return;
-    expect(typeof result.event.closedAt).toBe("string");
+    expect(result.event.closedAt).toMatch(/\+09:00$/);
   });
 
   it("リポジトリに正しい Date オブジェクトを渡す", async () => {
@@ -124,7 +124,7 @@ describe("updateEvent", () => {
     expect(result.status).toBe("ok");
     if (result.status !== "ok") return;
     expect(result.event.title).toBe("更新後タイトル");
-    expect(typeof result.event.startAt).toBe("string");
+    expect(result.event.startAt).toMatch(/\+09:00$/);
   });
 
   it("not-found: イベントが存在しない場合", async () => {
@@ -190,7 +190,7 @@ describe("getEventForEdit", () => {
     if (result.status !== "ok") return;
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.venueFee).toBe(3000);
-    expect(typeof result.event.startAt).toBe("string");
+    expect(result.event.startAt).toMatch(/\+09:00$/);
     expect(result.songs[0]).toEqual({
       eventSongId: "event-song-uuid-1",
       songId: "song-uuid-1",

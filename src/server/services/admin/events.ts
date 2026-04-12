@@ -1,5 +1,6 @@
 import type { IAdminEventRepository } from "@/server/repositories/admin/event-repository";
 import type { AdminEventResponse, CreateEventInput, UpdateEventInput } from "@/lib/types/api/admin/events";
+import { toJST } from "@/lib/utils/date";
 import type { Part } from "@drizzle/schema";
 
 type CreateEventResult = { status: "ok"; event: AdminEventResponse };
@@ -44,9 +45,9 @@ function toResponse(record: {
   return {
     id: record.id,
     title: record.title,
-    startAt: record.startAt.toISOString(),
-    endAt: record.endAt.toISOString(),
-    closedAt: record.closedAt ? record.closedAt.toISOString() : null,
+    startAt: toJST(record.startAt),
+    endAt: toJST(record.endAt),
+    closedAt: record.closedAt ? toJST(record.closedAt) : null,
     venue: record.venue,
     venueFee: record.venueFee,
     description: record.description,
