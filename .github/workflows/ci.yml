@@ -26,6 +26,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
       AUTH_SECRET: dummy-secret-for-build
+      HMAC_SECRET: dummy-hmac
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
