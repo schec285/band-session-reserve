@@ -33,11 +33,19 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/signin?callbackUrl=/admin", request.url));
   }
 
-  // 認証済みユーザーがサインイン/サインアップページにアクセスした場合はトップへ
-  const authPaths = ["/auth/signin", "/auth/signup"];
-  const isAuthPath = authPaths.some((p) => pathname.startsWith(p));
-  if (isAuthPath && isAuthenticated) {
+  // 認証済みユーザーが /auth/* にアクセスした場合はトップへ
+  if (pathname.startsWith("/auth/") && isAuthenticated) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // メール認証ページ（クッキーなし or 期限切れ → サインアップへ）
+  if (pathname.startsWith("/auth/signup/verify")) {
+    const verifyToken = request.cookies.get("signup_verify_token");
+    const parts = verifyToken?.value.split(".");
+    const isValid = parts?.length === 4 && Date.now() <= Number(parts[2]);
+    if (!isValid) {
+      return NextResponse.redirect(new URL("/auth/signup", request.url));
+    }
   }
 
   return NextResponse.next();

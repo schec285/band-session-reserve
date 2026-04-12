@@ -1,10 +1,19 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { signUp } from "@/server/services/auth/signup";
 import { DrizzleUserRepository } from "@/server/repositories/auth/user-repository.drizzle";
+import { DrizzleVerificationTokenRepository } from "@/server/repositories/auth/verification-token-repository.drizzle";
+import { ResendEmailService } from "@/server/services/email/auth/email-service.resend";
+import { createVerifyCookieValue } from "@/lib/auth/hmac";
+
+const COOKIE_MAX_AGE = 10 * 60; // 10分（秒）
 
 /**
  * ユーザー登録エンドポイント。
- * バリデーション後、メール/パスワードでユーザーを作成する。
+ * バリデーション後、ユーザーを作成し認証コードを発行する。
+ * レスポンスに HMAC 署名済みクッキー（emailHash + tokenId + 有効期限）を付与する。
+ * 全ケースで 201 を返し、登録状態を隠蔽する。
  */
 export async function POST(request: Request) {
   const body = await request.json();
@@ -24,11 +33,21 @@ export async function POST(request: Request) {
   }
 
   const userRepo = new DrizzleUserRepository();
-  const result = await signUp(userRepo, { email, password, name });
+  const tokenRepo = new DrizzleVerificationTokenRepository();
+  const emailService = new ResendEmailService(new Resend(process.env.RESEND_API_KEY));
+  const { tokenId } = await signUp(userRepo, tokenRepo, emailService, { email, password, name });
 
-  if (result.status === "duplicate") {
-    return NextResponse.json({ message: "このメールアドレスはすでに登録されています" }, { status: 409 });
-  }
+  const emailHash = crypto.createHash("sha256").update(email).digest("hex");
+  const expiresAt = Date.now() + COOKIE_MAX_AGE * 1000;
+  const cookieValue = createVerifyCookieValue(emailHash, tokenId, expiresAt);
 
-  return NextResponse.json({ message: "ユーザー登録が完了しました" }, { status: 201 });
+  const response = NextResponse.json({ message: "確認メールを送信しました" }, { status: 201 });
+  response.cookies.set("signup_verify_token", cookieValue, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: COOKIE_MAX_AGE,
+    path: "/",
+  });
+  return response;
 }

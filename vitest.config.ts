@@ -7,6 +7,9 @@ export default defineConfig({
     environment: "node",
     globals: true,
     clearMocks: true,
+    env: {
+      HMAC_SECRET: "test-secret",
+    },
     include: [
       "src/tests/api/**/*.test.ts",
       "src/tests/services/**/*.test.ts",

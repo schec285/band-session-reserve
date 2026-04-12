@@ -4,8 +4,8 @@ import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
 import { users, accounts } from "@drizzle/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
+import { login } from "@/server/services/auth/login";
+import { DrizzleUserRepository } from "@/server/repositories/auth/user-repository.drizzle";
 
 /**
  * NextAuth の設定。
@@ -30,26 +30,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       /**
        * メール/パスワードで認証する。
-       * passwordHash が存在しないアカウント（OAuthのみ）は拒否する。
+       * passwordHash が存在しないアカウント（OAuthのみ）・パスワード不一致・
+       * emailVerified が null（未認証）のいずれかの場合は拒否する。
        */
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, credentials.email as string))
-          .limit(1);
-
-        if (!user || !user.passwordHash) return null;
-
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        );
-        if (!isValid) return null;
-
-        return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
+        return login(new DrizzleUserRepository(), {
+          email: credentials.email as string,
+          password: credentials.password as string,
+        });
       },
     }),
   ],

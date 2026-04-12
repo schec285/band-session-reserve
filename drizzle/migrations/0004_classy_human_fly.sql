@@ -1,0 +1,1 @@
+ALTER TABLE "verification_tokens" ALTER COLUMN "code_hash" DROP NOT NULL;

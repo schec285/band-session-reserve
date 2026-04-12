@@ -1,19 +1,27 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Toast } from "@/components/ui/Toast";
+import type { ToastVariant } from "@/components/ui/Toast";
+import { clearFlash } from "@/server/actions/flash";
+
+interface SignInFormProps {
+  flash?: { type: ToastVariant; message: string } | null;
+}
 
 /**
  * メール/パスワードによるサインインフォーム。
  * callbackUrl クエリパラメータが存在する場合はサインイン成功後にそのURLへリダイレクトする。
  * 存在しない場合はトップページへリダイレクトする。
+ * flash が渡された場合はトースト通知を表示してクッキーを削除する。
  */
-export function SignInForm() {
+export function SignInForm({ flash }: SignInFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -21,6 +29,11 @@ export function SignInForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(flash ?? null);
+
+  useEffect(() => {
+    if (flash) clearFlash();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +61,14 @@ export function SignInForm() {
   }
 
   return (
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          variant={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     <Card className="w-full max-w-sm mx-auto">
       <CardHeader>
         <CardTitle>サインイン</CardTitle>
@@ -91,5 +112,6 @@ export function SignInForm() {
         </form>
       </CardContent>
     </Card>
+    </>
   );
 }

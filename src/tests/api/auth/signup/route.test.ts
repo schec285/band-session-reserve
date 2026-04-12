@@ -5,6 +5,18 @@ vi.mock("@/server/repositories/auth/user-repository.drizzle", () => ({
   DrizzleUserRepository: class {},
 }));
 
+vi.mock("@/server/repositories/auth/verification-token-repository.drizzle", () => ({
+  DrizzleVerificationTokenRepository: class {},
+}));
+
+vi.mock("resend", () => ({
+  Resend: class {},
+}));
+
+vi.mock("@/server/services/email/auth/email-service.resend", () => ({
+  ResendEmailService: class {},
+}));
+
 vi.mock("@/server/services/auth/signup", () => ({
   signUp: vi.fn(),
 }));
@@ -27,17 +39,23 @@ function makeRequest(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (signUp as Mock).mockResolvedValue({ status: "ok" });
+  (signUp as Mock).mockResolvedValue({ status: "ok", tokenId: "token-id-1" });
 });
 
 describe("POST /api/auth/signup", () => {
   describe("正常系", () => {
-    it("201: ユーザー登録成功", async () => {
+    it("201: クッキーを付与してレスポンスを返す", async () => {
       const res = await POST(makeRequest(validBody));
       const json = await res.json();
 
       expect(res.status).toBe(201);
-      expect(json.message).toBe("ユーザー登録が完了しました");
+      expect(json.message).toBe("確認メールを送信しました");
+
+      // HMAC クッキーが付与されている
+      const setCookie = res.headers.get("set-cookie");
+      expect(setCookie).toMatch(/signup_verify_token=/);
+      expect(setCookie).toMatch(/HttpOnly/);
+      expect(setCookie).toMatch(/Path=\//);
     });
   });
 
@@ -75,18 +93,6 @@ describe("POST /api/auth/signup", () => {
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual({ field: "password", message: "パスワードは8文字以上で入力してください" });
-    });
-  });
-
-  describe("異常系 — サービスエラー", () => {
-    it("409: メールアドレス重複", async () => {
-      (signUp as Mock).mockResolvedValue({ status: "duplicate" });
-
-      const res = await POST(makeRequest(validBody));
-      const json = await res.json();
-
-      expect(res.status).toBe(409);
-      expect(json.message).toBe("このメールアドレスはすでに登録されています");
     });
   });
 });

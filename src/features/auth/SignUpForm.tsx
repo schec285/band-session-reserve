@@ -1,23 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Toast } from "@/components/ui/Toast";
+import type { ToastVariant } from "@/components/ui/Toast";
+import { clearFlash } from "@/server/actions/flash";
+
+interface SignUpFormProps {
+  flash?: { type: ToastVariant; message: string } | null;
+}
 
 /**
  * ユーザー登録フォーム。
- * 登録成功後はサインインページへリダイレクトする。
+ * 登録成功後はメールアドレス認証ページへリダイレクトする。
+ * flash が渡された場合はトースト通知を表示してクッキーを削除する。
  */
-export function SignUpForm() {
+export function SignUpForm({ flash }: SignUpFormProps) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(flash ?? null);
+
+  useEffect(() => {
+    if (flash) clearFlash();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,11 +51,19 @@ export function SignUpForm() {
       return;
     }
 
-    router.push("/auth/signin");
+    router.push("/auth/signup/verify");
   }
 
   return (
-    <Card className="w-full max-w-sm mx-auto">
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          variant={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      <Card className="w-full max-w-sm mx-auto">
       <CardHeader>
         <CardTitle>新規登録</CardTitle>
       </CardHeader>
@@ -96,5 +117,6 @@ export function SignUpForm() {
         </form>
       </CardContent>
     </Card>
+    </>
   );
 }
