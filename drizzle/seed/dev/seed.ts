@@ -45,7 +45,7 @@ async function seed() {
   console.log("✅ ユーザー作成完了");
 
   // 曲
-  const [song1, song2, song3] = await db
+  await db
     .insert(songs)
     .values([
       { title: "Don't Stop Me Now", artist: "Queen" },
@@ -55,85 +55,6 @@ async function seed() {
     .returning({ id: songs.id });
 
   console.log("✅ 曲作成完了");
-
-  // イベント（募集中）
-  const openStart = new Date("2026-05-10T13:00:00+09:00");
-  const openEnd = new Date("2026-05-10T18:00:00+09:00");
-  const openClosed = new Date("2026-05-01T23:59:00+09:00");
-
-  // イベント（締め切り済み）
-  const closedStart = new Date("2026-03-15T13:00:00+09:00");
-  const closedEnd = new Date("2026-03-15T18:00:00+09:00");
-  const closedClosed = new Date("2026-03-08T23:59:00+09:00");
-
-  const [openEvent, closedEvent] = await db
-    .insert(events)
-    .values([
-      {
-        title: "春のバンドセッション",
-        startAt: openStart,
-        endAt: openEnd,
-        closedAt: openClosed,
-        venue: "スタジオA",
-        venueFee: 3000,
-        description: "春のバンドセッションです。初心者歓迎！",
-      },
-      {
-        title: "冬のバンドセッション",
-        startAt: closedStart,
-        endAt: closedEnd,
-        closedAt: closedClosed,
-        venue: "スタジオB",
-        venueFee: 2500,
-        description: "冬のバンドセッションです。",
-      },
-    ])
-    .returning({ id: events.id });
-
-  console.log("✅ イベント作成完了");
-
-  // イベント曲
-  const [, , es3] = await db
-    .insert(eventSongs)
-    .values([
-      {
-        eventId: openEvent.id,
-        songId: song1.id,
-        parts: ["vocal", "readGuitar", "backingGuitar", "bass", "drums"],
-      },
-      {
-        eventId: openEvent.id,
-        songId: song2.id,
-        parts: ["vocal", "readGuitar", "bass", "keyboard"],
-      },
-      {
-        eventId: closedEvent.id,
-        songId: song3.id,
-        parts: ["vocal", "readGuitar", "bass", "drums"],
-      },
-    ])
-    .returning({ id: eventSongs.id });
-
-  console.log("✅ イベント曲作成完了");
-
-  // 予約（締め切り済みイベントのみ）
-  await db.insert(reservations).values([
-    {
-      userId: member1.id,
-      eventSongId: es3.id,
-      part: "vocal",
-      snsConsent: true,
-      comment: "よろしくお願いします！",
-    },
-    {
-      userId: member1.id,
-      eventSongId: es3.id,
-      part: "bass",
-      snsConsent: false,
-    },
-  ]);
-
-  console.log("✅ 予約作成完了");
   console.log("🎸 シード完了！");
 }
 
