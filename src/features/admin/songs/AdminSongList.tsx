@@ -31,7 +31,7 @@ export function AdminSongList({ songs }: Props) {
     return errors.find((e) => e.field === field)?.message;
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrors([]);
     setSubmitting(true);
