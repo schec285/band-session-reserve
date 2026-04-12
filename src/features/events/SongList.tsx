@@ -143,12 +143,15 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
       throw new Error(json.message ?? "エントリーに失敗しました");
     }
 
-    setSelected(new Set());
-    afterRefreshRef.current = () => {
-      setDialogOpen(false);
-      setSuccessMessage("エントリーを受け付けました！セッションでお待ちしています");
-    };
-    startTransition(() => router.refresh());
+    return new Promise<void>((resolve) => {
+      afterRefreshRef.current = () => {
+        setSelected(new Set());
+        setDialogOpen(false);
+        setSuccessMessage("エントリーを受け付けました！セッションでお待ちしています");
+        resolve();
+      };
+      startTransition(() => router.refresh());
+    });
   }
 
   async function handleToggleTransferable() {
