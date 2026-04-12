@@ -48,7 +48,7 @@ export class ResendEmailService implements IEmailService {
   }): Promise<{ status: "ok" } | { status: "error" }> {
     return this.send({
       to: params.to,
-      subject: "バンドセッション予約システムへようこそ",
+      subject: "OTONOWAへようこそ",
       html: buildHtml(`<p>${params.name} さん。<br>メール認証が完了しました。ご登録ありがとうございます。</p>`),
     });
   }
