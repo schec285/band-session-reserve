@@ -159,14 +159,15 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isTransferable: !manageTarget.isTransferable }),
     });
-    setManageLoading(false);
     if (!res.ok) {
+      setManageLoading(false);
       const json = await res.json();
       alert(json.message ?? "更新に失敗しました");
       return;
     }
     const message = !manageTarget.isTransferable ? "譲渡可能に設定しました" : "譲渡不可に設定しました";
     afterRefreshRef.current = () => {
+      setManageLoading(false);
       setManageTarget(null);
       setSuccessMessage(message);
     };
@@ -177,13 +178,14 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
     if (!manageTarget) return;
     setManageLoading(true);
     const res = await fetch(`/api/reserve/${manageTarget.reservationId}`, { method: "DELETE" });
-    setManageLoading(false);
     if (!res.ok) {
+      setManageLoading(false);
       const json = await res.json();
       alert(json.message ?? "キャンセルに失敗しました");
       return;
     }
     afterRefreshRef.current = () => {
+      setManageLoading(false);
       setManageTarget(null);
       setSuccessMessage("エントリーをキャンセルしました");
     };
