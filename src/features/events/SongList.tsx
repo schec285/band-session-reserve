@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import type { SongWithReservations } from "@/lib/types/domain/events";
@@ -36,7 +36,8 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
+  const afterRefreshRef = useRef<(() => void) | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -48,6 +49,16 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
     isTransferable: boolean;
   } | null>(null);
   const [manageLoading, setManageLoading] = useState(false);
+
+  /**
+   * router.refresh() 完了後（isPending: true→false）にモーダルを閉じてメッセージを表示する。
+   */
+  useEffect(() => {
+    if (!isPending && afterRefreshRef.current) {
+      afterRefreshRef.current();
+      afterRefreshRef.current = null;
+    }
+  }, [isPending]);
 
   const isLoggedIn = !!session;
   const canEntry = isLoggedIn && !isClosed;
@@ -133,8 +144,10 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
     }
 
     setSelected(new Set());
-    setDialogOpen(false);
-    setSuccessMessage("エントリーを受け付けました！セッションでお待ちしています");
+    afterRefreshRef.current = () => {
+      setDialogOpen(false);
+      setSuccessMessage("エントリーを受け付けました！セッションでお待ちしています");
+    };
     startTransition(() => router.refresh());
   }
 
@@ -152,8 +165,11 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
       alert(json.message ?? "更新に失敗しました");
       return;
     }
-    setManageTarget(null);
-    setSuccessMessage(!manageTarget.isTransferable ? "譲渡可能に設定しました" : "譲渡不可に設定しました");
+    const message = !manageTarget.isTransferable ? "譲渡可能に設定しました" : "譲渡不可に設定しました";
+    afterRefreshRef.current = () => {
+      setManageTarget(null);
+      setSuccessMessage(message);
+    };
     startTransition(() => router.refresh());
   }
 
@@ -167,8 +183,10 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
       alert(json.message ?? "キャンセルに失敗しました");
       return;
     }
-    setManageTarget(null);
-    setSuccessMessage("エントリーをキャンセルしました");
+    afterRefreshRef.current = () => {
+      setManageTarget(null);
+      setSuccessMessage("エントリーをキャンセルしました");
+    };
     startTransition(() => router.refresh());
   }
 
