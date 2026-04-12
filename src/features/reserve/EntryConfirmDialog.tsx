@@ -157,7 +157,7 @@ export function EntryConfirmDialog({
               className="mt-0.5 h-4 w-4 cursor-pointer"
             />
             <Label htmlFor="confirm-snsConsent" className="text-sm leading-snug cursor-pointer">
-              セッションの様子がSNSに掲載される場合があることに同意します
+              セッションの様子がSNSに掲載される場合があることに同意します(任意)
             </Label>
           </div>
 
