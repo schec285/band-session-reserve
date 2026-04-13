@@ -24,7 +24,7 @@ npm install
 cp .env.local.example .env.local
 ```
 
-`SESSION_SECRET` と `API_TOKEN_SECRET` は以下のコマンドで生成できます。
+`HMAC_SECRET` は以下のコマンドで生成できます。
 
 ```bash
 openssl rand -hex 32
