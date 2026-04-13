@@ -23,6 +23,7 @@ async function seed() {
 
   // ユーザー
   const passwordHash = await hash("Password1@", 10);
+  const dateNow = new Date();
 
   const [, member1] = await db
     .insert(users)
@@ -31,12 +32,14 @@ async function seed() {
         name: "管理者",
         email: "admin@example.com",
         passwordHash,
+        emailVerified: dateNow,
         role: "admin",
       },
       {
         name: "テストユーザー",
         email: "test@example.com",
         passwordHash,
+        emailVerified: dateNow,
         role: "member",
       },
     ])
