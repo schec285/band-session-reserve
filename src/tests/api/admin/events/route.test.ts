@@ -21,6 +21,8 @@ const validBody = {
   endAt: futureEnd,
   closedAt: null,
   venue: "渋谷スタジオ A",
+  venueFee: 3000,
+  participationFee: 500,
   description: "春の定期セッションです。",
 };
 

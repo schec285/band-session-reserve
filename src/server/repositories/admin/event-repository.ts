@@ -10,6 +10,7 @@ export interface IAdminEventRecord {
   closedAt: Date | null;
   venue: string;
   venueFee: number;
+  participationFee: number;
   description: string;
 }
 
@@ -23,6 +24,7 @@ export interface IAdminCreateEventInput {
   closedAt: Date | null;
   venue: string;
   venueFee: number;
+  participationFee: number;
   description: string;
 }
 

@@ -11,6 +11,7 @@ const adminEventFields = {
   closedAt: events.closedAt,
   venue: events.venue,
   venueFee: events.venueFee,
+  participationFee: events.participationFee,
   description: events.description,
 } as const;
 
@@ -107,6 +108,7 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         closedAt: input.closedAt,
         venue: input.venue,
         venueFee: input.venueFee,
+        participationFee: input.participationFee,
         description: input.description,
       })
       .returning(adminEventFields);
@@ -127,6 +129,7 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         closedAt: input.closedAt,
         venue: input.venue,
         venueFee: input.venueFee,
+        participationFee: input.participationFee,
         description: input.description,
         updatedAt: new Date(),
       })

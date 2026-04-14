@@ -15,6 +15,7 @@ const mockEventRecord = {
   closedAt: null,
   venue: "渋谷スタジオ A",
   venueFee: 3000,
+  participationFee: 500,
   description: "春のセッションです",
 };
 
@@ -25,6 +26,7 @@ const validInput = {
   closedAt: null,
   venue: "渋谷スタジオ A",
   venueFee: 3000,
+  participationFee: 500,
   description: "春のセッションです",
 };
 
@@ -70,6 +72,7 @@ describe("createEvent", () => {
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.title).toBe("春のセッション");
     expect(result.event.venueFee).toBe(3000);
+    expect(result.event.participationFee).toBe(500);
     expect(result.event.startAt).toMatch(/\+09:00$/);
     expect(result.event.endAt).toMatch(/\+09:00$/);
     expect(result.event.closedAt).toBeNull();
@@ -100,6 +103,7 @@ describe("createEvent", () => {
       closedAt: null,
       venue: validInput.venue,
       venueFee: 3000,
+      participationFee: 500,
       description: validInput.description,
     });
   });
@@ -147,6 +151,7 @@ describe("updateEvent", () => {
       closedAt: null,
       venue: validInput.venue,
       venueFee: 3000,
+      participationFee: 500,
       description: validInput.description,
     });
   });
@@ -190,6 +195,7 @@ describe("getEventForEdit", () => {
     if (result.status !== "ok") return;
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.venueFee).toBe(3000);
+    expect(result.event.participationFee).toBe(500);
     expect(result.event.startAt).toMatch(/\+09:00$/);
     expect(result.songs[0]).toEqual({
       eventSongId: "event-song-uuid-1",

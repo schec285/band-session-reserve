@@ -30,6 +30,7 @@ export function EventForm({ event }: Props) {
   );
   const [venue, setVenue] = useState(event?.venue ?? "");
   const [venueFee, setVenueFee] = useState<number>(event?.venueFee ?? 0);
+  const [participationFee, setParticipationFee] = useState<number>(event?.participationFee ?? 0);
   const [description, setDescription] = useState(event?.description ?? "");
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -50,6 +51,7 @@ export function EventForm({ event }: Props) {
       closedAt: closedAt ? `${closedAt}:00+09:00` : null,
       venue,
       venueFee,
+      participationFee,
       description,
     };
 
@@ -115,6 +117,21 @@ export function EventForm({ event }: Props) {
         />
         {fieldError("venueFee") && (
           <p className="text-destructive text-sm">{fieldError("venueFee")}</p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="participationFee">参加費（一人当たり）</Label>
+        <Input
+          id="participationFee"
+          type="number"
+          min={0}
+          step={1}
+          value={participationFee}
+          onChange={(e) => setParticipationFee(Number(e.target.value))}
+        />
+        {fieldError("participationFee") && (
+          <p className="text-destructive text-sm">{fieldError("participationFee")}</p>
         )}
       </div>
 

@@ -11,6 +11,7 @@ const EventFields = {
   closedAt: z.string().nullable().optional(),
   venue: z.string().min(1, "会場は必須です"),
   venueFee: z.number().int().min(0, "会場費は0以上の整数で入力してください").optional(),
+  participationFee: z.number().int().min(0, "参加費は0以上の整数で入力してください").optional(),
   description: z.string().min(1, "説明は必須です"),
 };
 
@@ -71,6 +72,7 @@ export const AdminEventResponseSchema = z.object({
   closedAt: z.string().nullable(),
   venue: z.string(),
   venueFee: z.number(),
+  participationFee: z.number(),
   description: z.string(),
 });
 
