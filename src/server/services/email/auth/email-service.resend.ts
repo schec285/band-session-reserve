@@ -13,7 +13,7 @@ export class ResendEmailService implements IEmailService {
    */
   private async send(params: { to: string; subject: string; html: string }): Promise<{ status: "ok" } | { status: "error" }> {
     const { data, error } = await this.resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "no-reply@musicsessionotonowa.com",
       to: params.to,
       subject: params.subject,
       html: params.html,
