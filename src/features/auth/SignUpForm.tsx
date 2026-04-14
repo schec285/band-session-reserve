@@ -43,10 +43,9 @@ export function SignUpForm({ flash }: SignUpFormProps) {
       body: JSON.stringify({ name, email, password }),
     });
 
-    setLoading(false);
-
     if (!res.ok) {
       const json = await res.json();
+      setLoading(false);
       setError(json.message ?? "登録に失敗しました");
       return;
     }

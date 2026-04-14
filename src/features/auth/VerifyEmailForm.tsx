@@ -30,8 +30,6 @@ export function VerifyEmailForm() {
       body: JSON.stringify({ code }),
     });
 
-    setLoading(false);
-
     const json = await res.json();
 
     if (!res.ok) {
@@ -40,6 +38,7 @@ export function VerifyEmailForm() {
         router.push("/auth/signup");
         return;
       }
+      setLoading(false);
       setError(json.message ?? "認証に失敗しました");
       return;
     }
