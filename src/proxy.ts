@@ -44,7 +44,18 @@ export function proxy(request: NextRequest) {
     const parts = verifyToken?.value.split(".");
     const isValid = parts?.length === 4 && Date.now() <= Number(parts[2]);
     if (!isValid) {
-      return NextResponse.redirect(new URL("/auth/signup", request.url));
+      const res = NextResponse.redirect(new URL("/auth/signup", request.url));
+      const message = verifyToken
+        ? "認証コードの有効期限が切れています。もう一度登録してください"
+        : "セッションが無効です。最初からやり直してください";
+      res.cookies.set("flash", JSON.stringify({ type: "error", message }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60,
+      });
+      return res;
     }
   }
 

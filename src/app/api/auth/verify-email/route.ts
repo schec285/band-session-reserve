@@ -35,7 +35,10 @@ export async function POST(request: Request) {
   const parsed = parseVerifyCookie(cookieValue);
 
   if (!parsed) {
-    return NextResponse.json({ message: "セッションが無効です。最初からやり直してください" }, { status: 401 });
+    return NextResponse.json(
+      { message: "セッションが無効です。最初からやり直してください", reason: "restart" },
+      { status: 401 }
+    );
   }
 
   const { tokenId, emailHash } = parsed;
