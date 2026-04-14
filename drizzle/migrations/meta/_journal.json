@@ -43,6 +43,13 @@
       "when": 1776167355301,
       "tag": "0005_messy_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776170432123,
+      "tag": "0006_brave_santa_claus",
+      "breakpoints": true
     }
   ]
 }

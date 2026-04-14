@@ -1,16 +1,20 @@
-import type { IReservationRepository } from "@/server/repositories/reserve/reservation-repository";
-import { FORBIDDEN_SAME_SONG_PAIRS } from "@/lib/utils/parts";
+import type { IReservationRepository, IEventSongRecord } from "@/server/repositories/reserve/reservation-repository";
+import { FORBIDDEN_SAME_SONG_PAIRS, VOCAL_PARTS, getPartCategory } from "@/lib/utils/parts";
+import type { Part } from "@drizzle/schema";
 
 type CreateReservationsResult =
   | { status: "ok" }
   | { status: "not-found" }
   | { status: "filled" }
   | { status: "closed" }
-  | { status: "forbidden-combination" };
+  | { status: "forbidden-combination" }
+  | { status: "entry-limit-exceeded" };
 
 /**
  * 複数の予約を一括作成する。
- * 全エントリーのバリデーション（存在確認・受付状況・空き確認）を先に行い、
+ * Phase 1: 全エントリーの eventSong を一括取得（not-found チェック）
+ * Phase 2: エントリー数制限チェック（イベントごと・カテゴリごとにバッチ合算で検証）
+ * Phase 3: 既存チェック（closed / forbidden-combination / filled）
  * 1件でも失敗した場合は全件キャンセルする。全件通過後に createMany で一括保存する。
  */
 export async function createReservations(
@@ -22,9 +26,45 @@ export async function createReservations(
     comment?: string;
   }
 ): Promise<CreateReservationsResult> {
+  // Phase 1: 全エントリーの eventSong を取得
+  const eventSongMap = new Map<string, IEventSongRecord>();
   for (const entry of params.entries) {
-    const eventSong = await repo.findEventSongWithEvent(entry.eventSongId);
-    if (!eventSong) return { status: "not-found" };
+    if (!eventSongMap.has(entry.eventSongId)) {
+      const eventSong = await repo.findEventSongWithEvent(entry.eventSongId);
+      if (!eventSong) return { status: "not-found" };
+      eventSongMap.set(entry.eventSongId, eventSong);
+    }
+  }
+
+  // Phase 2: エントリー数制限チェック
+  // (eventId, category) をキーとしてバッチ内のエントリー数を集計する
+  const batchCounts = new Map<string, number>();
+  for (const entry of params.entries) {
+    const eventSong = eventSongMap.get(entry.eventSongId)!;
+    const category = getPartCategory(entry.part as Part);
+    const key = `${eventSong.event.id}:${category}`;
+    batchCounts.set(key, (batchCounts.get(key) ?? 0) + 1);
+  }
+
+  for (const [key, batchCount] of batchCounts) {
+    const [eventId, category] = key.split(":") as [string, "vocal" | "instrument"];
+    // イベントの上限値を取得（いずれかのentryからeventSongを参照）
+    const anySong = [...eventSongMap.values()].find((s) => s.event.id === eventId)!;
+    const limit = category === "vocal"
+      ? anySong.event.vocalEntryLimit
+      : anySong.event.instrumentEntryLimit;
+    if (limit === null) continue; // null = 制限なし
+
+    const categoryParts = category === "vocal"
+      ? [...VOCAL_PARTS]
+      : (["readGuitar", "backingGuitar", "bass", "drums", "keyboard", "other"] as string[]);
+    const dbCount = await repo.countByUserIdAndEventIdAndParts(params.userId, eventId, categoryParts);
+    if (dbCount + batchCount > limit) return { status: "entry-limit-exceeded" };
+  }
+
+  // Phase 3: 既存チェック（closed / forbidden-combination / filled）
+  for (const entry of params.entries) {
+    const eventSong = eventSongMap.get(entry.eventSongId)!;
 
     const deadline = eventSong.event.closedAt ?? eventSong.event.startAt;
     if (deadline <= new Date()) return { status: "closed" };

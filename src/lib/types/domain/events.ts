@@ -11,6 +11,8 @@ export type Event = {
   venue: string;
   participationFee: number;
   description: string;
+  vocalEntryLimit: number | null;
+  instrumentEntryLimit: number | null;
 };
 
 /**

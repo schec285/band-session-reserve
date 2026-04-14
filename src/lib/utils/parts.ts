@@ -22,6 +22,19 @@ export const PART_LABELS: Record<Part, string> = {
 };
 
 /**
+ * ボーカル系パート（エントリー数制限のカテゴリ判定に使用する）。
+ */
+export const VOCAL_PARTS: readonly Part[] = ["vocal", "chorus"];
+
+/**
+ * パートのエントリー数制限カテゴリを返す。
+ * vocal / chorus は "vocal"、それ以外は "instrument" に分類する。
+ */
+export function getPartCategory(part: Part): "vocal" | "instrument" {
+  return (VOCAL_PARTS as readonly string[]).includes(part) ? "vocal" : "instrument";
+}
+
+/**
  * 同一曲内で同時に選択できない禁止パートの組み合わせ。
  * 物理的に1人では演奏できない組み合わせを定義する。
  */

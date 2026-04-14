@@ -12,6 +12,8 @@ export interface IAdminEventRecord {
   venueFee: number;
   participationFee: number;
   description: string;
+  vocalEntryLimit: number | null;
+  instrumentEntryLimit: number | null;
 }
 
 /**
@@ -26,6 +28,8 @@ export interface IAdminCreateEventInput {
   venueFee: number;
   participationFee: number;
   description: string;
+  vocalEntryLimit: number | null;
+  instrumentEntryLimit: number | null;
 }
 
 /**

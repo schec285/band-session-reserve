@@ -53,6 +53,12 @@ export async function POST(request: Request) {
       { status: 422 }
     );
   }
+  if (result.status === "entry-limit-exceeded") {
+    return NextResponse.json(
+      { message: "エントリー数の上限に達しています" } satisfies ErrorResponse,
+      { status: 422 }
+    );
+  }
 
   return NextResponse.json({ message: "予約を受け付けました！セッションでお待ちしています 🎵" } satisfies ErrorResponse);
 }

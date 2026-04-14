@@ -2,8 +2,11 @@ export interface IEventSongRecord {
   id: string;
   parts: string[];
   event: {
+    id: string;
     startAt: Date;
     closedAt: Date | null;
+    vocalEntryLimit: number | null;
+    instrumentEntryLimit: number | null;
   };
 }
 
@@ -17,6 +20,8 @@ export interface IReservationRecord {
 export interface IReservationRepository {
   /** eventSongId でイベント曲とイベント情報を取得する */
   findEventSongWithEvent(eventSongId: string): Promise<IEventSongRecord | null>;
+  /** ユーザーがあるイベント内で指定パート群に持つ予約数を返す */
+  countByUserIdAndEventIdAndParts(userId: string, eventId: string, parts: string[]): Promise<number>;
   /** eventSongId とパートで既存の予約を検索する */
   findByEventSongIdAndPart(eventSongId: string, part: string): Promise<{ id: string } | null>;
   /** userId と eventSongId でその曲における既存予約一覧を取得する */

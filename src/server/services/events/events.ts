@@ -36,6 +36,8 @@ export async function getEvents(repo: IEventRepository): Promise<Event[]> {
     venue: e.venue,
     participationFee: e.participationFee,
     description: e.description,
+    vocalEntryLimit: e.vocalEntryLimit,
+    instrumentEntryLimit: e.instrumentEntryLimit,
   }));
 }
 
@@ -65,6 +67,8 @@ export async function getEventSongs(
     venue: eventRecord.venue,
     participationFee: eventRecord.participationFee,
     description: eventRecord.description,
+    vocalEntryLimit: eventRecord.vocalEntryLimit,
+    instrumentEntryLimit: eventRecord.instrumentEntryLimit,
   };
   const songs: SongWithReservations[] = songRecords.map((song) => ({
     id: song.id,

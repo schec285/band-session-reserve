@@ -23,6 +23,8 @@ export class DrizzleEventRepository implements IEventRepository {
         venue: events.venue,
         participationFee: events.participationFee,
         description: events.description,
+        vocalEntryLimit: events.vocalEntryLimit,
+        instrumentEntryLimit: events.instrumentEntryLimit,
       })
       .from(events);
   }
@@ -41,6 +43,8 @@ export class DrizzleEventRepository implements IEventRepository {
         venue: events.venue,
         participationFee: events.participationFee,
         description: events.description,
+        vocalEntryLimit: events.vocalEntryLimit,
+        instrumentEntryLimit: events.instrumentEntryLimit,
       })
       .from(events)
       .where(eq(events.id, eventId))

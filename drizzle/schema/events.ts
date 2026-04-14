@@ -10,6 +10,8 @@ export const events = pgTable("events", {
   venueFee: integer("venue_fee").notNull().default(0),
   participationFee: integer("participation_fee").notNull().default(0),
   description: text("description").notNull().default(""),
+  vocalEntryLimit: integer("vocal_entry_limit"),
+  instrumentEntryLimit: integer("instrument_entry_limit"),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 });

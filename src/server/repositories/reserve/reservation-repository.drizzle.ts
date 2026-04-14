@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray, count } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { reservations, eventSongs, events } from "@drizzle/schema";
 import type { IEventSongRecord, IReservationRecord, IReservationRepository } from "./reservation-repository";
@@ -16,8 +16,11 @@ export class DrizzleReservationRepository implements IReservationRepository {
       .select({
         id: eventSongs.id,
         parts: eventSongs.parts,
+        eventId: events.id,
         startAt: events.startAt,
         closedAt: events.closedAt,
+        vocalEntryLimit: events.vocalEntryLimit,
+        instrumentEntryLimit: events.instrumentEntryLimit,
       })
       .from(eventSongs)
       .innerJoin(events, eq(eventSongs.eventId, events.id))
@@ -30,8 +33,11 @@ export class DrizzleReservationRepository implements IReservationRepository {
       id: row.id,
       parts: row.parts,
       event: {
+        id: row.eventId,
         startAt: row.startAt,
         closedAt: row.closedAt,
+        vocalEntryLimit: row.vocalEntryLimit,
+        instrumentEntryLimit: row.instrumentEntryLimit,
       },
     };
   }
@@ -71,6 +77,26 @@ export class DrizzleReservationRepository implements IReservationRepository {
           eq(reservations.eventSongId, eventSongId)
         )
       );
+  }
+
+  /**
+   * ユーザーがあるイベント内で指定パート群に持つ予約数を返す。
+   * エントリー数制限チェックに使用する。
+   */
+  async countByUserIdAndEventIdAndParts(userId: string, eventId: string, parts: string[]): Promise<number> {
+    if (parts.length === 0) return 0;
+    const rows = await db
+      .select({ cnt: count() })
+      .from(reservations)
+      .innerJoin(eventSongs, eq(reservations.eventSongId, eventSongs.id))
+      .where(
+        and(
+          eq(reservations.userId, userId),
+          eq(eventSongs.eventId, eventId),
+          inArray(reservations.part, parts as Array<typeof reservations.part._.data>)
+        )
+      );
+    return Number(rows[0]?.cnt ?? 0);
   }
 
   /**
