@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { setFlash } from "@/server/actions/flash";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +33,6 @@ export function VerifyEmailForm() {
 
     if (!res.ok) {
       if (json.reason === "restart" || json.reason === "expired") {
-        await setFlash("error", json.message);
         router.push("/auth/signup");
         return;
       }

@@ -50,9 +50,17 @@ export async function POST(request: Request) {
   const result = await verifyEmail(userRepo, tokenRepo, emailService, { tokenId, emailHash, code });
 
   if (result.status === "error") {
-    const response = NextResponse.json({ message: ERROR_MESSAGES[result.reason], reason: result.reason }, { status: 400 });
+    const message = ERROR_MESSAGES[result.reason];
+    const response = NextResponse.json({ message, reason: result.reason }, { status: 400 });
     if (result.reason === "expired" || result.reason === "restart") {
       response.cookies.delete("signup_verify_token");
+      response.cookies.set("flash", JSON.stringify({ type: "error", message }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60,
+      });
     }
     return response;
   }
