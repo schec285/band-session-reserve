@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, Ticket } from "lucide-react";
 import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
@@ -54,6 +54,10 @@ export default async function EventDetailPage({
           <div className="flex items-center gap-3 text-muted-foreground">
             <MapPin className="w-4 h-4 shrink-0" />
             <span className="font-medium text-foreground">{event.venue}</span>
+          </div>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <Ticket className="w-4 h-4 shrink-0" />
+            <span className="font-medium text-foreground">参加費 {event.participationFee.toLocaleString()}円</span>
           </div>
           {event.description && (
             <p className="pt-2 text-muted-foreground border-t border-border leading-relaxed">

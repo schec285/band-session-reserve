@@ -1,4 +1,4 @@
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, Ticket } from "lucide-react";
 import type { Event } from "@/lib/types/domain/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDate, formatTime } from "@/lib/utils/date";
@@ -39,6 +39,10 @@ export function EventCard({ event }: { event: Event }) {
             <div className="flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 shrink-0" />
               <span>{event.venue}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Ticket className="w-3.5 h-3.5 shrink-0" />
+              <span>参加費 {event.participationFee.toLocaleString()}円</span>
             </div>
           </div>
         </div>

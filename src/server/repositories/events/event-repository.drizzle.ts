@@ -21,6 +21,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
+        participationFee: events.participationFee,
         description: events.description,
       })
       .from(events);
@@ -38,6 +39,7 @@ export class DrizzleEventRepository implements IEventRepository {
         endAt: events.endAt,
         closedAt: events.closedAt,
         venue: events.venue,
+        participationFee: events.participationFee,
         description: events.description,
       })
       .from(events)

@@ -34,6 +34,7 @@ export async function getEvents(repo: IEventRepository): Promise<Event[]> {
     endAt: toJST(e.endAt),
     closedAt: e.closedAt ? toJST(e.closedAt) : null,
     venue: e.venue,
+    participationFee: e.participationFee,
     description: e.description,
   }));
 }
@@ -62,6 +63,7 @@ export async function getEventSongs(
     endAt: toJST(eventRecord.endAt),
     closedAt: eventRecord.closedAt ? toJST(eventRecord.closedAt) : null,
     venue: eventRecord.venue,
+    participationFee: eventRecord.participationFee,
     description: eventRecord.description,
   };
   const songs: SongWithReservations[] = songRecords.map((song) => ({

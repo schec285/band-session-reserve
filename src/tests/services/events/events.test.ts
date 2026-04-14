@@ -16,6 +16,7 @@ const openEventNear: IEventRecord = {
   endAt: new Date(nearFuture.getTime() + 1000 * 60 * 60 * 8),
   closedAt: null,
   venue: "渋谷スタジオ A",
+  participationFee: 500,
   description: "",
 };
 
@@ -27,6 +28,7 @@ const openEventFar: IEventRecord = {
   endAt: new Date(farFuture.getTime() + 1000 * 60 * 60 * 8),
   closedAt: null,
   venue: "新宿スタジオ B",
+  participationFee: 0,
   description: "",
 };
 
@@ -38,6 +40,7 @@ const closedEventRecent: IEventRecord = {
   endAt: new Date(recentPast.getTime() + 1000 * 60 * 60 * 8),
   closedAt: new Date(recentPast.getTime() - 1000 * 60 * 60),
   venue: "池袋スタジオ C",
+  participationFee: 0,
   description: "",
 };
 
@@ -49,6 +52,7 @@ const closedEventDistant: IEventRecord = {
   endAt: new Date(distantPast.getTime() + 1000 * 60 * 60 * 8),
   closedAt: null,
   venue: "品川スタジオ D",
+  participationFee: 0,
   description: "",
 };
 
@@ -149,6 +153,7 @@ describe("getEventSongs", () => {
     endAt: new Date(nearFuture.getTime() + 1000 * 60 * 60 * 8),
     closedAt: null,
     venue: "渋谷スタジオ A",
+    participationFee: 500,
     description: "春のセッションです",
   };
 

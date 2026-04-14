@@ -9,6 +9,7 @@ export type Event = {
   endAt: string;
   closedAt: string | null;
   venue: string;
+  participationFee: number;
   description: string;
 };
 
