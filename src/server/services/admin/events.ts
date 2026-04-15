@@ -42,6 +42,8 @@ function toResponse(record: {
   venueFee: number;
   participationFee: number;
   description: string;
+  vocalEntryLimit: number | null;
+  instrumentEntryLimit: number | null;
 }): AdminEventResponse {
   return {
     id: record.id,
@@ -53,6 +55,8 @@ function toResponse(record: {
     venueFee: record.venueFee,
     participationFee: record.participationFee,
     description: record.description,
+    vocalEntryLimit: record.vocalEntryLimit,
+    instrumentEntryLimit: record.instrumentEntryLimit,
   };
 }
 
@@ -72,6 +76,8 @@ export async function createEvent(
     venueFee: input.venueFee ?? 0,
     participationFee: input.participationFee ?? 0,
     description: input.description,
+    vocalEntryLimit: input.vocalEntryLimit ?? null,
+    instrumentEntryLimit: input.instrumentEntryLimit ?? null,
   });
 
   return { status: "ok", event: toResponse(record) };
@@ -94,6 +100,8 @@ export async function updateEvent(
     venueFee: input.venueFee ?? 0,
     participationFee: input.participationFee ?? 0,
     description: input.description,
+    vocalEntryLimit: input.vocalEntryLimit ?? null,
+    instrumentEntryLimit: input.instrumentEntryLimit ?? null,
   });
 
   if (!record) return { status: "not-found" };

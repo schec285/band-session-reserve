@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import type { SongWithReservations } from "@/lib/types/domain/events";
 import type { Part } from "@drizzle/schema";
 
-import { PART_LABELS } from "@/lib/utils/parts";
+import { PART_LABELS, VOCAL_PARTS } from "@/lib/utils/parts";
 import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/Toast";
@@ -32,7 +32,17 @@ const PART_ORDER: Part[] = [
  * 未ログインまたは募集終了の場合は空きパートを「空き」表示のみとし、未ログインのときはサインインへ誘導する。
  * 自分のエントリーは名前をリンク風に表示し、クリックで管理モーダルを開く。
  */
-export function SongList({ songs, isClosed = false }: { songs: SongWithReservations[]; isClosed?: boolean }) {
+export function SongList({
+  songs,
+  isClosed = false,
+  vocalEntryLimit = null,
+  instrumentEntryLimit = null,
+}: {
+  songs: SongWithReservations[];
+  isClosed?: boolean;
+  vocalEntryLimit?: number | null;
+  instrumentEntryLimit?: number | null;
+}) {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -66,6 +76,14 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
   const selectedSongCount = new Set(
     Array.from(selected).map((key) => key.slice(0, key.indexOf(":")))
   ).size;
+
+  const allReservations = songs.flatMap((s) => s.reservations);
+  const myVocalCount = allReservations.filter(
+    (r) => r.isOwner && (VOCAL_PARTS as readonly string[]).includes(r.part)
+  ).length;
+  const myInstrumentCount = allReservations.filter(
+    (r) => r.isOwner && !(VOCAL_PARTS as readonly string[]).includes(r.part)
+  ).length;
 
   if (songs.length === 0) {
     return <p className="text-sm text-muted-foreground">曲が登録されていません</p>;
@@ -197,6 +215,24 @@ export function SongList({ songs, isClosed = false }: { songs: SongWithReservati
 
   return (
     <div className="space-y-4">
+      {/* エントリー数 */}
+      {canEntry && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <span>
+            ボーカル系:{" "}
+            <span className={`font-semibold ${vocalEntryLimit !== null && myVocalCount >= vocalEntryLimit ? "text-red-600" : "text-blue-600"}`}>
+              {myVocalCount} / {vocalEntryLimit ?? "∞"}曲
+            </span>
+          </span>
+          <span>
+            楽器系:{" "}
+            <span className={`font-semibold ${instrumentEntryLimit !== null && myInstrumentCount >= instrumentEntryLimit ? "text-red-600" : "text-blue-600"}`}>
+              {myInstrumentCount} / {instrumentEntryLimit ?? "∞"}曲
+            </span>
+          </span>
+        </div>
+      )}
+
       {/* 曲一覧テーブル */}
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full min-w-[640px] border-collapse text-sm">

@@ -18,6 +18,8 @@ const openEventNear: IEventRecord = {
   venue: "渋谷スタジオ A",
   participationFee: 500,
   description: "",
+  vocalEntryLimit: null,
+  instrumentEntryLimit: null,
 };
 
 /** 募集中イベント（startAt がさらに未来・closedAt null） */
@@ -30,6 +32,8 @@ const openEventFar: IEventRecord = {
   venue: "新宿スタジオ B",
   participationFee: 0,
   description: "",
+  vocalEntryLimit: null,
+  instrumentEntryLimit: null,
 };
 
 /** 終了済みイベント（closedAt が過去） */
@@ -42,6 +46,8 @@ const closedEventRecent: IEventRecord = {
   venue: "池袋スタジオ C",
   participationFee: 0,
   description: "",
+  vocalEntryLimit: null,
+  instrumentEntryLimit: null,
 };
 
 /** 終了済みイベント（startAt が過去・closedAt null） */
@@ -54,6 +60,8 @@ const closedEventDistant: IEventRecord = {
   venue: "品川スタジオ D",
   participationFee: 0,
   description: "",
+  vocalEntryLimit: null,
+  instrumentEntryLimit: null,
 };
 
 let mockRepo: Mocked<IEventRepository>;
@@ -155,6 +163,8 @@ describe("getEventSongs", () => {
     venue: "渋谷スタジオ A",
     participationFee: 500,
     description: "春のセッションです",
+    vocalEntryLimit: null,
+    instrumentEntryLimit: null,
   };
 
   const currentUserId = "user-uuid-current";

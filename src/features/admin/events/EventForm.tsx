@@ -31,6 +31,8 @@ export function EventForm({ event }: Props) {
   const [venue, setVenue] = useState(event?.venue ?? "");
   const [venueFee, setVenueFee] = useState<number>(event?.venueFee ?? 0);
   const [participationFee, setParticipationFee] = useState<number>(event?.participationFee ?? 0);
+  const [vocalEntryLimit, setVocalEntryLimit] = useState<number | "">(event?.vocalEntryLimit ?? "");
+  const [instrumentEntryLimit, setInstrumentEntryLimit] = useState<number | "">(event?.instrumentEntryLimit ?? "");
   const [description, setDescription] = useState(event?.description ?? "");
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +54,8 @@ export function EventForm({ event }: Props) {
       venue,
       venueFee,
       participationFee,
+      vocalEntryLimit: vocalEntryLimit === "" ? null : vocalEntryLimit,
+      instrumentEntryLimit: instrumentEntryLimit === "" ? null : instrumentEntryLimit,
       description,
     };
 
@@ -133,6 +137,40 @@ export function EventForm({ event }: Props) {
         {fieldError("participationFee") && (
           <p className="text-destructive text-sm">{fieldError("participationFee")}</p>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label htmlFor="vocalEntryLimit">ボーカル系エントリー数上限（任意）</Label>
+          <Input
+            id="vocalEntryLimit"
+            type="number"
+            min={1}
+            step={1}
+            value={vocalEntryLimit}
+            placeholder="制限なし"
+            onChange={(e) => setVocalEntryLimit(e.target.value === "" ? "" : Number(e.target.value))}
+          />
+          {fieldError("vocalEntryLimit") && (
+            <p className="text-destructive text-sm">{fieldError("vocalEntryLimit")}</p>
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="instrumentEntryLimit">楽器系エントリー数上限（任意）</Label>
+          <Input
+            id="instrumentEntryLimit"
+            type="number"
+            min={1}
+            step={1}
+            value={instrumentEntryLimit}
+            placeholder="制限なし"
+            onChange={(e) => setInstrumentEntryLimit(e.target.value === "" ? "" : Number(e.target.value))}
+          />
+          {fieldError("instrumentEntryLimit") && (
+            <p className="text-destructive text-sm">{fieldError("instrumentEntryLimit")}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

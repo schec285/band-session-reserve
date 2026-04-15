@@ -9,13 +9,13 @@ const past = new Date(now.getTime() - 1000 * 60 * 60);
 const openEventSong1 = {
   id: "event-song-uuid-1",
   parts: ["vocal", "drums"],
-  event: { startAt: future, closedAt: null },
+  event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: null },
 };
 
 const openEventSong2 = {
   id: "event-song-uuid-2",
   parts: ["bass", "keyboard"],
-  event: { startAt: future, closedAt: null },
+  event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: null },
 };
 
 const entry1 = { eventSongId: "event-song-uuid-1", part: "vocal", isTransferable: false };
@@ -32,13 +32,15 @@ let mockRepo: Mocked<IReservationRepository>;
 beforeEach(() => {
   mockRepo = {
     findEventSongWithEvent: vi.fn(),
+    countByUserIdAndEventIdAndParts: vi.fn(),
     findByEventSongIdAndPart: vi.fn(),
     findByUserIdAndEventSongId: vi.fn(),
     findById: vi.fn(),
-    updatePartAndTransferable: vi.fn(),
+    updateTransferable: vi.fn(),
     deleteById: vi.fn(),
     createMany: vi.fn(),
   };
+  mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(0);
   mockRepo.findEventSongWithEvent.mockImplementation(async (id) => {
     if (id === "event-song-uuid-1") return openEventSong1;
     if (id === "event-song-uuid-2") return openEventSong2;
@@ -118,7 +120,7 @@ describe("createReservations", () => {
     it("closed: startAt が過去（closedAt が null）の場合は createMany を呼ばない", async () => {
       mockRepo.findEventSongWithEvent.mockResolvedValue({
         ...openEventSong1,
-        event: { startAt: past, closedAt: null },
+        event: { id: "event-uuid-1", startAt: past, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: null },
       });
 
       const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
@@ -130,7 +132,7 @@ describe("createReservations", () => {
     it("closed: closedAt が過去の場合は createMany を呼ばない", async () => {
       mockRepo.findEventSongWithEvent.mockResolvedValue({
         ...openEventSong1,
-        event: { startAt: future, closedAt: past },
+        event: { id: "event-uuid-1", startAt: future, closedAt: past, vocalEntryLimit: null, instrumentEntryLimit: null },
       });
 
       const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
@@ -187,6 +189,115 @@ describe("createReservations", () => {
         ...baseParams,
         entries: [{ eventSongId: "event-song-uuid-2", part: "backingGuitar" }],
       });
+
+      expect(result).toEqual({ status: "ok" });
+    });
+  });
+
+  describe("異常系 — entry-limit-exceeded", () => {
+    it("entry-limit-exceeded: ボーカル系上限に達している場合は createMany を呼ばない", async () => {
+      const limitedEventSong = {
+        ...openEventSong1,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 3, instrumentEntryLimit: null },
+      };
+      mockRepo.findEventSongWithEvent.mockResolvedValue(limitedEventSong);
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(3);
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
+
+      expect(result).toEqual({ status: "entry-limit-exceeded" });
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+
+    it("entry-limit-exceeded: 楽器系上限に達している場合は createMany を呼ばない", async () => {
+      const limitedEventSong = {
+        ...openEventSong2,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: 4 },
+      };
+      mockRepo.findEventSongWithEvent.mockResolvedValue(limitedEventSong);
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(4);
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry2] });
+
+      expect(result).toEqual({ status: "entry-limit-exceeded" });
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+
+    it("entry-limit-exceeded: バッチ内の合算でも上限超過を検出する", async () => {
+      const limitedEventSong1 = {
+        ...openEventSong1,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 3, instrumentEntryLimit: null },
+      };
+      const limitedEventSong2 = {
+        ...openEventSong2,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 3, instrumentEntryLimit: null },
+      };
+      mockRepo.findEventSongWithEvent.mockImplementation(async (id) => {
+        if (id === "event-song-uuid-1") return limitedEventSong1;
+        if (id === "event-song-uuid-2") return limitedEventSong2;
+        return null;
+      });
+      // DB に既存 2 件、バッチで 2 件追加 → 合計 4 件 > 上限 3
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(2);
+
+      const result = await createReservations(mockRepo, {
+        ...baseParams,
+        entries: [
+          { eventSongId: "event-song-uuid-1", part: "vocal", isTransferable: false },
+          { eventSongId: "event-song-uuid-2", part: "chorus", isTransferable: false },
+        ],
+      });
+
+      expect(result).toEqual({ status: "entry-limit-exceeded" });
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+
+    it("ok: DB既存 + バッチ合算が上限以内なら通る", async () => {
+      const limitedEventSong = {
+        ...openEventSong1,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 3, instrumentEntryLimit: null },
+      };
+      mockRepo.findEventSongWithEvent.mockResolvedValue(limitedEventSong);
+      // DB に既存 2 件、バッチで 1 件 → 合計 3 件 = 上限 3（OK）
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(2);
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
+
+      expect(result).toEqual({ status: "ok" });
+    });
+
+    it("ok: vocalEntryLimit が null なら制限なし", async () => {
+      const unlimitedEventSong = {
+        ...openEventSong1,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: null },
+      };
+      mockRepo.findEventSongWithEvent.mockResolvedValue(unlimitedEventSong);
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(999);
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
+
+      expect(result).toEqual({ status: "ok" });
+    });
+
+    it("ok: ボーカル系上限超過でも楽器系は独立して判定される", async () => {
+      const eventSong1WithLimit = {
+        ...openEventSong1,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 1, instrumentEntryLimit: 5 },
+      };
+      const eventSong2WithLimit = {
+        ...openEventSong2,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 1, instrumentEntryLimit: 5 },
+      };
+      mockRepo.findEventSongWithEvent.mockImplementation(async (id) => {
+        if (id === "event-song-uuid-1") return eventSong1WithLimit;
+        if (id === "event-song-uuid-2") return eventSong2WithLimit;
+        return null;
+      });
+      // vocal は上限 1 に対し DB 0 件 + バッチ 1 件 = ちょうど 1（OK）
+      // instrument は DB 2 件 + バッチ 1 件 = 3 ≤ 5（OK）
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(0);
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1, entry2] });
 
       expect(result).toEqual({ status: "ok" });
     });

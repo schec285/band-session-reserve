@@ -13,6 +13,8 @@ const adminEventFields = {
   venueFee: events.venueFee,
   participationFee: events.participationFee,
   description: events.description,
+  vocalEntryLimit: events.vocalEntryLimit,
+  instrumentEntryLimit: events.instrumentEntryLimit,
 } as const;
 
 /**
@@ -110,6 +112,8 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         venueFee: input.venueFee,
         participationFee: input.participationFee,
         description: input.description,
+        vocalEntryLimit: input.vocalEntryLimit,
+        instrumentEntryLimit: input.instrumentEntryLimit,
       })
       .returning(adminEventFields);
 
@@ -131,6 +135,8 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         venueFee: input.venueFee,
         participationFee: input.participationFee,
         description: input.description,
+        vocalEntryLimit: input.vocalEntryLimit,
+        instrumentEntryLimit: input.instrumentEntryLimit,
         updatedAt: new Date(),
       })
       .where(eq(events.id, eventId))

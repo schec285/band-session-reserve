@@ -13,6 +13,8 @@ const EventFields = {
   venueFee: z.number().int().min(0, "会場費は0以上の整数で入力してください").optional(),
   participationFee: z.number().int().min(0, "参加費は0以上の整数で入力してください").optional(),
   description: z.string().min(1, "説明は必須です"),
+  vocalEntryLimit: z.number().int().min(1, "ボーカル系エントリー数は1以上の整数で入力してください").nullable().optional(),
+  instrumentEntryLimit: z.number().int().min(1, "楽器系エントリー数は1以上の整数で入力してください").nullable().optional(),
 };
 
 type EventFieldsInput = {
@@ -74,6 +76,8 @@ export const AdminEventResponseSchema = z.object({
   venueFee: z.number(),
   participationFee: z.number(),
   description: z.string(),
+  vocalEntryLimit: z.number().nullable(),
+  instrumentEntryLimit: z.number().nullable(),
 });
 
 export type AdminEventResponse = z.infer<typeof AdminEventResponseSchema>;

@@ -17,6 +17,8 @@ const mockEventRecord = {
   venueFee: 3000,
   participationFee: 500,
   description: "春のセッションです",
+  vocalEntryLimit: null,
+  instrumentEntryLimit: null,
 };
 
 const validInput = {
@@ -28,6 +30,8 @@ const validInput = {
   venueFee: 3000,
   participationFee: 500,
   description: "春のセッションです",
+  vocalEntryLimit: null,
+  instrumentEntryLimit: null,
 };
 
 const mockSongs = [
@@ -105,6 +109,8 @@ describe("createEvent", () => {
       venueFee: 3000,
       participationFee: 500,
       description: validInput.description,
+      vocalEntryLimit: null,
+      instrumentEntryLimit: null,
     });
   });
 });
@@ -153,6 +159,8 @@ describe("updateEvent", () => {
       venueFee: 3000,
       participationFee: 500,
       description: validInput.description,
+      vocalEntryLimit: null,
+      instrumentEntryLimit: null,
     });
   });
 });
