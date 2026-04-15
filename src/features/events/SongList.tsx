@@ -220,15 +220,23 @@ export function SongList({
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span>
             ボーカル系:{" "}
-            <span className={`font-semibold ${vocalEntryLimit !== null && myVocalCount >= vocalEntryLimit ? "text-red-600" : "text-blue-600"}`}>
-              {myVocalCount} / {vocalEntryLimit ?? "∞"}曲
-            </span>
+            {vocalEntryLimit !== null ? (
+              <span className={`font-semibold ${myVocalCount >= vocalEntryLimit ? "text-red-600" : "text-blue-600"}`}>
+                {myVocalCount} / {vocalEntryLimit}曲
+              </span>
+            ) : (
+              <span className="font-semibold text-green-600">上限なし</span>
+            )}
           </span>
           <span>
             楽器系:{" "}
-            <span className={`font-semibold ${instrumentEntryLimit !== null && myInstrumentCount >= instrumentEntryLimit ? "text-red-600" : "text-blue-600"}`}>
-              {myInstrumentCount} / {instrumentEntryLimit ?? "∞"}曲
-            </span>
+            {instrumentEntryLimit !== null ? (
+              <span className={`font-semibold ${myInstrumentCount >= instrumentEntryLimit ? "text-red-600" : "text-blue-600"}`}>
+                {myInstrumentCount} / {instrumentEntryLimit}曲
+              </span>
+            ) : (
+              <span className="font-semibold text-green-600">上限なし</span>
+            )}
           </span>
         </div>
       )}
