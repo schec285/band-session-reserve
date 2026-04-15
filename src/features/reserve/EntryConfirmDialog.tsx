@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,11 @@ export function EntryConfirmDialog({
   const [transferable, setTransferable] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [error]);
 
   // 曲ごとにパートをまとめる
   const groupedBySong = entries.reduce<
@@ -161,7 +166,7 @@ export function EntryConfirmDialog({
             </Label>
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p ref={errorRef} className="text-sm text-destructive">{error}</p>}
         </DialogContent>
 
         <DialogFooter>
