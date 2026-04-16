@@ -25,6 +25,11 @@ export default async function EventDetailPage({
   const { event, songs } = result;
   const status = getEventStatus(event);
 
+  const now = new Date();
+  const isEntryClosed =
+    (event.closedAt != null && now > new Date(event.closedAt)) ||
+    now > new Date(event.startAt);
+
   return (
     <div className="space-y-6">
       <a href="/" className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1">
@@ -71,7 +76,7 @@ export default async function EventDetailPage({
       <div>
         <SongList
           songs={songs}
-          isClosed={status !== "upcoming"}
+          isClosed={isEntryClosed}
           vocalEntryLimit={event.vocalEntryLimit}
           instrumentEntryLimit={event.instrumentEntryLimit}
         />

@@ -298,13 +298,14 @@ export function SongList({
                         <td key={part} className={`px-3 py-3 text-center ${isOwner ? "bg-yellow-100" : ""}`}>
                           {isOwner ? (
                             <button
-                              onClick={() => setManageTarget({
+                              onClick={() => !isClosed && setManageTarget({
                                 reservationId: reservation.reservationId!,
                                 songTitle: song.title,
                                 part: PART_LABELS[part],
                                 isTransferable: reservation.isTransferable,
                               })}
-                              className="text-sm font-medium underline underline-offset-2 text-blue-700 hover:text-blue-900"
+                              disabled={isClosed}
+                              className="text-sm font-medium underline underline-offset-2 text-blue-700 hover:text-blue-900 disabled:no-underline disabled:text-foreground disabled:cursor-default"
                               aria-label={`${song.title} ${PART_LABELS[part]} を管理`}
                             >
                               {username}
