@@ -72,7 +72,7 @@ export function UserMenu() {
           </div>
           <nav className="py-1">
             <button
-              onClick={() => { setOpen(false); router.push("/my/reservations"); }}
+              onClick={() => { setOpen(false); router.push("/user/reservations"); }}
               className="w-full text-left px-4 py-2 text-sm hover:bg-accent transition-colors"
             >
               マイ予約

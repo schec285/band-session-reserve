@@ -1,7 +1,7 @@
-import { eq, and, inArray, count } from "drizzle-orm";
+import { eq, and, inArray, count, gt, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { reservations, eventSongs, events } from "@drizzle/schema";
-import type { IEventSongRecord, IReservationRecord, IReservationRepository } from "./reservation-repository";
+import { reservations, eventSongs, events, songs } from "@drizzle/schema";
+import type { IEventSongRecord, IMyReservationRecord, IReservationRecord, IReservationRepository } from "./reservation-repository";
 
 /**
  * Drizzle ORM を使った IReservationRepository の実装。
@@ -131,6 +131,50 @@ export class DrizzleReservationRepository implements IReservationRepository {
    */
   async deleteById(reservationId: string): Promise<void> {
     await db.delete(reservations).where(eq(reservations.id, reservationId));
+  }
+
+  /**
+   * userId に紐づく今後の予約一覧を開催日昇順で取得する。
+   */
+  async findUpcomingByUserId(userId: string): Promise<IMyReservationRecord[]> {
+    const rows = await db
+      .select({
+        reservationId: reservations.id,
+        eventId: events.id,
+        eventTitle: events.title,
+        eventStartAt: events.startAt,
+        eventVenue: events.venue,
+        songTitle: songs.title,
+        songArtist: songs.artist,
+        part: reservations.part,
+        isTransferable: reservations.isTransferable,
+        createdAt: reservations.createdAt,
+      })
+      .from(reservations)
+      .innerJoin(eventSongs, eq(reservations.eventSongId, eventSongs.id))
+      .innerJoin(events, eq(eventSongs.eventId, events.id))
+      .innerJoin(songs, eq(eventSongs.songId, songs.id))
+      .where(
+        and(
+          eq(reservations.userId, userId),
+          gt(events.startAt, new Date())
+        )
+      )
+      .orderBy(asc(events.startAt));
+
+    return rows.map((row) => ({
+      reservationId: row.reservationId,
+      event: {
+        id: row.eventId,
+        title: row.eventTitle,
+        startAt: row.eventStartAt,
+        venue: row.eventVenue,
+      },
+      song: { title: row.songTitle, artist: row.songArtist },
+      part: row.part,
+      isTransferable: row.isTransferable,
+      createdAt: row.createdAt,
+    }));
   }
 
   /**

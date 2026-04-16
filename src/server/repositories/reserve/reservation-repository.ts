@@ -17,9 +17,20 @@ export interface IReservationRecord {
   part: string;
 }
 
+export interface IMyReservationRecord {
+  reservationId: string;
+  event: { id: string; title: string; startAt: Date; venue: string };
+  song: { title: string; artist: string };
+  part: string;
+  isTransferable: boolean;
+  createdAt: Date;
+}
+
 export interface IReservationRepository {
   /** eventSongId でイベント曲とイベント情報を取得する */
   findEventSongWithEvent(eventSongId: string): Promise<IEventSongRecord | null>;
+  /** userId に紐づく今後の予約一覧を開催日昇順で取得する */
+  findUpcomingByUserId(userId: string): Promise<IMyReservationRecord[]>;
   /** ユーザーがあるイベント内で指定パート群に持つ予約数を返す */
   countByUserIdAndEventIdAndParts(userId: string, eventId: string, parts: string[]): Promise<number>;
   /** eventSongId とパートで既存の予約を検索する */
