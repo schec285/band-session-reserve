@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { updateEvent, deleteEvent } from "@/server/services/admin/events";
 import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { UpdateEventSchema } from "@/lib/types/api/admin/events";
+import { withApiHandler } from "@/lib/api/error-handler";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -27,29 +28,31 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const { eventId } = await params;
-  const body = await request.json();
-  const parsed = UpdateEventSchema.safeParse(body);
+    const { eventId } = await params;
+    const body = await request.json();
+    const parsed = UpdateEventSchema.safeParse(body);
 
-  if (!parsed.success) {
-    const errors = parsed.error.issues.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }));
-    return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
-  }
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      }));
+      return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
+    }
 
-  const repo = new DrizzleAdminEventRepository();
-  const result = await updateEvent(repo, eventId, parsed.data);
+    const repo = new DrizzleAdminEventRepository();
+    const result = await updateEvent(repo, eventId, parsed.data);
 
-  if (result.status === "not-found") {
-    return NextResponse.json({ message: "イベントが見つかりません" }, { status: 404 });
-  }
+    if (result.status === "not-found") {
+      return NextResponse.json({ message: "イベントが見つかりません" }, { status: 404 });
+    }
 
-  return NextResponse.json({ event: result.event });
+    return NextResponse.json({ event: result.event });
+  });
 }
 
 /**
@@ -60,16 +63,18 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const { eventId } = await params;
-  const repo = new DrizzleAdminEventRepository();
-  const result = await deleteEvent(repo, eventId);
+    const { eventId } = await params;
+    const repo = new DrizzleAdminEventRepository();
+    const result = await deleteEvent(repo, eventId);
 
-  if (result.status === "not-found") {
-    return NextResponse.json({ message: "イベントが見つかりません" }, { status: 404 });
-  }
+    if (result.status === "not-found") {
+      return NextResponse.json({ message: "イベントが見つかりません" }, { status: 404 });
+    }
 
-  return NextResponse.json({ message: "イベントを削除しました" });
+    return NextResponse.json({ message: "イベントを削除しました" });
+  });
 }

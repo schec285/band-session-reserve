@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getAllSongs, createSong } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
 import { CreateSongSchema } from "@/lib/types/api/admin/songs";
+import { withApiHandler } from "@/lib/api/error-handler";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -24,13 +25,15 @@ async function requireAdmin() {
  * admin のみアクセス可。
  */
 export async function GET(_request: Request) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const repo = new DrizzleSongRepository();
-  const songs = await getAllSongs(repo);
+    const repo = new DrizzleSongRepository();
+    const songs = await getAllSongs(repo);
 
-  return NextResponse.json({ songs });
+    return NextResponse.json({ songs });
+  });
 }
 
 /**
@@ -38,22 +41,24 @@ export async function GET(_request: Request) {
  * admin のみアクセス可。
  */
 export async function POST(request: Request) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const body = await request.json();
-  const parsed = CreateSongSchema.safeParse(body);
+    const body = await request.json();
+    const parsed = CreateSongSchema.safeParse(body);
 
-  if (!parsed.success) {
-    const errors = parsed.error.issues.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }));
-    return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
-  }
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      }));
+      return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
+    }
 
-  const repo = new DrizzleSongRepository();
-  const result = await createSong(repo, parsed.data);
+    const repo = new DrizzleSongRepository();
+    const result = await createSong(repo, parsed.data);
 
-  return NextResponse.json({ song: result.song }, { status: 201 });
+    return NextResponse.json({ song: result.song }, { status: 201 });
+  });
 }

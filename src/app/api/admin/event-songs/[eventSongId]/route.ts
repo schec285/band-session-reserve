@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { deleteEventSong } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
+import { withApiHandler } from "@/lib/api/error-handler";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -26,16 +27,18 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ eventSongId: string }> }
 ) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const { eventSongId } = await params;
-  const repo = new DrizzleSongRepository();
-  const result = await deleteEventSong(repo, eventSongId);
+    const { eventSongId } = await params;
+    const repo = new DrizzleSongRepository();
+    const result = await deleteEventSong(repo, eventSongId);
 
-  if (result.status === "not-found") {
-    return NextResponse.json({ message: "イベント曲が見つかりません" }, { status: 404 });
-  }
+    if (result.status === "not-found") {
+      return NextResponse.json({ message: "イベント曲が見つかりません" }, { status: 404 });
+    }
 
-  return NextResponse.json({ message: "曲をイベントから削除しました" });
+    return NextResponse.json({ message: "曲をイベントから削除しました" });
+  });
 }

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { addEventSong } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
 import { AddEventSongSchema } from "@/lib/types/api/admin/songs";
+import { withApiHandler } from "@/lib/api/error-handler";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -27,23 +28,25 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const { eventId } = await params;
-  const body = await request.json();
-  const parsed = AddEventSongSchema.safeParse(body);
+    const { eventId } = await params;
+    const body = await request.json();
+    const parsed = AddEventSongSchema.safeParse(body);
 
-  if (!parsed.success) {
-    const errors = parsed.error.issues.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }));
-    return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
-  }
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      }));
+      return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
+    }
 
-  const repo = new DrizzleSongRepository();
-  const result = await addEventSong(repo, eventId, parsed.data);
+    const repo = new DrizzleSongRepository();
+    const result = await addEventSong(repo, eventId, parsed.data);
 
-  return NextResponse.json({ eventSong: result.eventSong }, { status: 201 });
+    return NextResponse.json({ eventSong: result.eventSong }, { status: 201 });
+  });
 }

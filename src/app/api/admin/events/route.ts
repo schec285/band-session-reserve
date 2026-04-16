@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { createEvent } from "@/server/services/admin/events";
 import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { CreateEventSchema } from "@/lib/types/api/admin/events";
+import { withApiHandler } from "@/lib/api/error-handler";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -24,22 +25,24 @@ async function requireAdmin() {
  * admin のみアクセス可。バリデーション後にイベントを作成する。
  */
 export async function POST(request: Request) {
-  const { error } = await requireAdmin();
-  if (error) return error;
+  return withApiHandler(async () => {
+    const { error } = await requireAdmin();
+    if (error) return error;
 
-  const body = await request.json();
-  const parsed = CreateEventSchema.safeParse(body);
+    const body = await request.json();
+    const parsed = CreateEventSchema.safeParse(body);
 
-  if (!parsed.success) {
-    const errors = parsed.error.issues.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }));
-    return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
-  }
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      }));
+      return NextResponse.json({ message: "入力内容に誤りがあります", errors }, { status: 400 });
+    }
 
-  const repo = new DrizzleAdminEventRepository();
-  const result = await createEvent(repo, parsed.data);
+    const repo = new DrizzleAdminEventRepository();
+    const result = await createEvent(repo, parsed.data);
 
-  return NextResponse.json({ event: result.event }, { status: 201 });
+    return NextResponse.json({ event: result.event }, { status: 201 });
+  });
 }

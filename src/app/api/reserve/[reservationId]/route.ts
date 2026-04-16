@@ -5,6 +5,7 @@ import { DrizzleReservationRepository } from "@/server/repositories/reserve/rese
 import { UpdateTransferableSchema } from "@/lib/types/api/reserve";
 import type { ErrorResponse } from "@/lib/types/api";
 import type { CancelReservationResponse } from "@/lib/types/api/reserve";
+import { withApiHandler } from "@/lib/api/error-handler";
 
 /**
  * 予約の譲渡可否変更エンドポイント。
@@ -14,41 +15,43 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ reservationId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });
-  }
+  return withApiHandler(async () => {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });
+    }
 
-  const body = await request.json();
-  const parsed = UpdateTransferableSchema.safeParse(body);
+    const body = await request.json();
+    const parsed = UpdateTransferableSchema.safeParse(body);
 
-  if (!parsed.success) {
-    const errors = parsed.error.issues.map((e) => ({
-      field: e.path.join("."),
-      message: e.message,
-    }));
-    return NextResponse.json({ message: "入力内容に誤りがあります", errors } satisfies ErrorResponse, { status: 400 });
-  }
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      }));
+      return NextResponse.json({ message: "入力内容に誤りがあります", errors } satisfies ErrorResponse, { status: 400 });
+    }
 
-  const { reservationId } = await params;
-  const reservationRepo = new DrizzleReservationRepository();
-  const result = await updateTransferable(reservationRepo, {
-    reservationId,
-    userId: session.user.id,
-    isTransferable: parsed.data.isTransferable,
+    const { reservationId } = await params;
+    const reservationRepo = new DrizzleReservationRepository();
+    const result = await updateTransferable(reservationRepo, {
+      reservationId,
+      userId: session.user.id,
+      isTransferable: parsed.data.isTransferable,
+    });
+
+    if (result.status === "not-found") {
+      return NextResponse.json({ message: "予約が見つかりません" } satisfies ErrorResponse, { status: 404 });
+    }
+    if (result.status === "forbidden") {
+      return NextResponse.json({ message: "この操作は許可されていません" } satisfies ErrorResponse, { status: 403 });
+    }
+    if (result.status === "closed") {
+      return NextResponse.json({ message: "このイベントの受付は終了しています" } satisfies ErrorResponse, { status: 422 });
+    }
+
+    return NextResponse.json({ message: "予約を更新しました" } satisfies ErrorResponse);
   });
-
-  if (result.status === "not-found") {
-    return NextResponse.json({ message: "予約が見つかりません" } satisfies ErrorResponse, { status: 404 });
-  }
-  if (result.status === "forbidden") {
-    return NextResponse.json({ message: "この操作は許可されていません" } satisfies ErrorResponse, { status: 403 });
-  }
-  if (result.status === "closed") {
-    return NextResponse.json({ message: "このイベントの受付は終了しています" } satisfies ErrorResponse, { status: 422 });
-  }
-
-  return NextResponse.json({ message: "予約を更新しました" } satisfies ErrorResponse);
 }
 
 /**
@@ -59,27 +62,29 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ reservationId: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });
-  }
+  return withApiHandler(async () => {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });
+    }
 
-  const { reservationId } = await params;
-  const reservationRepo = new DrizzleReservationRepository();
-  const result = await cancelReservation(reservationRepo, {
-    reservationId,
-    userId: session.user.id,
+    const { reservationId } = await params;
+    const reservationRepo = new DrizzleReservationRepository();
+    const result = await cancelReservation(reservationRepo, {
+      reservationId,
+      userId: session.user.id,
+    });
+
+    if (result.status === "not-found") {
+      return NextResponse.json({ message: "予約が見つかりません" } satisfies ErrorResponse, { status: 404 });
+    }
+    if (result.status === "forbidden") {
+      return NextResponse.json({ message: "この操作は許可されていません" } satisfies ErrorResponse, { status: 403 });
+    }
+    if (result.status === "closed") {
+      return NextResponse.json({ message: "このイベントの受付は終了しています" } satisfies ErrorResponse, { status: 422 });
+    }
+
+    return NextResponse.json({ message: "予約をキャンセルしました" } satisfies CancelReservationResponse);
   });
-
-  if (result.status === "not-found") {
-    return NextResponse.json({ message: "予約が見つかりません" } satisfies ErrorResponse, { status: 404 });
-  }
-  if (result.status === "forbidden") {
-    return NextResponse.json({ message: "この操作は許可されていません" } satisfies ErrorResponse, { status: 403 });
-  }
-  if (result.status === "closed") {
-    return NextResponse.json({ message: "このイベントの受付は終了しています" } satisfies ErrorResponse, { status: 422 });
-  }
-
-  return NextResponse.json({ message: "予約をキャンセルしました" } satisfies CancelReservationResponse);
 }
