@@ -37,11 +37,13 @@ export function SongList({
   isClosed = false,
   vocalEntryLimit = null,
   instrumentEntryLimit = null,
+  participationFee = 0,
 }: {
   songs: SongWithReservations[];
   isClosed?: boolean;
   vocalEntryLimit?: number | null;
   instrumentEntryLimit?: number | null;
+  participationFee?: number;
 }) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -119,10 +121,12 @@ export function SongList({
 
   async function handleConfirmSubmit({
     snsConsent,
+    policyConsent,
     comment,
     transferableKeys,
   }: {
     snsConsent: boolean;
+    policyConsent: boolean;
     comment: string;
     transferableKeys: Set<string>;
   }) {
@@ -135,7 +139,7 @@ export function SongList({
       };
     });
 
-    const parsed = CreateReservationsSchema.safeParse({ entries, snsConsent, comment: comment || undefined });
+    const parsed = CreateReservationsSchema.safeParse({ entries, snsConsent, policyConsent, comment: comment || undefined });
     if (!parsed.success) {
       throw new Error(parsed.error.issues[0].message);
     }
@@ -146,6 +150,7 @@ export function SongList({
       body: JSON.stringify({
         entries,
         snsConsent,
+        policyConsent,
         comment: comment || undefined,
       }),
     });
@@ -393,6 +398,7 @@ export function SongList({
       <EntryConfirmDialog
         open={dialogOpen}
         entries={buildEntryItems()}
+        participationFee={participationFee}
         onClose={() => setDialogOpen(false)}
         onSubmit={handleConfirmSubmit}
       />

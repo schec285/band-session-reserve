@@ -44,6 +44,7 @@ export const CreateReservationsSchema = z.object({
       }
     }),
   snsConsent: z.boolean({ error: "選択してください" }),
+  policyConsent: z.literal(true, { error: "参加ポリシーへの同意が必要です" }),
   comment: z.string().optional(),
 });
 

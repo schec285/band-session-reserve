@@ -79,6 +79,7 @@ export default async function EventDetailPage({
           isClosed={isEntryClosed}
           vocalEntryLimit={event.vocalEntryLimit}
           instrumentEntryLimit={event.instrumentEntryLimit}
+          participationFee={event.participationFee}
         />
       </div>
     </div>

@@ -20,6 +20,7 @@ const validBody = {
     { eventSongId: VALID_UUID, part: "vocal", isTransferable: false },
   ],
   snsConsent: true,
+  policyConsent: true,
   comment: "よろしくお願いします。",
 };
 
@@ -206,6 +207,29 @@ describe("POST /api/reserve", () => {
       expect(json.message).toBe("入力内容に誤りがあります");
       expect(json.errors).toContainEqual(
         expect.objectContaining({ field: "snsConsent" })
+      );
+    });
+
+    it("400: policyConsent が未指定", async () => {
+      const { policyConsent: _, ...bodyWithoutPolicy } = validBody;
+      const res = await POST(makeRequest(bodyWithoutPolicy));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("入力内容に誤りがあります");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({ field: "policyConsent" })
+      );
+    });
+
+    it("400: policyConsent が false", async () => {
+      const res = await POST(makeRequest({ ...validBody, policyConsent: false }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("入力内容に誤りがあります");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({ field: "policyConsent" })
       );
     });
   });

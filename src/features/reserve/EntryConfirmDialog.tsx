@@ -16,20 +16,23 @@ export type EntryItem = {
 
 /**
  * エントリー最終確認ダイアログ。
- * 選択した曲・パートを曲ごとにまとめて表示し、パートごとの譲渡可否・SNS同意・コメント入力を行って送信を確定する。
+ * 選択した曲・パートを曲ごとにまとめて表示し、パートごとの譲渡可否・SNS同意・参加ポリシー同意・コメント入力を行って送信を確定する。
  */
 export function EntryConfirmDialog({
   open,
   entries,
+  participationFee,
   onClose,
   onSubmit,
 }: {
   open: boolean;
   entries: EntryItem[];
+  participationFee: number;
   onClose: () => void;
-  onSubmit: (params: { snsConsent: boolean; comment: string; transferableKeys: Set<string> }) => Promise<void>;
+  onSubmit: (params: { snsConsent: boolean; policyConsent: boolean; comment: string; transferableKeys: Set<string> }) => Promise<void>;
 }) {
   const [snsConsent, setSnsConsent] = useState(true);
+  const [policyConsent, setPolicyConsent] = useState(false);
   const [comment, setComment] = useState("");
   const [transferable, setTransferable] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -74,7 +77,7 @@ export function EntryConfirmDialog({
     setLoading(true);
     setError(null);
     try {
-      await onSubmit({ snsConsent, comment: comment.trim(), transferableKeys: transferable });
+      await onSubmit({ snsConsent, policyConsent, comment: comment.trim(), transferableKeys: transferable });
     } catch (e) {
       setError(e instanceof Error ? e.message : "エントリーに失敗しました");
     } finally {
@@ -85,6 +88,7 @@ export function EntryConfirmDialog({
   function handleClose() {
     if (loading) return;
     setSnsConsent(true);
+    setPolicyConsent(false);
     setComment("");
     setTransferable(new Set());
     setError(null);
@@ -152,6 +156,30 @@ export function EntryConfirmDialog({
             />
           </div>
 
+          {/* 参加ポリシー同意 */}
+          <div className="flex items-start gap-3">
+            <input
+              id="confirm-policyConsent"
+              type="checkbox"
+              checked={policyConsent}
+              onChange={(e) => setPolicyConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 cursor-pointer"
+            />
+            <Label htmlFor="confirm-policyConsent" className="text-sm leading-snug cursor-pointer">
+              参加費は{participationFee.toLocaleString()}円です。
+              <a
+                href="/participation-policy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline text-blue-600 hover:text-blue-800"
+                onClick={(e) => e.stopPropagation()}
+              >
+                参加ポリシー
+              </a>
+              に同意する？
+            </Label>
+          </div>
+
           {/* SNS同意 */}
           <div className="flex items-start gap-3">
             <input
@@ -173,7 +201,7 @@ export function EntryConfirmDialog({
           <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
             キャンセル
           </Button>
-          <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button type="submit" disabled={loading || !policyConsent} className="bg-blue-600 hover:bg-blue-700 text-white">
             {loading ? "送信中..." : "エントリーを確定する"}
           </Button>
         </DialogFooter>
