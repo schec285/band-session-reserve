@@ -9,13 +9,13 @@ import { formatDate, formatTime } from "@/lib/utils/date";
  */
 export function EventCard({ event }: { event: Event }) {
   const status = getEventStatus(event);
-  const isUpcoming = status === "upcoming";
+  const isUpcoming = status === "upcoming" || status === "ongoing";
 
   return (
     <a href={`/events/${event.id}`} className="block group">
-      <div className={`relative rounded-xl border bg-card transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5 overflow-hidden ${isUpcoming ? "border-blue-200" : "border-border"}`}>
+      <div className={`relative rounded-xl border bg-card transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5 overflow-hidden ${status === "ongoing" ? "border-green-200" : status === "upcoming" ? "border-blue-200" : "border-border"}`}>
         {/* 左アクセントライン */}
-        <div className={`absolute left-0 top-0 bottom-0 w-1 ${isUpcoming ? "bg-blue-500" : "bg-muted-foreground/30"}`} />
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${status === "ongoing" ? "bg-green-500" : status === "upcoming" ? "bg-blue-500" : "bg-muted-foreground/30"}`} />
 
         <div className="pl-5 pr-4 py-4">
           {/* タイトル行 + バッジ */}

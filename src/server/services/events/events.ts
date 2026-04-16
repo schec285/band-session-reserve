@@ -7,27 +7,29 @@ type GetEventSongsResult =
   | { status: "not-found" };
 
 /**
- * 全イベントを取得し、募集中・終了済みでソートして返す。
- * 募集中イベント（(closedAt ?? startAt) > 現在時刻）を startAt 昇順で先頭に並べ、
- * 終了済みイベントを startAt 降順でその後に続ける。
+ * 全イベントを取得し、開催中・開催予定・開催終了でソートして返す。
+ * 開催中イベント（startAt <= 現在時刻 <= endAt）を endAt 昇順で先頭に並べ、
+ * 開催予定イベント（startAt > 現在時刻）を startAt 昇順で続け、
+ * 開催終了イベント（endAt < 現在時刻）を startAt 降順で末尾に並べる。
  * 日時フィールドは ISO 8601 文字列に変換する。
  */
 export async function getEvents(repo: IEventRepository): Promise<Event[]> {
   const records = await repo.findAllEvents();
   const now = new Date();
 
-  const isOpen = (startAt: Date, closedAt: Date | null) =>
-    (closedAt ?? startAt) > now;
+  const ongoing = records
+    .filter((e) => e.startAt <= now && now <= e.endAt)
+    .sort((a, b) => a.endAt.getTime() - b.endAt.getTime());
 
-  const open = records
-    .filter((e) => isOpen(e.startAt, e.closedAt))
+  const upcoming = records
+    .filter((e) => e.startAt > now)
     .sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
 
-  const closed = records
-    .filter((e) => !isOpen(e.startAt, e.closedAt))
+  const ended = records
+    .filter((e) => e.endAt <= now)
     .sort((a, b) => b.startAt.getTime() - a.startAt.getTime());
 
-  return [...open, ...closed].map((e) => ({
+  return [...ongoing, ...upcoming, ...ended].map((e) => ({
     id: e.id,
     title: e.title,
     startAt: toJST(e.startAt),
