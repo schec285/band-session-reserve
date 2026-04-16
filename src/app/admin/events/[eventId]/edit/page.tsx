@@ -33,7 +33,6 @@ export default async function EditEventPage({
       </div>
 
       <div>
-        <h2 className="text-xl font-bold mb-4">曲管理</h2>
         <AdminEventSongManager
           eventId={eventId}
           eventSongs={eventSongs}

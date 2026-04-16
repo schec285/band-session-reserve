@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { PART_LABELS } from "@/lib/utils/parts";
 import type { Part } from "@drizzle/schema";
 
@@ -29,22 +31,67 @@ interface Props {
 }
 
 /**
- * イベントの曲一覧表示・追加・削除を管理するコンポーネント。
+ * イベントの曲管理セクション。
+ * セクション全体をアコーディオンで開閉でき、曲一覧はカード表示、追加はポップアップダイアログで行う。
  */
 export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [sectionOpen, setSectionOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSongId, setSelectedSongId] = useState("");
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
 
+  // 追加直後に自動スクロールするための追跡
+  const pendingScrollSongId = useRef<string | null>(null);
+  const songRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  /**
+   * eventSongs が更新されたとき、追加した曲へ自動スクロールする。
+   * アコーディオンが閉じていた場合は自動で開く。
+   */
+  useEffect(() => {
+    const targetSongId = pendingScrollSongId.current;
+    if (!targetSongId) return;
+
+    const newSong = eventSongs.find((s) => s.songId === targetSongId);
+    if (!newSong) return;
+
+    pendingScrollSongId.current = null;
+    setSectionOpen(true);
+
+    requestAnimationFrame(() => {
+      songRefs.current.get(newSong.eventSongId)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  }, [eventSongs]);
+
+  /**
+   * パートの選択・解除を切り替える。
+   */
   function togglePart(part: string) {
     setSelectedParts((prev) =>
       prev.includes(part) ? prev.filter((p) => p !== part) : [...prev, part]
     );
   }
 
+  /**
+   * ダイアログを閉じてフォームをリセットする。
+   */
+  const handleCloseDialog = useCallback(() => {
+    setDialogOpen(false);
+    setSelectedSongId("");
+    setSelectedParts([]);
+    setError("");
+  }, []);
+
+  /**
+   * 曲をイベントに追加する。追加後はダイアログを閉じ、追加した曲へ自動スクロールする。
+   */
   async function handleAdd() {
     if (!selectedSongId || selectedParts.length === 0) {
       setError("曲とパートを選択してください");
@@ -63,8 +110,8 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     setAdding(false);
 
     if (res.ok) {
-      setSelectedSongId("");
-      setSelectedParts([]);
+      pendingScrollSongId.current = selectedSongId;
+      handleCloseDialog();
       startTransition(() => router.refresh());
     } else {
       const json = await res.json();
@@ -72,6 +119,9 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     }
   }
 
+  /**
+   * 曲をイベントから削除する。
+   */
   async function handleDelete(eventSongId: string) {
     if (!confirm("この曲をイベントから削除しますか？")) return;
 
@@ -88,82 +138,135 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }
 
   return (
-    <div className="space-y-6">
-      {/* 登録済み曲一覧 */}
-      {eventSongs.length === 0 ? (
-        <p className="text-muted-foreground text-sm">曲が登録されていません。</p>
-      ) : (
-        <div className="space-y-2">
-          {eventSongs.map((song) => (
-            <div
-              key={song.eventSongId}
-              className="flex items-center justify-between p-3 border rounded-lg"
-            >
-              <div>
-                <p className="font-medium text-sm">{song.title}</p>
-                <p className="text-xs text-muted-foreground">{song.artist}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {song.parts.map((p) => PART_LABELS[p] ?? p).join("・")}
-                </p>
+    <div className="space-y-2">
+      <div className="border rounded-lg overflow-hidden">
+        {/* アコーディオンヘッダー */}
+        <button
+          type="button"
+          onClick={() => setSectionOpen((prev) => !prev)}
+          className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <span className="text-xl font-bold">イベント曲一覧</span>
+          {sectionOpen ? (
+            <ChevronUp className="h-5 w-5 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-muted-foreground shrink-0" />
+          )}
+        </button>
+
+        {/* アコーディオンコンテンツ */}
+        {sectionOpen && (
+          <div className="border-t px-5 py-5 space-y-4">
+            {/* 登録済み曲一覧（カード） */}
+            {eventSongs.length === 0 ? (
+              <p className="text-muted-foreground text-sm">曲が登録されていません。</p>
+            ) : (
+              <div className="space-y-2">
+                {eventSongs.map((song) => (
+                  <div
+                    key={song.eventSongId}
+                    ref={(el) => {
+                      if (el) {
+                        songRefs.current.set(song.eventSongId, el);
+                      } else {
+                        songRefs.current.delete(song.eventSongId);
+                      }
+                    }}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium text-sm">{song.title}</p>
+                      <p className="text-xs text-muted-foreground">{song.artist}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {song.parts.map((p) => (
+                          <span
+                            key={p}
+                            className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary border border-primary/20"
+                          >
+                            {PART_LABELS[p] ?? p}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(song.eventSongId)}
+                    >
+                      削除
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDelete(song.eventSongId)}
-              >
-                削除
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 曲追加フォーム */}
-      <div className="border rounded-lg p-4 space-y-4">
-        <h3 className="font-medium text-sm">曲を追加する</h3>
-
-        <div className="space-y-1">
-          <label className="text-sm">曲を選択</label>
-          <select
-            value={selectedSongId}
-            onChange={(e) => setSelectedSongId(e.target.value)}
-            className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">選択してください</option>
-            {allSongs.map((song) => (
-              <option key={song.id} value={song.id}>
-                {song.title} / {song.artist}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-sm">募集するパート</label>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {ALL_PARTS.map((part) => (
-              <button
-                key={part}
-                type="button"
-                onClick={() => togglePart(part)}
-                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                  selectedParts.includes(part)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border hover:bg-muted"
-                }`}
-              >
-                {PART_LABELS[part]}
-              </button>
-            ))}
+            )}
           </div>
-        </div>
+        )}
+      </div>
 
-        {error && <p className="text-destructive text-sm">{error}</p>}
-
-        <Button size="sm" onClick={handleAdd} disabled={adding || isPending}>
-          {adding || isPending ? "追加中..." : "追加する"}
+      {/* 曲追加ボタン（アコーディオン外・右寄せ） */}
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          onClick={() => setDialogOpen(true)}
+          disabled={isPending}
+          className="gap-1.5"
+        >
+          <Plus className="h-4 w-4" />
+          曲を追加する
         </Button>
       </div>
+
+      {/* 曲追加ポップアップ */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogHeader title="曲を追加する" onClose={handleCloseDialog} />
+        <DialogContent>
+          <div className="space-y-1">
+            <label className="text-sm">曲を選択</label>
+            <select
+              value={selectedSongId}
+              onChange={(e) => setSelectedSongId(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">選択してください</option>
+              {allSongs.map((song) => (
+                <option key={song.id} value={song.id}>
+                  {song.title} / {song.artist}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm">募集するパート</label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {ALL_PARTS.map((part) => (
+                <button
+                  key={part}
+                  type="button"
+                  onClick={() => togglePart(part)}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                    selectedParts.includes(part)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {PART_LABELS[part]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && <p className="text-destructive text-sm">{error}</p>}
+        </DialogContent>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={handleCloseDialog}>
+            キャンセル
+          </Button>
+          <Button size="sm" onClick={handleAdd} disabled={adding || isPending}>
+            {adding || isPending ? "追加中..." : "追加する"}
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }
