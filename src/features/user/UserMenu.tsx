@@ -78,7 +78,7 @@ export function UserMenu() {
               マイ予約
             </button>
             <button
-              onClick={() => { setOpen(false); router.push("/my/profile"); }}
+              onClick={() => { setOpen(false); router.push("/profile.html"); }}
               className="w-full text-left px-4 py-2 text-sm hover:bg-accent transition-colors"
             >
               プロフィール
