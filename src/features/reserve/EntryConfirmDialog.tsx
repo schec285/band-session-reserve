@@ -166,17 +166,19 @@ export function EntryConfirmDialog({
               className="mt-0.5 h-4 w-4 cursor-pointer"
             />
             <Label htmlFor="confirm-policyConsent" className="text-sm leading-snug cursor-pointer">
-              参加費は{participationFee.toLocaleString()}円です。
-              <a
-                href="/participation-policy.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline text-blue-600 hover:text-blue-800"
-                onClick={(e) => e.stopPropagation()}
-              >
-                参加ポリシー
-              </a>
-              に同意する？
+              <span>
+                参加費は{participationFee.toLocaleString()}円です。
+                <a
+                  href="/participation-policy.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-blue-600 hover:text-blue-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  参加ポリシー
+                </a>
+                に同意する？
+              </span>
             </Label>
           </div>
 
