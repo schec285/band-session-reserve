@@ -8,6 +8,7 @@ const future2 = new Date(now.getTime() + 1000 * 60 * 60 * 48);
 
 const record1 = {
   reservationId: "res-uuid-1",
+  eventSongId: "event-song-uuid-1",
   event: { id: "event-uuid-1", title: "春のバンドセッション", startAt: future1, venue: "渋谷スタジオ" },
   song: { title: "夜に駆ける", artist: "YOASOBI" },
   part: "vocal",
@@ -17,6 +18,7 @@ const record1 = {
 
 const record2 = {
   reservationId: "res-uuid-2",
+  eventSongId: "event-song-uuid-2",
   event: { id: "event-uuid-2", title: "夏のバンドセッション", startAt: future2, venue: "新宿スタジオ" },
   song: { title: "Subtitle", artist: "Official髭男dism" },
   part: "bass",
@@ -49,6 +51,7 @@ describe("getMyReservations", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
       reservationId: "res-uuid-1",
+      eventSongId: "event-song-uuid-1",
       event: {
         id: "event-uuid-1",
         title: "春のバンドセッション",
@@ -62,6 +65,7 @@ describe("getMyReservations", () => {
     });
     expect(result[1]).toEqual({
       reservationId: "res-uuid-2",
+      eventSongId: "event-song-uuid-2",
       event: {
         id: "event-uuid-2",
         title: "夏のバンドセッション",

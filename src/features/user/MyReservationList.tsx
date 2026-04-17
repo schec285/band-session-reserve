@@ -12,7 +12,7 @@ type Props = {
 };
 
 type SongGroup = {
-  songKey: string;
+  eventSongId: string;
   title: string;
   artist: string;
   items: MyReservationItem[];
@@ -38,12 +38,12 @@ function groupByEventAndSong(reservations: MyReservationItem[]): EventGroup[] {
       eventMap.set(id, { eventId: id, title, startAt, venue, songs: [] });
     }
     const eventGroup = eventMap.get(id)!;
-    const songKey = `${item.song.title}__${item.song.artist}`;
-    const songGroup = eventGroup.songs.find((s) => s.songKey === songKey);
+    const { eventSongId } = item;
+    const songGroup = eventGroup.songs.find((s) => s.eventSongId === eventSongId);
     if (songGroup) {
       songGroup.items.push(item);
     } else {
-      eventGroup.songs.push({ songKey, title: item.song.title, artist: item.song.artist, items: [item] });
+      eventGroup.songs.push({ eventSongId, title: item.song.title, artist: item.song.artist, items: [item] });
     }
   }
   return Array.from(eventMap.values());
@@ -129,7 +129,7 @@ export function MyReservationList({ reservations }: Props) {
             {isOpen && (
               <ul className="divide-y divide-border">
                 {group.songs.map((song) => (
-                  <li key={song.songKey} className="px-4 py-3">
+                  <li key={song.eventSongId} className="px-4 py-3">
                     <p className="text-sm font-medium">
                       {song.title}
                       <span className="text-muted-foreground font-normal ml-2">{song.artist}</span>

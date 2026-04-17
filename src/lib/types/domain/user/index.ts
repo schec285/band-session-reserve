@@ -4,6 +4,7 @@
  */
 export type MyReservationItem = {
   reservationId: string;
+  eventSongId: string;
   event: { id: string; title: string; startAt: string; venue: string };
   song: { title: string; artist: string };
   part: string;

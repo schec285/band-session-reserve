@@ -140,6 +140,7 @@ export class DrizzleReservationRepository implements IReservationRepository {
     const rows = await db
       .select({
         reservationId: reservations.id,
+        eventSongId: eventSongs.id,
         eventId: events.id,
         eventTitle: events.title,
         eventStartAt: events.startAt,
@@ -164,6 +165,7 @@ export class DrizzleReservationRepository implements IReservationRepository {
 
     return rows.map((row) => ({
       reservationId: row.reservationId,
+      eventSongId: row.eventSongId,
       event: {
         id: row.eventId,
         title: row.eventTitle,

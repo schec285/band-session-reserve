@@ -13,6 +13,7 @@ export async function getMyReservations(
   const records = await repo.findUpcomingByUserId(userId);
   return records.map((r) => ({
     reservationId: r.reservationId,
+    eventSongId: r.eventSongId,
     event: {
       id: r.event.id,
       title: r.event.title,

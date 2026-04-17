@@ -19,6 +19,7 @@ export interface IReservationRecord {
 
 export interface IMyReservationRecord {
   reservationId: string;
+  eventSongId: string;
   event: { id: string; title: string; startAt: Date; venue: string };
   song: { title: string; artist: string };
   part: string;
