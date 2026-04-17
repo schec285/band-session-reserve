@@ -177,7 +177,7 @@ export function EntryConfirmDialog({
                 >
                   参加ポリシー
                 </a>
-                に同意する？
+                に同意します
               </span>
             </Label>
           </div>
