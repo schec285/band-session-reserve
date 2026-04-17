@@ -50,6 +50,13 @@
       "when": 1776170432123,
       "tag": "0006_brave_santa_claus",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1776435335997,
+      "tag": "0007_stiff_white_queen",
+      "breakpoints": true
     }
   ]
 }
