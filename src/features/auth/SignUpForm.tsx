@@ -24,6 +24,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(flash ?? null);
@@ -37,10 +38,16 @@ export function SignUpForm({ flash }: SignUpFormProps) {
     setLoading(true);
     setError(null);
 
+    if (password !== confirmPassword) {
+      setError("パスワードが一致しません");
+      setLoading(false);
+      return;
+    }
+
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, confirmPassword }),
     });
 
     if (!res.ok) {
@@ -100,6 +107,17 @@ export function SignUpForm({ flash }: SignUpFormProps) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="confirmPassword">パスワード（確認）</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               autoComplete="new-password"
             />

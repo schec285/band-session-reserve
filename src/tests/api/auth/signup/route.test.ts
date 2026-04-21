@@ -26,6 +26,7 @@ import { signUp } from "@/server/services/auth/signup";
 const validBody = {
   email: "test@example.com",
   password: "password123",
+  confirmPassword: "password123",
   name: "テストユーザー",
 };
 
@@ -88,11 +89,28 @@ describe("POST /api/auth/signup", () => {
     });
 
     it("400: password が8文字未満", async () => {
-      const res = await POST(makeRequest({ ...validBody, password: "short" }));
+      const res = await POST(makeRequest({ ...validBody, password: "short", confirmPassword: "short" }));
       const json = await res.json();
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual({ field: "password", message: "パスワードは8文字以上で入力してください" });
+    });
+
+    it("400: confirmPassword が未指定", async () => {
+      const { confirmPassword: _, ...body } = validBody;
+      const res = await POST(makeRequest(body));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "confirmPassword", message: "確認用パスワードを入力してください" });
+    });
+
+    it("400: confirmPassword が password と不一致", async () => {
+      const res = await POST(makeRequest({ ...validBody, confirmPassword: "different123" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "confirmPassword", message: "パスワードが一致しません" });
     });
   });
 });
