@@ -13,7 +13,7 @@ export class ResendEmailService implements IEmailService {
    */
   private async send(params: { to: string; subject: string; html: string }): Promise<{ status: "ok" } | { status: "error" }> {
     const { data, error } = await this.resend.emails.send({
-      from: "no-reply@musicsessionotonowa.com",
+      from: "onboarding@resend.dev",
       to: params.to,
       subject: params.subject,
       html: params.html,
@@ -50,6 +50,21 @@ export class ResendEmailService implements IEmailService {
       to: params.to,
       subject: "OTONOWAへようこそ",
       html: buildHtml(`<p>${params.name} さん。<br>メール認証が完了しました。ご登録ありがとうございます。</p>`),
+    });
+  }
+
+  /**
+   * パスワードリセット用の認証コードメールを送信する。
+   */
+  async sendPasswordResetEmail(params: {
+    to: string;
+    name: string;
+    code: string;
+  }): Promise<{ status: "ok" } | { status: "error" }> {
+    return this.send({
+      to: params.to,
+      subject: "パスワードリセットのご確認",
+      html: buildHtml(`<p>${params.name} さん。<br>パスワードリセットの認証コードは <strong>${params.code}</strong> です。10分以内に入力してください。</p>`),
     });
   }
 }

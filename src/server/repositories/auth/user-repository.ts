@@ -1,6 +1,6 @@
 export interface IUserRepository {
   /** メールアドレスでユーザーを検索する */
-  findByEmail(email: string): Promise<{ id: string; emailVerified: Date | null } | null>;
+  findByEmail(email: string): Promise<{ id: string; name: string; emailVerified: Date | null } | null>;
   /** IDでユーザーを検索する */
   findById(id: string): Promise<{ id: string; email: string; name: string } | null>;
   /** 認証用にメールアドレスでユーザーを検索する（passwordHash・emailVerified 含む） */
@@ -19,4 +19,6 @@ export interface IUserRepository {
   update(id: string, data: { passwordHash: string; name: string }): Promise<void>;
   /** email_verified を現在時刻でセットする */
   setEmailVerified(id: string): Promise<void>;
+  /** パスワードハッシュのみを更新する */
+  updatePassword(id: string, passwordHash: string): Promise<void>;
 }

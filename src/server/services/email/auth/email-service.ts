@@ -21,4 +21,13 @@ export interface IEmailService {
     to: string;
     name: string;
   }): Promise<SendEmailResult>;
+
+  /**
+   * パスワードリセット用の認証コードメールを送信する。
+   */
+  sendPasswordResetEmail(params: {
+    to: string;
+    name: string;
+    code: string;
+  }): Promise<SendEmailResult>;
 }

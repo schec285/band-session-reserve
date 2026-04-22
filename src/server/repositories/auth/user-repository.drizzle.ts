@@ -10,13 +10,13 @@ export class DrizzleUserRepository implements IUserRepository {
   /**
    * メールアドレスでユーザーを検索する。
    */
-  async findByEmail(email: string): Promise<{ id: string; emailVerified: Date | null } | null> {
+  async findByEmail(email: string): Promise<{ id: string; name: string; emailVerified: Date | null } | null> {
     const [user] = await db
-      .select({ id: users.id, emailVerified: users.emailVerified })
+      .select({ id: users.id, name: users.name, emailVerified: users.emailVerified })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
-    return user ?? null;
+    return user ? { id: user.id, name: user.name ?? "", emailVerified: user.emailVerified } : null;
   }
 
   /**
@@ -82,5 +82,12 @@ export class DrizzleUserRepository implements IUserRepository {
    */
   async setEmailVerified(id: string): Promise<void> {
     await db.update(users).set({ emailVerified: new Date() }).where(eq(users.id, id));
+  }
+
+  /**
+   * パスワードハッシュのみを更新する。
+   */
+  async updatePassword(id: string, passwordHash: string): Promise<void> {
+    await db.update(users).set({ passwordHash }).where(eq(users.id, id));
   }
 }

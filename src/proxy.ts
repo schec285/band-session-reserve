@@ -59,6 +59,48 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  // パスワードリセット コード入力ページ（クッキーなし or 期限切れ → リセットリクエストへ）
+  if (pathname.startsWith("/auth/reset-password/verify")) {
+    const verifyToken = request.cookies.get("reset_verify_token");
+    const parts = verifyToken?.value.split(".");
+    const isValid = parts?.length === 4 && Date.now() <= Number(parts[2]);
+    if (!isValid) {
+      const res = NextResponse.redirect(new URL("/auth/reset-password", request.url));
+      const message = verifyToken
+        ? "認証コードの有効期限が切れています。もう一度やり直してください"
+        : "セッションが無効です。最初からやり直してください";
+      res.cookies.set("flash", JSON.stringify({ type: "error", message }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60,
+      });
+      return res;
+    }
+  }
+
+  // パスワードリセット 新パスワード入力ページ（クッキーなし or 期限切れ → リセットリクエストへ）
+  if (pathname.startsWith("/auth/reset-password/new-password")) {
+    const resetToken = request.cookies.get("reset_token");
+    const parts = resetToken?.value.split(".");
+    const isValid = parts?.length === 4 && Date.now() <= Number(parts[2]);
+    if (!isValid) {
+      const res = NextResponse.redirect(new URL("/auth/reset-password", request.url));
+      const message = resetToken
+        ? "セッションの有効期限が切れています。もう一度やり直してください"
+        : "セッションが無効です。最初からやり直してください";
+      res.cookies.set("flash", JSON.stringify({ type: "error", message }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60,
+      });
+      return res;
+    }
+  }
+
   return NextResponse.next();
 }
 

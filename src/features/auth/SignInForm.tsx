@@ -104,6 +104,11 @@ export function SignInForm({ flash }: SignInFormProps) {
             {loading || isPending ? "サインイン中..." : "サインイン"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
+            <a href="/auth/reset-password" className="underline">
+              パスワードをお忘れの方
+            </a>
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
             アカウントをお持ちでない方は{" "}
             <a href="/auth/signup" className="underline">
               新規登録
