@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDeleteButton";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDatetime } from "@/lib/utils/date";
-import { PART_LABELS } from "@/lib/utils/parts";
+import { PART_LABELS, PART_ORDER } from "@/lib/utils/parts";
 
 /**
  * 管理者用イベント詳細ページ。
@@ -111,12 +111,16 @@ export default async function AdminEventDetailPage({
                   <p className="font-medium text-sm">{song.title}</p>
                   <p className="text-xs text-muted-foreground">{song.artist}</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {song.parts.map((p) => (
+                    {[...song.parts].sort((a, b) => PART_ORDER.indexOf(a.part) - PART_ORDER.indexOf(b.part)).map(({ part, entered }) => (
                       <span
-                        key={p}
-                        className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary border border-primary/20"
+                        key={part}
+                        className={
+                          entered
+                            ? "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-300"
+                            : "px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground border border-border"
+                        }
                       >
-                        {PART_LABELS[p] ?? p}
+                        {PART_LABELS[part] ?? part}
                       </span>
                     ))}
                   </div>

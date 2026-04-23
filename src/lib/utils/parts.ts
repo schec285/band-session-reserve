@@ -22,6 +22,11 @@ export const PART_LABELS: Record<Part, string> = {
 };
 
 /**
+ * パートの表示順。PART_LABELS の定義順を正とする。
+ */
+export const PART_ORDER: Part[] = Object.keys(PART_LABELS) as Part[];
+
+/**
  * ボーカル系パート（エントリー数制限のカテゴリ判定に使用する）。
  */
 export const VOCAL_PARTS: readonly Part[] = ["vocal", "chorus"];

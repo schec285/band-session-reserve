@@ -15,14 +15,14 @@ type DeleteEventResult =
 
 /**
  * 編集フォームに渡す曲情報。
- * parts は予約状況から part 名のみ抽出したリスト。
+ * parts は募集パートとエントリー有無のリスト。
  */
 export type AdminEventSongInfo = {
   eventSongId: string;
   songId: string;
   title: string;
   artist: string;
-  parts: Part[];
+  parts: { part: Part; entered: boolean }[];
 };
 
 type GetEventForEditResult =
@@ -141,7 +141,7 @@ export async function getEventForEdit(
     songId: s.id,
     title: s.title,
     artist: s.artist,
-    parts: s.reservations.map((r) => r.part as Part),
+    parts: s.reservations.map((r) => ({ part: r.part as Part, entered: r.username !== null })),
   }));
 
   return { status: "ok", event: toResponse(eventRecord), songs };

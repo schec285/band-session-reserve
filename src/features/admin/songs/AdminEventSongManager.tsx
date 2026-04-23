@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
-import { PART_LABELS } from "@/lib/utils/parts";
+import { PART_LABELS, PART_ORDER } from "@/lib/utils/parts";
 import type { Part } from "@drizzle/schema";
 
 const ALL_PARTS = Object.keys(PART_LABELS) as Part[];
@@ -15,7 +15,7 @@ interface EventSong {
   songId: string;
   title: string;
   artist: string;
-  parts: Part[];
+  parts: { part: Part; entered: boolean }[];
 }
 
 interface Song {
@@ -178,12 +178,16 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
                       <p className="font-medium text-sm">{song.title}</p>
                       <p className="text-xs text-muted-foreground">{song.artist}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {song.parts.map((p) => (
+                        {[...song.parts].sort((a, b) => PART_ORDER.indexOf(a.part) - PART_ORDER.indexOf(b.part)).map(({ part, entered }) => (
                           <span
-                            key={p}
-                            className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary border border-primary/20"
+                            key={part}
+                            className={
+                              entered
+                                ? "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-300"
+                                : "px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground border border-border"
+                            }
                           >
-                            {PART_LABELS[p] ?? p}
+                            {PART_LABELS[part] ?? part}
                           </span>
                         ))}
                       </div>
