@@ -11,13 +11,15 @@ import { toDatetimeLocal } from "@/lib/utils/date";
 interface Props {
   /** 編集時は既存イベントを渡す。新規作成時は undefined */
   event?: AdminEventResponse;
+  /** キャンセル時の遷移先。省略時は /admin/events */
+  cancelPath?: string;
 }
 
 /**
  * イベント作成・編集フォーム。
  * event が渡された場合は PUT、なければ POST を使用する。
  */
-export function EventForm({ event }: Props) {
+export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
   const router = useRouter();
   const isEdit = !!event;
   const [isPending, startTransition] = useTransition();
@@ -72,7 +74,7 @@ export function EventForm({ event }: Props) {
 
     if (res.ok) {
       startTransition(() => {
-        router.push("/admin/events");
+        router.push(cancelPath);
         router.refresh();
       });
     } else {
@@ -82,7 +84,7 @@ export function EventForm({ event }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1">
         <Label htmlFor="title">タイトル</Label>
         <Input
@@ -235,16 +237,16 @@ export function EventForm({ event }: Props) {
         <p className="text-destructive text-sm">{fieldError("")}</p>
       )}
 
-      <div className="flex gap-3">
-        <Button type="submit" disabled={submitting || isPending}>
-          {submitting || isPending ? "保存中..." : isEdit ? "更新する" : "作成する"}
-        </Button>
+      <div className="flex justify-end gap-3">
         <Button
           type="button"
           variant="outline"
-          onClick={() => startTransition(() => router.push("/admin/events"))}
+          onClick={() => startTransition(() => router.push(cancelPath))}
         >
           キャンセル
+        </Button>
+        <Button type="submit" disabled={submitting || isPending}>
+          {submitting || isPending ? "保存中..." : isEdit ? "更新する" : "作成する"}
         </Button>
       </div>
     </form>
