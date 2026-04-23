@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDeleteButton";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDatetime } from "@/lib/utils/date";
+import { PART_LABELS } from "@/lib/utils/parts";
 
 /**
  * 管理者用イベント詳細ページ。
@@ -23,7 +24,7 @@ export default async function AdminEventDetailPage({
 
   if (result.status === "not-found") notFound();
 
-  const { event } = result;
+  const { event, songs } = result;
   const status = getEventStatus(event);
 
   return (
@@ -94,6 +95,34 @@ export default async function AdminEventDetailPage({
           <div>
             <p className="text-muted-foreground text-sm mb-1">説明</p>
             <p className="text-sm whitespace-pre-wrap">{event.description}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="border rounded-lg p-6 space-y-3">
+        <h2 className="font-semibold">登録曲</h2>
+        {songs.length === 0 ? (
+          <p className="text-muted-foreground text-sm">曲が登録されていません。</p>
+        ) : (
+          <div className="space-y-2">
+            {songs.map((song) => (
+              <div key={song.eventSongId} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <p className="font-medium text-sm">{song.title}</p>
+                  <p className="text-xs text-muted-foreground">{song.artist}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {song.parts.map((p) => (
+                      <span
+                        key={p}
+                        className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary border border-primary/20"
+                      >
+                        {PART_LABELS[p] ?? p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
