@@ -3,7 +3,6 @@ import { getEvents } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AdminEventActions } from "@/features/admin/events/AdminEventActions";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDatetime } from "@/lib/utils/date";
 
@@ -30,9 +29,10 @@ export default async function AdminEventsPage() {
           {events.map((event) => {
             const status = getEventStatus(event);
             return (
-              <div
+              <Link
                 key={event.id}
-                className="flex flex-col gap-3 p-4 border rounded-lg sm:flex-row sm:items-center sm:justify-between sm:gap-0"
+                href={`/admin/events/${event.id}`}
+                className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-0"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -44,8 +44,7 @@ export default async function AdminEventsPage() {
                     {formatDatetime(event.startAt)}〜{formatDatetime(event.endAt)}
                   </p>
                 </div>
-                <AdminEventActions eventId={event.id} />
-              </div>
+              </Link>
             );
           })}
         </div>
