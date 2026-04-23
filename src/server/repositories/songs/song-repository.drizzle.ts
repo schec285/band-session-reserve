@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { songs, eventSongs } from "@drizzle/schema";
+import type { Part } from "@drizzle/schema/enums";
 import type {
   ISongRecord,
   IEventSongRecord,
@@ -73,6 +74,22 @@ export class DrizzleSongRepository implements ISongRepository {
       artist: song!.artist,
       parts: rows[0].parts,
     };
+  }
+
+  /**
+   * イベント曲の募集パートを更新する。存在しない場合は null を返す。
+   */
+  async updateEventSongParts(
+    eventSongId: string,
+    parts: Part[]
+  ): Promise<{ eventSongId: string; parts: Part[] } | null> {
+    const rows = await db
+      .update(eventSongs)
+      .set({ parts, updatedAt: new Date() })
+      .where(eq(eventSongs.id, eventSongId))
+      .returning({ eventSongId: eventSongs.id, parts: eventSongs.parts });
+
+    return rows[0] ?? null;
   }
 
   /**

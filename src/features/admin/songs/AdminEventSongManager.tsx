@@ -32,17 +32,27 @@ interface Props {
 
 /**
  * イベントの曲管理セクション。
- * セクション全体をアコーディオンで開閉でき、曲一覧はカード表示、追加はポップアップダイアログで行う。
+ * セクション全体をアコーディオンで開閉でき、曲一覧はカード表示、追加・パート編集はポップアップダイアログで行う。
  */
 export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [sectionOpen, setSectionOpen] = useState(false);
+
+  // 追加ダイアログの状態
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSongId, setSelectedSongId] = useState("");
   const [selectedParts, setSelectedParts] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
+
+  // パート編集ダイアログの状態
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingSong, setEditingSong] = useState<EventSong | null>(null);
+  const [editSelectedParts, setEditSelectedParts] = useState<Part[]>([]);
+  const [editError, setEditError] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const [confirmRemovePart, setConfirmRemovePart] = useState<Part | null>(null);
 
   // 追加直後に自動スクロールするための追跡
   const pendingScrollSongId = useRef<string | null>(null);
@@ -71,7 +81,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }, [eventSongs]);
 
   /**
-   * パートの選択・解除を切り替える。
+   * 追加ダイアログのパート選択・解除を切り替える。
    */
   function togglePart(part: string) {
     setSelectedParts((prev) =>
@@ -80,7 +90,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }
 
   /**
-   * ダイアログを閉じてフォームをリセットする。
+   * 追加ダイアログを閉じてフォームをリセットする。
    */
   const handleCloseDialog = useCallback(() => {
     setDialogOpen(false);
@@ -134,6 +144,84 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     } else {
       const json = await res.json();
       alert(json.message ?? "削除に失敗しました");
+    }
+  }
+
+  /**
+   * パート編集ダイアログを開き、現在のパートで初期化する。
+   */
+  function handleOpenEditDialog(song: EventSong) {
+    setEditingSong(song);
+    setEditSelectedParts(song.parts.map((p) => p.part));
+    setEditError("");
+    setEditDialogOpen(true);
+  }
+
+  /**
+   * パート編集ダイアログを閉じてリセットする。
+   */
+  const handleCloseEditDialog = useCallback(() => {
+    setEditDialogOpen(false);
+    setEditingSong(null);
+    setEditSelectedParts([]);
+    setEditError("");
+    setConfirmRemovePart(null);
+  }, []);
+
+  /**
+   * パート編集ダイアログのトグル処理。
+   * エントリー済みパートを外す場合は確認ダイアログを経由する。
+   */
+  function toggleEditPart(part: Part) {
+    if (!editSelectedParts.includes(part)) {
+      setEditSelectedParts((prev) => [...prev, part]);
+    } else {
+      const isEntered = editingSong?.parts.find((p) => p.part === part)?.entered ?? false;
+      if (isEntered) {
+        setConfirmRemovePart(part);
+      } else {
+        setEditSelectedParts((prev) => prev.filter((p) => p !== part));
+      }
+    }
+  }
+
+  /**
+   * エントリー済みパートの削除を確認後に実行する。
+   */
+  function handleConfirmRemovePart() {
+    if (!confirmRemovePart) return;
+    setEditSelectedParts((prev) => prev.filter((p) => p !== confirmRemovePart));
+    setConfirmRemovePart(null);
+  }
+
+  /**
+   * 募集パートを更新する。
+   */
+  async function handleUpdateParts() {
+    if (!editingSong) return;
+
+    if (editSelectedParts.length === 0) {
+      setEditError("パートを1つ以上選択してください");
+      return;
+    }
+
+    setEditError("");
+    setUpdating(true);
+
+    const res = await fetch(`/api/admin/event-songs/${editingSong.eventSongId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parts: editSelectedParts }),
+    });
+
+    setUpdating(false);
+
+    if (res.ok) {
+      handleCloseEditDialog();
+      startTransition(() => router.refresh());
+    } else {
+      const json = await res.json();
+      setEditError(json.message ?? "更新に失敗しました");
     }
   }
 
@@ -192,13 +280,23 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
                         ))}
                       </div>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(song.eventSongId)}
-                    >
-                      削除
-                    </Button>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditDialog(song)}
+                        disabled={isPending}
+                      >
+                        パート編集
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(song.eventSongId)}
+                      >
+                        削除
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -271,6 +369,80 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {/* パート編集ダイアログ */}
+      {editingSong && (
+        <>
+          <Dialog open={editDialogOpen} onClose={handleCloseEditDialog}>
+            <DialogHeader title="募集パートを編集" onClose={handleCloseEditDialog} />
+            <DialogContent>
+              <p className="text-sm text-muted-foreground">
+                {editingSong.title} / {editingSong.artist}
+              </p>
+
+              <div className="space-y-1">
+                <label className="text-sm">募集するパート</label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {ALL_PARTS.map((part) => {
+                    const isSelected = editSelectedParts.includes(part);
+                    const isEntered = editingSong.parts.find((p) => p.part === part)?.entered ?? false;
+                    return (
+                      <button
+                        key={part}
+                        type="button"
+                        onClick={() => toggleEditPart(part)}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                          isSelected
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border hover:bg-muted"
+                        }`}
+                      >
+                        {PART_LABELS[part]}
+                        {isEntered && isSelected && (
+                          <span className="ml-1 text-[10px] opacity-70">★</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">★ はエントリー済みパートです</p>
+              </div>
+
+              {editError && <p className="text-destructive text-sm">{editError}</p>}
+            </DialogContent>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={handleCloseEditDialog}>
+                キャンセル
+              </Button>
+              <Button size="sm" onClick={handleUpdateParts} disabled={updating || isPending}>
+                {updating || isPending ? "更新中..." : "更新する"}
+              </Button>
+            </DialogFooter>
+          </Dialog>
+
+          {/* エントリー済みパート削除確認ダイアログ */}
+          <Dialog open={confirmRemovePart !== null} onClose={() => setConfirmRemovePart(null)}>
+            <DialogHeader
+              title="エントリー済みパートの削除確認"
+              onClose={() => setConfirmRemovePart(null)}
+            />
+            <DialogContent>
+              <p className="text-sm">
+                「{confirmRemovePart ? PART_LABELS[confirmRemovePart] : ""}」にはすでにエントリーがあります。
+                このパートを募集から外してもよいですか？
+              </p>
+            </DialogContent>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setConfirmRemovePart(null)}>
+                キャンセル
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleConfirmRemovePart}>
+                外す
+              </Button>
+            </DialogFooter>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }

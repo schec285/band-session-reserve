@@ -53,3 +53,13 @@ export const AdminEventSongResponseSchema = z.object({
 });
 
 export type AdminEventSongResponse = z.infer<typeof AdminEventSongResponseSchema>;
+
+/**
+ * PATCH /api/admin/event-songs/[eventSongId] のリクエストボディスキーマ。
+ * 募集パートを更新する。
+ */
+export const UpdateEventSongPartsSchema = z.object({
+  parts: z.array(PartSchema).min(1, "パートを1つ以上選択してください"),
+});
+
+export type UpdateEventSongPartsInput = z.infer<typeof UpdateEventSongPartsSchema>;

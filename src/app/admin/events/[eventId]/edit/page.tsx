@@ -28,7 +28,7 @@ export default async function EditEventPage({
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-bold mb-6">イベント編集</h1>
+        <h1 className="text-2xl font-bold mb-4">イベント編集</h1>
         <EventForm event={event} cancelPath={`/admin/events/${eventId}`} />
       </div>
 

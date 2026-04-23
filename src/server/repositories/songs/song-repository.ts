@@ -48,4 +48,6 @@ export interface ISongRepository {
   addEventSong(input: IAddEventSongInput): Promise<IEventSongRecord>;
   /** イベント曲IDでイベント曲を削除する。存在しない場合は false を返す */
   deleteEventSong(eventSongId: string): Promise<boolean>;
+  /** イベント曲の募集パートを更新する。存在しない場合は null を返す */
+  updateEventSongParts(eventSongId: string, parts: Part[]): Promise<{ eventSongId: string; parts: Part[] } | null>;
 }

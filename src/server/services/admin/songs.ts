@@ -1,5 +1,5 @@
 import type { ISongRepository } from "@/server/repositories/songs/song-repository";
-import type { AdminSongResponse, AdminEventSongResponse, CreateSongInput, AddEventSongInput } from "@/lib/types/api/admin/songs";
+import type { AdminSongResponse, AdminEventSongResponse, CreateSongInput, AddEventSongInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
 import type { Part } from "@drizzle/schema/enums";
 
 type CreateSongResult =
@@ -10,6 +10,10 @@ type AddEventSongResult =
 
 type DeleteEventSongResult =
   | { status: "ok" }
+  | { status: "not-found" };
+
+type UpdateEventSongPartsResult =
+  | { status: "ok"; eventSongId: string; parts: Part[] }
   | { status: "not-found" };
 
 /**
@@ -45,6 +49,19 @@ export async function addEventSong(
     parts: input.parts as Part[],
   });
   return { status: "ok", eventSong: record };
+}
+
+/**
+ * イベント曲の募集パートを更新する。存在しない場合は status: "not-found" を返す。
+ */
+export async function updateEventSongParts(
+  repo: ISongRepository,
+  eventSongId: string,
+  input: UpdateEventSongPartsInput
+): Promise<UpdateEventSongPartsResult> {
+  const record = await repo.updateEventSongParts(eventSongId, input.parts as Part[]);
+  if (!record) return { status: "not-found" };
+  return { status: "ok", eventSongId: record.eventSongId, parts: record.parts };
 }
 
 /**

@@ -210,7 +210,11 @@ describe("getEventForEdit", () => {
       songId: "song-uuid-1",
       title: "千本桜",
       artist: "黒うさP",
-      parts: ["vocal", "drums", "bass"],
+      parts: [
+        { part: "vocal", entered: true },
+        { part: "drums", entered: false },
+        { part: "bass",  entered: false },
+      ],
     });
   });
 

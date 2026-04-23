@@ -83,8 +83,24 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
     }
   }
 
+  const actionButtons = (
+    <div className="flex justify-end gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => startTransition(() => router.push(cancelPath))}
+      >
+        キャンセル
+      </Button>
+      <Button type="submit" disabled={submitting || isPending}>
+        {submitting || isPending ? "保存中..." : isEdit ? "更新する" : "作成する"}
+      </Button>
+    </div>
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {isEdit && actionButtons}
       <div className="space-y-1">
         <Label htmlFor="title">タイトル</Label>
         <Input
@@ -237,18 +253,7 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
         <p className="text-destructive text-sm">{fieldError("")}</p>
       )}
 
-      <div className="flex justify-end gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => startTransition(() => router.push(cancelPath))}
-        >
-          キャンセル
-        </Button>
-        <Button type="submit" disabled={submitting || isPending}>
-          {submitting || isPending ? "保存中..." : isEdit ? "更新する" : "作成する"}
-        </Button>
-      </div>
+      {!isEdit && actionButtons}
     </form>
   );
 }
