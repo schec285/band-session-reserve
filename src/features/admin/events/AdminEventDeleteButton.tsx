@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 
 interface Props {
   eventId: string;
@@ -14,14 +15,14 @@ interface Props {
  */
 export function AdminEventDeleteButton({ eventId }: Props) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   async function handleDelete() {
-    if (!confirm("このイベントを削除しますか？")) return;
-
     const res = await fetch(`/api/admin/events/${eventId}`, { method: "DELETE" });
 
     if (res.ok) {
+      setOpen(false);
       startTransition(() => router.push("/admin/events"));
     } else {
       const json = await res.json();
@@ -30,13 +31,29 @@ export function AdminEventDeleteButton({ eventId }: Props) {
   }
 
   return (
-    <Button
-      variant="ghost"
-      className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full h-8 text-sm"
-      onClick={handleDelete}
-      disabled={isPending}
-    >
-      {isPending ? "削除中..." : "このイベントを削除する"}
-    </Button>
+    <>
+      <Button
+        variant="ghost"
+        className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full h-8 text-sm"
+        onClick={() => setOpen(true)}
+      >
+        このイベントを削除する
+      </Button>
+
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogHeader title="イベントの削除" onClose={() => setOpen(false)} />
+        <DialogContent>
+          <p className="text-sm">このイベントを削除しますか？この操作は元に戻せません。</p>
+        </DialogContent>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+            キャンセル
+          </Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+            {isPending ? "削除中..." : "削除する"}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </>
   );
 }

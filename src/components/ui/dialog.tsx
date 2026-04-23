@@ -72,7 +72,7 @@ export function DialogHeader({
  * ダイアログのコンテンツ領域。スクロール可能な本文エリア。
  */
 export function DialogContent({ children }: { children: React.ReactNode }) {
-  return <div className="px-6 py-4 space-y-4 max-h-[60vh] overflow-y-auto">{children}</div>;
+  return <div className="px-6 py-8 space-y-4 max-h-[60vh] overflow-y-auto">{children}</div>;
 }
 
 /**
