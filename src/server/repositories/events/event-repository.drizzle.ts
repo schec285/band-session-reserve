@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { events, eventSongs, songs, reservations, users } from "@drizzle/schema";
+import { events, eventSongs, eventSongParts, songs, reservations, users } from "@drizzle/schema";
 import type { IEventRecord, ISongWithReservations, IEventRepository } from "./event-repository";
 
 /**
@@ -59,14 +59,13 @@ export class DrizzleEventRepository implements IEventRepository {
    * イベントが存在しない場合は null、曲が 0 件の場合は空配列を返す。
    */
   async findEventSongsWithReservations(eventId: string): Promise<ISongWithReservations[] | null> {
-    // クエリ 1: イベントの存在確認 + 曲一覧（parts 配列込み）を取得
+    // クエリ 1: イベントの存在確認 + 曲一覧を取得
     const songRows = await db
       .select({
         eventSongId: eventSongs.id,
         songId: songs.id,
         title: songs.title,
         artist: songs.artist,
-        parts: eventSongs.parts,
       })
       .from(events)
       .leftJoin(eventSongs, eq(eventSongs.eventId, events.id))
@@ -78,13 +77,27 @@ export class DrizzleEventRepository implements IEventRepository {
 
     // イベントが存在するが曲が 0 件の場合
     const validSongRows = songRows.filter(
-      (r): r is typeof r & { eventSongId: string; songId: string; title: string; artist: string; parts: string[] } =>
+      (r): r is typeof r & { eventSongId: string; songId: string; title: string; artist: string } =>
         r.eventSongId !== null
     );
     if (validSongRows.length === 0) return [];
 
-    // クエリ 2: 対象 event_songs の予約一覧（username・userId 付き）を取得
     const eventSongIds = validSongRows.map((r) => r.eventSongId);
+
+    // クエリ 2: 募集パートを event_song_parts から取得
+    const partRows = await db
+      .select({ eventSongId: eventSongParts.eventSongId, part: eventSongParts.part })
+      .from(eventSongParts)
+      .where(inArray(eventSongParts.eventSongId, eventSongIds));
+
+    const partsByEventSongId = new Map<string, string[]>();
+    for (const r of partRows) {
+      const list = partsByEventSongId.get(r.eventSongId) ?? [];
+      list.push(r.part);
+      partsByEventSongId.set(r.eventSongId, list);
+    }
+
+    // クエリ 3: 対象 event_songs の予約一覧（username・userId 付き）を取得
     const reservationRows = await db
       .select({
         reservationId: reservations.id,
@@ -100,9 +113,10 @@ export class DrizzleEventRepository implements IEventRepository {
 
     // parts 配列を展開し、予約状況をマージして返す
     return validSongRows.map((songRow) => {
+      const parts = partsByEventSongId.get(songRow.eventSongId) ?? [];
       const songReservations = reservationRows.filter((r) => r.eventSongId === songRow.eventSongId);
 
-      const reservationList = songRow.parts.map((part) => {
+      const reservationList = parts.map((part) => {
         const existing = songReservations.find((r) => r.part === part);
         return {
           part,

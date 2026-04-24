@@ -57,6 +57,13 @@
       "when": 1776435335997,
       "tag": "0007_stiff_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777008324921,
+      "tag": "0008_watery_leo",
+      "breakpoints": true
     }
   ]
 }

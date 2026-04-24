@@ -4,5 +4,6 @@ export * from "./accounts";
 export * from "./events";
 export * from "./songs";
 export * from "./event-songs";
+export * from "./event-song-parts";
 export * from "./reservations";
 export * from "./verification-tokens";

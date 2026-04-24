@@ -1,6 +1,6 @@
 import { eq, and, inArray, count, gt, asc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { reservations, eventSongs, events, songs } from "@drizzle/schema";
+import { reservations, eventSongs, eventSongParts, events, songs } from "@drizzle/schema";
 import type { IEventSongRecord, IMyReservationRecord, IReservationRecord, IReservationRepository } from "./reservation-repository";
 
 /**
@@ -15,7 +15,6 @@ export class DrizzleReservationRepository implements IReservationRepository {
     const rows = await db
       .select({
         id: eventSongs.id,
-        parts: eventSongs.parts,
         eventId: events.id,
         startAt: events.startAt,
         closedAt: events.closedAt,
@@ -29,9 +28,14 @@ export class DrizzleReservationRepository implements IReservationRepository {
     const row = rows[0];
     if (!row) return null;
 
+    const partRows = await db
+      .select({ part: eventSongParts.part })
+      .from(eventSongParts)
+      .where(eq(eventSongParts.eventSongId, eventSongId));
+
     return {
       id: row.id,
-      parts: row.parts,
+      parts: partRows.map((r) => r.part),
       event: {
         id: row.eventId,
         startAt: row.startAt,

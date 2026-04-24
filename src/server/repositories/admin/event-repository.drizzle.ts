@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { events, eventSongs, songs, reservations, users } from "@drizzle/schema";
+import { events, eventSongs, eventSongParts, songs, reservations, users } from "@drizzle/schema";
 import type { IAdminEventRecord, IAdminCreateEventInput, IAdminEventRepository, IAdminSongWithReservations } from "./event-repository";
 
 const adminEventFields = {
@@ -55,7 +55,6 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         songId: songs.id,
         title: songs.title,
         artist: songs.artist,
-        parts: eventSongs.parts,
       })
       .from(events)
       .leftJoin(eventSongs, eq(eventSongs.eventId, events.id))
@@ -65,12 +64,25 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
     if (songRows.length === 0) return null;
 
     const validSongRows = songRows.filter(
-      (r): r is typeof r & { eventSongId: string; songId: string; title: string; artist: string; parts: string[] } =>
+      (r): r is typeof r & { eventSongId: string; songId: string; title: string; artist: string } =>
         r.eventSongId !== null
     );
     if (validSongRows.length === 0) return [];
 
     const eventSongIds = validSongRows.map((r) => r.eventSongId);
+
+    const partRows = await db
+      .select({ eventSongId: eventSongParts.eventSongId, part: eventSongParts.part })
+      .from(eventSongParts)
+      .where(inArray(eventSongParts.eventSongId, eventSongIds));
+
+    const partsByEventSongId = new Map<string, string[]>();
+    for (const r of partRows) {
+      const list = partsByEventSongId.get(r.eventSongId) ?? [];
+      list.push(r.part);
+      partsByEventSongId.set(r.eventSongId, list);
+    }
+
     const reservationRows = await db
       .select({
         eventSongId: reservations.eventSongId,
@@ -82,8 +94,9 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
       .where(inArray(reservations.eventSongId, eventSongIds));
 
     return validSongRows.map((songRow) => {
+      const parts = partsByEventSongId.get(songRow.eventSongId) ?? [];
       const songReservations = reservationRows.filter((r) => r.eventSongId === songRow.eventSongId);
-      const reservationList = songRow.parts.map((part) => {
+      const reservationList = parts.map((part) => {
         const existing = songReservations.find((r) => r.part === part);
         return { part, username: existing?.username ?? null };
       });

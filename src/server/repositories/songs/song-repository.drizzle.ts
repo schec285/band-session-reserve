@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { songs, eventSongs } from "@drizzle/schema";
+import { songs, eventSongs, eventSongParts } from "@drizzle/schema";
 import type { Part } from "@drizzle/schema/enums";
 import type {
   ISongRecord,
@@ -50,6 +50,7 @@ export class DrizzleSongRepository implements ISongRepository {
 
   /**
    * イベントに曲を追加し、作成したレコードを返す。
+   * event_songs に INSERT した後、event_song_parts に募集パートを bulk INSERT する。
    */
   async addEventSong(input: IAddEventSongInput): Promise<IEventSongRecord> {
     const rows = await db
@@ -57,39 +58,66 @@ export class DrizzleSongRepository implements ISongRepository {
       .values({
         eventId: input.eventId,
         songId: input.songId,
-        parts: input.parts,
       })
       .returning({
         eventSongId: eventSongs.id,
         songId: eventSongs.songId,
-        parts: eventSongs.parts,
       });
+
+    const eventSongId = rows[0].eventSongId;
+
+    await db.insert(eventSongParts).values(
+      input.parts.map((part) => ({ eventSongId, part }))
+    );
 
     const song = await this.findSongById(input.songId);
 
     return {
-      eventSongId: rows[0].eventSongId,
+      eventSongId,
       songId: rows[0].songId,
       title: song!.title,
       artist: song!.artist,
-      parts: rows[0].parts,
+      parts: input.parts,
     };
   }
 
   /**
    * イベント曲の募集パートを更新する。存在しない場合は null を返す。
+   * transaction 内で、削除パートの event_song_parts 行を DELETE（→ reservations cascade 削除）し、
+   * 追加パートを INSERT する。
    */
   async updateEventSongParts(
     eventSongId: string,
     parts: Part[]
   ): Promise<{ eventSongId: string; parts: Part[] } | null> {
-    const rows = await db
-      .update(eventSongs)
-      .set({ parts, updatedAt: new Date() })
+    const existing = await db
+      .select({ id: eventSongs.id })
+      .from(eventSongs)
       .where(eq(eventSongs.id, eventSongId))
-      .returning({ eventSongId: eventSongs.id, parts: eventSongs.parts });
+      .limit(1);
 
-    return rows[0] ?? null;
+    if (!existing[0]) return null;
+
+    await db.transaction(async (tx) => {
+      // 新リストにないパートを削除（→ reservations が cascade で自動削除される）
+      await tx.delete(eventSongParts).where(
+        and(
+          eq(eventSongParts.eventSongId, eventSongId),
+          notInArray(eventSongParts.part, parts)
+        )
+      );
+
+      // 新規パートを追加（既存パートは ON CONFLICT DO NOTHING でスキップ）
+      await tx.insert(eventSongParts)
+        .values(parts.map((part) => ({ eventSongId, part })))
+        .onConflictDoNothing();
+
+      await tx.update(eventSongs)
+        .set({ updatedAt: new Date() })
+        .where(eq(eventSongs.id, eventSongId));
+    });
+
+    return { eventSongId, parts };
   }
 
   /**

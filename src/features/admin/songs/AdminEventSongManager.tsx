@@ -392,20 +392,19 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
                         type="button"
                         onClick={() => toggleEditPart(part)}
                         className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                          isSelected
+                          isEntered && isSelected
+                            ? "bg-green-100 text-green-700 border-green-300"
+                            : isSelected
                             ? "bg-primary text-primary-foreground border-primary"
                             : "border-border hover:bg-muted"
                         }`}
                       >
                         {PART_LABELS[part]}
-                        {isEntered && isSelected && (
-                          <span className="ml-1 text-[10px] opacity-70">★</span>
-                        )}
                       </button>
                     );
                   })}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">★ はエントリー済みパートです</p>
+                <p className="text-xs text-muted-foreground mt-1">緑はエントリー済みパートです</p>
               </div>
 
               {editError && <p className="text-destructive text-sm">{editError}</p>}
