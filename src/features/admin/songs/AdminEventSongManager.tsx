@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { PART_LABELS, PART_ORDER } from "@/lib/utils/parts";
+import { PartBadgeList } from "@/components/PartBadgeList";
 import type { Part } from "@drizzle/schema";
 
 const ALL_PARTS = Object.keys(PART_LABELS) as Part[];
@@ -265,19 +266,8 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
                     <div>
                       <p className="font-medium text-sm">{song.title}</p>
                       <p className="text-xs text-muted-foreground">{song.artist}</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {[...song.parts].sort((a, b) => PART_ORDER.indexOf(a.part) - PART_ORDER.indexOf(b.part)).map(({ part, entered }) => (
-                          <span
-                            key={part}
-                            className={
-                              entered
-                                ? "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-300"
-                                : "px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground border border-border"
-                            }
-                          >
-                            {PART_LABELS[part] ?? part}
-                          </span>
-                        ))}
+                      <div className="mt-1">
+                        <PartBadgeList parts={song.parts} />
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">

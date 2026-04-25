@@ -6,25 +6,12 @@ import { useRouter, usePathname } from "next/navigation";
 import type { SongWithReservations } from "@/lib/types/domain/events";
 import type { Part } from "@drizzle/schema";
 
-import { PART_LABELS, VOCAL_PARTS } from "@/lib/utils/parts";
+import { PART_LABELS, PART_ORDER, VOCAL_PARTS } from "@/lib/utils/parts";
 import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/Toast";
 import { EntryConfirmDialog, type EntryItem } from "@/features/reserve/EntryConfirmDialog";
 
-/**
- * テーブルに表示するパートの順序定義。
- */
-const PART_ORDER: Part[] = [
-  "vocal",
-  "chorus",
-  "readGuitar",
-  "backingGuitar",
-  "bass",
-  "drums",
-  "keyboard",
-  "other",
-];
 
 /**
  * 曲一覧とパート別予約状況を横並びテーブルで表示するコンポーネント。

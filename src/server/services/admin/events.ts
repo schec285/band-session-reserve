@@ -1,6 +1,7 @@
 import type { IAdminEventRepository } from "@/server/repositories/admin/event-repository";
 import type { AdminEventResponse, CreateEventInput, UpdateEventInput } from "@/lib/types/api/admin/events";
 import { toJST } from "@/lib/utils/date";
+import { PART_ORDER } from "@/lib/utils/parts";
 import type { Part } from "@drizzle/schema";
 
 type CreateEventResult = { status: "ok"; event: AdminEventResponse };
@@ -25,8 +26,17 @@ export type AdminEventSongInfo = {
   parts: { part: Part; entered: boolean }[];
 };
 
+/**
+ * エントリー一覧に表示する参加者情報。
+ * ユーザー単位で、そのユーザーがエントリーしているパートを PART_ORDER 順で持つ。
+ */
+export type AdminEventEntrant = {
+  username: string;
+  parts: Part[];
+};
+
 type GetEventForEditResult =
-  | { status: "ok"; event: AdminEventResponse; songs: AdminEventSongInfo[] }
+  | { status: "ok"; event: AdminEventResponse; songs: AdminEventSongInfo[]; entrants: AdminEventEntrant[] }
   | { status: "not-found" };
 
 /**
@@ -144,5 +154,20 @@ export async function getEventForEdit(
     parts: s.reservations.map((r) => ({ part: r.part as Part, entered: r.username !== null })),
   }));
 
-  return { status: "ok", event: toResponse(eventRecord), songs };
+  const entrantMap = new Map<string, Set<Part>>();
+  for (const s of songRecords) {
+    for (const r of s.reservations) {
+      if (r.username) {
+        const parts = entrantMap.get(r.username) ?? new Set<Part>();
+        parts.add(r.part as Part);
+        entrantMap.set(r.username, parts);
+      }
+    }
+  }
+  const entrants: AdminEventEntrant[] = [...entrantMap.entries()].map(([username, parts]) => ({
+    username,
+    parts: [...parts].sort((a, b) => PART_ORDER.indexOf(a) - PART_ORDER.indexOf(b)),
+  }));
+
+  return { status: "ok", event: toResponse(eventRecord), songs, entrants };
 }

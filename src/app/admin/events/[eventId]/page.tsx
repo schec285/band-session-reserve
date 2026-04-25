@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDeleteButton";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDatetime } from "@/lib/utils/date";
-import { PART_LABELS, PART_ORDER } from "@/lib/utils/parts";
+import { PartBadgeList } from "@/components/PartBadgeList";
 
 /**
  * 管理者用イベント詳細ページ。
@@ -24,7 +24,7 @@ export default async function AdminEventDetailPage({
 
   if (result.status === "not-found") notFound();
 
-  const { event, songs } = result;
+  const { event, songs, entrants } = result;
   const status = getEventStatus(event);
 
   return (
@@ -110,24 +110,46 @@ export default async function AdminEventDetailPage({
                 <div>
                   <p className="font-medium text-sm">{song.title}</p>
                   <p className="text-xs text-muted-foreground">{song.artist}</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {[...song.parts].sort((a, b) => PART_ORDER.indexOf(a.part) - PART_ORDER.indexOf(b.part)).map(({ part, entered }) => (
-                      <span
-                        key={part}
-                        className={
-                          entered
-                            ? "px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-300"
-                            : "px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground border border-border"
-                        }
-                      >
-                        {PART_LABELS[part] ?? part}
-                      </span>
-                    ))}
+                  <div className="mt-1">
+                    <PartBadgeList parts={song.parts} />
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      <div className="border rounded-lg p-6 space-y-3">
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold">エントリー一覧</h2>
+          <span className="text-sm text-muted-foreground">{entrants.length} 名</span>
+        </div>
+        {entrants.length === 0 ? (
+          <p className="text-muted-foreground text-sm">エントリーはまだありません。</p>
+        ) : (
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="pb-2 pr-4 font-medium w-8">#</th>
+                <th className="pb-2 pr-4 font-medium">ユーザ名</th>
+                <th className="pb-2 font-medium">パート</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {[...entrants]
+                .sort((a, b) => a.username.localeCompare(b.username, "ja"))
+                .map(({ username, parts }, index) => (
+                  <tr key={username}>
+                    <td className="py-2 pr-4 text-muted-foreground tabular-nums">{index + 1}</td>
+                    <td className="py-2 pr-4 font-medium whitespace-nowrap">{username}</td>
+                    <td className="py-2">
+                      <PartBadgeList parts={parts.map((p) => ({ part: p, entered: true }))} />
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         )}
       </div>
 
