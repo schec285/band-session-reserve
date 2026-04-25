@@ -12,6 +12,7 @@ export type EntryItem = {
   songArtist: string;
   eventSongId: string;
   part: Part;
+  isTakeover?: boolean;
 };
 
 /**
@@ -45,16 +46,17 @@ export function EntryConfirmDialog({
 
   // 曲ごとにパートをまとめる
   const groupedBySong = entries.reduce<
-    Map<string, { songTitle: string; songArtist: string; parts: Part[] }>
+    Map<string, { songTitle: string; songArtist: string; parts: Array<{ part: Part; isTakeover: boolean }> }>
   >((map, entry) => {
     const existing = map.get(entry.eventSongId);
+    const item = { part: entry.part, isTakeover: entry.isTakeover ?? false };
     if (existing) {
-      existing.parts.push(entry.part);
+      existing.parts.push(item);
     } else {
       map.set(entry.eventSongId, {
         songTitle: entry.songTitle,
         songArtist: entry.songArtist,
-        parts: [entry.part],
+        parts: [item],
       });
     }
     return map;
@@ -118,7 +120,7 @@ export function EntryConfirmDialog({
                     </div>
                   </div>
                   <div className="mt-2 space-y-1.5">
-                    {parts.map((part) => {
+                    {parts.map(({ part, isTakeover }) => {
                       const key = `${eventSongId}:${part}`;
                       const isTransferable = transferable.has(key);
                       return (
@@ -126,15 +128,21 @@ export function EntryConfirmDialog({
                           <span className="inline-block rounded bg-blue-100 text-blue-700 text-xs px-2 py-0.5">
                             {PART_LABELS[part]}
                           </span>
-                          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={isTransferable}
-                              onChange={() => toggleTransferable(key)}
-                              className="h-3.5 w-3.5 cursor-pointer"
-                            />
-                            譲渡可能
-                          </label>
+                          {isTakeover ? (
+                            <span className="text-xs text-muted-foreground">
+                              譲渡引受のため譲渡不可
+                            </span>
+                          ) : (
+                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={isTransferable}
+                                onChange={() => toggleTransferable(key)}
+                                className="h-3.5 w-3.5 cursor-pointer"
+                              />
+                              譲渡可能
+                            </label>
+                          )}
                         </div>
                       );
                     })}

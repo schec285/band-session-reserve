@@ -50,9 +50,9 @@ export class DrizzleReservationRepository implements IReservationRepository {
    * eventSongId とパートで既存の予約を検索する。
    * 存在しない場合は null を返す。
    */
-  async findByEventSongIdAndPart(eventSongId: string, part: string): Promise<{ id: string } | null> {
+  async findByEventSongIdAndPart(eventSongId: string, part: string): Promise<{ id: string; isTransferable: boolean; userId: string } | null> {
     const rows = await db
-      .select({ id: reservations.id })
+      .select({ id: reservations.id, isTransferable: reservations.isTransferable, userId: reservations.userId })
       .from(reservations)
       .where(
         and(
@@ -86,6 +86,7 @@ export class DrizzleReservationRepository implements IReservationRepository {
   /**
    * ユーザーがあるイベント内で指定パート群に持つ予約数を返す。
    * エントリー数制限チェックに使用する。
+   * `isTransferable = true` の予約は除外する（譲渡可は上限にカウントしない）。
    */
   async countByUserIdAndEventIdAndParts(userId: string, eventId: string, parts: string[]): Promise<number> {
     if (parts.length === 0) return 0;
@@ -97,7 +98,8 @@ export class DrizzleReservationRepository implements IReservationRepository {
         and(
           eq(reservations.userId, userId),
           eq(eventSongs.eventId, eventId),
-          inArray(reservations.part, parts as Array<typeof reservations.part._.data>)
+          inArray(reservations.part, parts as Array<typeof reservations.part._.data>),
+          eq(reservations.isTransferable, false)
         )
       );
     return Number(rows[0]?.cnt ?? 0);
@@ -135,6 +137,24 @@ export class DrizzleReservationRepository implements IReservationRepository {
    */
   async deleteById(reservationId: string): Promise<void> {
     await db.delete(reservations).where(eq(reservations.id, reservationId));
+  }
+
+  /**
+   * 譲渡引受: 既存予約の userId を新ユーザーに書き換え、previousUserId に元ユーザーを記録する。
+   * isTransferable は常に false にセットされる。
+   */
+  async takeoverReservation(reservationId: string, data: { userId: string; previousUserId: string; snsConsent: boolean; comment?: string }): Promise<void> {
+    await db
+      .update(reservations)
+      .set({
+        userId: data.userId as typeof reservations.userId._.data,
+        previousUserId: data.previousUserId as typeof reservations.userId._.data,
+        snsConsent: data.snsConsent,
+        isTransferable: false,
+        comment: data.comment,
+        updatedAt: new Date(),
+      })
+      .where(eq(reservations.id, reservationId as typeof reservations.id._.data));
   }
 
   /**

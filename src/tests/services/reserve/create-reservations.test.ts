@@ -38,6 +38,7 @@ beforeEach(() => {
     findById: vi.fn(),
     updateTransferable: vi.fn(),
     deleteById: vi.fn(),
+    takeoverReservation: vi.fn(),
     createMany: vi.fn(),
   };
   mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(0);
@@ -48,6 +49,7 @@ beforeEach(() => {
   });
   mockRepo.findByEventSongIdAndPart.mockResolvedValue(null);
   mockRepo.findByUserIdAndEventSongId.mockResolvedValue([]);
+  mockRepo.takeoverReservation.mockResolvedValue(undefined);
   mockRepo.createMany.mockResolvedValue(undefined);
 });
 
@@ -301,11 +303,26 @@ describe("createReservations", () => {
 
       expect(result).toEqual({ status: "ok" });
     });
+
+    it("ok: 既存予約がすべて譲渡可の場合はリポジトリがカウント0を返し上限に影響しない", async () => {
+      const limitedEventSong = {
+        ...openEventSong1,
+        event: { id: "event-uuid-1", startAt: future, closedAt: null, vocalEntryLimit: 1, instrumentEntryLimit: null },
+      };
+      mockRepo.findEventSongWithEvent.mockResolvedValue(limitedEventSong);
+      // 既存予約は isTransferable=true のためリポジトリが除外してカウント 0 を返す
+      mockRepo.countByUserIdAndEventIdAndParts.mockResolvedValue(0);
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
+
+      expect(result).toEqual({ status: "ok" });
+      expect(mockRepo.createMany).toHaveBeenCalled();
+    });
   });
 
   describe("異常系 — filled", () => {
-    it("filled: パートが埋まっている場合は createMany を呼ばない", async () => {
-      mockRepo.findByEventSongIdAndPart.mockResolvedValue({ id: "existing-id" });
+    it("filled: 譲渡不可のパートが埋まっている場合は createMany を呼ばない", async () => {
+      mockRepo.findByEventSongIdAndPart.mockResolvedValue({ id: "existing-id", isTransferable: false, userId: "other-user" });
 
       const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
 
@@ -313,9 +330,9 @@ describe("createReservations", () => {
       expect(mockRepo.createMany).not.toHaveBeenCalled();
     });
 
-    it("filled: 複数件のうち1件でもパートが埋まっていれば全件キャンセル", async () => {
+    it("filled: 複数件のうち1件でも譲渡不可で埋まっていれば全件キャンセル", async () => {
       mockRepo.findByEventSongIdAndPart.mockImplementation(async (eventSongId) => {
-        if (eventSongId === "event-song-uuid-2") return { id: "existing-id" };
+        if (eventSongId === "event-song-uuid-2") return { id: "existing-id", isTransferable: false, userId: "other-user" };
         return null;
       });
 
@@ -323,6 +340,43 @@ describe("createReservations", () => {
 
       expect(result).toEqual({ status: "filled" });
       expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("譲渡引受", () => {
+    it("ok: 譲渡可スロットを引き受けると takeoverReservation が呼ばれ createMany は呼ばれない", async () => {
+      mockRepo.findByEventSongIdAndPart.mockResolvedValue({ id: "existing-id", isTransferable: true, userId: "original-user" });
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1] });
+
+      expect(result).toEqual({ status: "ok" });
+      expect(mockRepo.takeoverReservation).toHaveBeenCalledWith("existing-id", {
+        userId: "user-uuid",
+        previousUserId: "original-user",
+        snsConsent: true,
+        comment: undefined,
+      });
+      expect(mockRepo.createMany).not.toHaveBeenCalled();
+    });
+
+    it("ok: 引受と新規が混在すると takeoverReservation と createMany の両方が呼ばれる", async () => {
+      mockRepo.findByEventSongIdAndPart.mockImplementation(async (eventSongId) => {
+        if (eventSongId === "event-song-uuid-1") return { id: "existing-id", isTransferable: true, userId: "original-user" };
+        return null;
+      });
+
+      const result = await createReservations(mockRepo, { ...baseParams, entries: [entry1, entry2] });
+
+      expect(result).toEqual({ status: "ok" });
+      expect(mockRepo.takeoverReservation).toHaveBeenCalledWith("existing-id", {
+        userId: "user-uuid",
+        previousUserId: "original-user",
+        snsConsent: true,
+        comment: undefined,
+      });
+      expect(mockRepo.createMany).toHaveBeenCalledWith([
+        expect.objectContaining({ eventSongId: "event-song-uuid-2", part: "bass" }),
+      ]);
     });
   });
 });

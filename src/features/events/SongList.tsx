@@ -81,10 +81,10 @@ export function SongList({
 
   const allReservations = songs.flatMap((s) => s.reservations);
   const myVocalCount = allReservations.filter(
-    (r) => r.isOwner && (VOCAL_PARTS as readonly string[]).includes(r.part)
+    (r) => r.isOwner && !r.isTransferable && (VOCAL_PARTS as readonly string[]).includes(r.part)
   ).length;
   const myInstrumentCount = allReservations.filter(
-    (r) => r.isOwner && !(VOCAL_PARTS as readonly string[]).includes(r.part)
+    (r) => r.isOwner && !r.isTransferable && !(VOCAL_PARTS as readonly string[]).includes(r.part)
   ).length;
 
   if (songs.length === 0) {
@@ -104,6 +104,15 @@ export function SongList({
     });
   }
 
+  // 譲渡引受対象のキー集合（eventSongId:part）
+  const transferableSlotKeys = new Set<string>(
+    songs.flatMap((s) =>
+      s.reservations
+        .filter((r) => r.isTransferable && !r.isOwner && r.username != null)
+        .map((r) => `${s.eventSongId}:${r.part}`)
+    )
+  );
+
   function buildEntryItems(): EntryItem[] {
     return Array.from(selected).map((key) => {
       const colonIndex = key.indexOf(":");
@@ -115,6 +124,7 @@ export function SongList({
         part,
         songTitle: song?.title ?? "",
         songArtist: song?.artist ?? "",
+        isTakeover: transferableSlotKeys.has(key),
       };
     });
   }
@@ -299,6 +309,10 @@ export function SongList({
                     }
 
                     if (isFilled) {
+                      const canTakeover = !isOwner && reservation.isTransferable && canEntry;
+                      const key = `${song.eventSongId}:${part}`;
+                      const isChecked = selected.has(key);
+
                       return (
                         <td key={part} className={`px-3 py-3 text-center ${isOwner ? "bg-yellow-100" : ""}`}>
                           {isOwner ? (
@@ -318,6 +332,17 @@ export function SongList({
                                 <span className="ml-1 text-xs text-green-600 font-normal">(譲渡可)</span>
                               )}
                             </button>
+                          ) : canTakeover ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <input
+                                type="checkbox"
+                                aria-label={`${song.title} ${PART_LABELS[part]} を引き受ける`}
+                                checked={isChecked}
+                                onChange={() => toggleEntry(song.eventSongId, part)}
+                                className="h-4 w-4 cursor-pointer"
+                              />
+                              <span className="text-xs">{username}<span className="text-green-600">(譲渡可)</span></span>
+                            </div>
                           ) : (
                             <span className="text-sm font-medium">
                               {username}

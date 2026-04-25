@@ -62,7 +62,11 @@ export async function createReservations(
     if (dbCount + batchCount > limit) return { status: "entry-limit-exceeded" };
   }
 
-  // Phase 3: 既存チェック（closed / forbidden-combination / filled）
+  // Phase 3: 既存チェック（closed / forbidden-combination / filled / 譲渡引受）
+  type TakeoverEntry = { reservationId: string; previousUserId: string; entry: typeof params.entries[number] };
+  const takeoverEntries: TakeoverEntry[] = [];
+  const takeoverKeys = new Set<string>();
+
   for (const entry of params.entries) {
     const eventSong = eventSongMap.get(entry.eventSongId)!;
 
@@ -78,19 +82,38 @@ export async function createReservations(
     if (hasForbidden) return { status: "forbidden-combination" };
 
     const existing = await repo.findByEventSongIdAndPart(entry.eventSongId, entry.part);
-    if (existing) return { status: "filled" };
+    if (existing) {
+      if (!existing.isTransferable) return { status: "filled" };
+      // 譲渡可の場合は引受OKとして UPDATE 対象に積む
+      takeoverEntries.push({ reservationId: existing.id, previousUserId: existing.userId, entry });
+      takeoverKeys.add(`${entry.eventSongId}:${entry.part}`);
+    }
   }
 
-  await repo.createMany(
-    params.entries.map((entry) => ({
+  // 譲渡引受: 既存予約を UPDATE して新ユーザーに置き換える
+  for (const takeover of takeoverEntries) {
+    await repo.takeoverReservation(takeover.reservationId, {
       userId: params.userId,
-      eventSongId: entry.eventSongId,
-      part: entry.part,
+      previousUserId: takeover.previousUserId,
       snsConsent: params.snsConsent,
-      isTransferable: entry.isTransferable,
       comment: params.comment,
-    }))
-  );
+    });
+  }
+
+  // 新規エントリーのみ INSERT
+  const newEntries = params.entries.filter((e) => !takeoverKeys.has(`${e.eventSongId}:${e.part}`));
+  if (newEntries.length > 0) {
+    await repo.createMany(
+      newEntries.map((entry) => ({
+        userId: params.userId,
+        eventSongId: entry.eventSongId,
+        part: entry.part,
+        snsConsent: params.snsConsent,
+        isTransferable: entry.isTransferable,
+        comment: params.comment,
+      }))
+    );
+  }
 
   return { status: "ok" };
 }
