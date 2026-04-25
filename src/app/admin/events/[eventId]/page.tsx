@@ -27,6 +27,9 @@ export default async function AdminEventDetailPage({
   const { event, songs, entrants } = result;
   const status = getEventStatus(event);
 
+  const totalCollected = event.participationFee * entrants.length;
+  const balance = totalCollected - event.venueFee;
+
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -87,6 +90,19 @@ export default async function AdminEventDetailPage({
             <dt className="text-muted-foreground">楽器系エントリー上限</dt>
             <dd className="font-medium mt-0.5">
               {event.instrumentEntryLimit != null ? `${event.instrumentEntryLimit} 枠` : "無制限"}
+            </dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">暫定徴収額</dt>
+            <dd className="font-medium mt-0.5 flex items-baseline gap-2">
+              <span>{totalCollected.toLocaleString("ja-JP")} 円</span>
+              <span className={`text-sm ${balance > 0 ? "text-green-600" : balance < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                {balance > 0
+                  ? `(${balance.toLocaleString("ja-JP")} 円)`
+                  : balance < 0
+                  ? `(△${Math.abs(balance).toLocaleString("ja-JP")} 円)`
+                  : "(収支ゼロ)"}
+              </span>
             </dd>
           </div>
         </dl>
