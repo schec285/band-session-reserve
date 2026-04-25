@@ -1,0 +1,2 @@
+ALTER TABLE "reservations" ADD COLUMN "previous_user_id" uuid;--> statement-breakpoint
+ALTER TABLE "reservations" ADD CONSTRAINT "reservations_previous_user_id_users_id_fk" FOREIGN KEY ("previous_user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
