@@ -98,10 +98,10 @@ export default async function AdminEventDetailPage({
               <span>{totalCollected.toLocaleString("ja-JP")} 円</span>
               <span className={`text-sm ${balance > 0 ? "text-green-600" : balance < 0 ? "text-red-600" : "text-muted-foreground"}`}>
                 {balance > 0
-                  ? `(${balance.toLocaleString("ja-JP")} 円)`
+                  ? `(+${balance.toLocaleString("ja-JP")} 円)`
                   : balance < 0
-                  ? `(△${Math.abs(balance).toLocaleString("ja-JP")} 円)`
-                  : "(収支ゼロ)"}
+                    ? `(-${Math.abs(balance).toLocaleString("ja-JP")} 円)`
+                    : "(収支ゼロ)"}
               </span>
             </dd>
           </div>
