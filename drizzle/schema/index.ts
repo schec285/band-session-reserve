@@ -7,3 +7,4 @@ export * from "./event-songs";
 export * from "./event-song-parts";
 export * from "./reservations";
 export * from "./verification-tokens";
+export * from "./event-collections";

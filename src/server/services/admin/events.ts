@@ -31,8 +31,10 @@ export type AdminEventSongInfo = {
  * ユーザー単位で、そのユーザーがエントリーしているパートを PART_ORDER 順で持つ。
  */
 export type AdminEventEntrant = {
+  userId: string;
   username: string;
   parts: Part[];
+  collected: boolean;
 };
 
 type GetEventForEditResult =
@@ -154,20 +156,44 @@ export async function getEventForEdit(
     parts: s.reservations.map((r) => ({ part: r.part as Part, entered: r.username !== null })),
   }));
 
-  const entrantMap = new Map<string, Set<Part>>();
+  const entrantMap = new Map<string, { username: string; parts: Set<Part> }>();
   for (const s of songRecords) {
     for (const r of s.reservations) {
-      if (r.username) {
-        const parts = entrantMap.get(r.username) ?? new Set<Part>();
-        parts.add(r.part as Part);
-        entrantMap.set(r.username, parts);
+      if (r.username && r.userId) {
+        const existing = entrantMap.get(r.userId) ?? { username: r.username, parts: new Set<Part>() };
+        existing.parts.add(r.part as Part);
+        entrantMap.set(r.userId, existing);
       }
     }
   }
-  const entrants: AdminEventEntrant[] = [...entrantMap.entries()].map(([username, parts]) => ({
+
+  const collectedIds = await repo.findCollectedUserIds(eventId);
+
+  const entrants: AdminEventEntrant[] = [...entrantMap.entries()].map(([userId, { username, parts }]) => ({
+    userId,
     username,
     parts: [...parts].sort((a, b) => PART_ORDER.indexOf(a) - PART_ORDER.indexOf(b)),
+    collected: collectedIds.has(userId),
   }));
 
   return { status: "ok", event: toResponse(eventRecord), songs, entrants };
+}
+
+type SetCollectionResult =
+  | { status: "ok" }
+  | { status: "not-found" };
+
+/**
+ * 参加費の徴収状況を更新する。
+ * イベントが存在しない場合は status: "not-found" を返す。
+ */
+export async function setCollection(
+  repo: IAdminEventRepository,
+  eventId: string,
+  userId: string,
+  collected: boolean
+): Promise<SetCollectionResult> {
+  const updated = await repo.setCollected(eventId, userId, collected);
+  if (!updated) return { status: "not-found" };
+  return { status: "ok" };
 }

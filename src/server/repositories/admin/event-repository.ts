@@ -38,6 +38,7 @@ export interface IAdminCreateEventInput {
 export interface IAdminReservationInfo {
   part: string;
   username: string | null;
+  userId: string | null;
 }
 
 /**
@@ -62,6 +63,15 @@ export interface IAdminEventRepository {
    * イベントが存在するが曲が 0 件の場合は空配列を返す。
    */
   findEventSongsWithReservations(eventId: string): Promise<IAdminSongWithReservations[] | null>;
+  /** イベントの徴収済みユーザーIDセットを取得する */
+  findCollectedUserIds(eventId: string): Promise<Set<string>>;
+  /**
+   * 徴収状況を更新する。
+   * collected: true → 徴収済みとして記録（既存の場合は何もしない）
+   * collected: false → 徴収記録を削除
+   * イベントが存在しない場合は false を返す。
+   */
+  setCollected(eventId: string, userId: string, collected: boolean): Promise<boolean>;
   /** イベントを作成し、作成したレコードを返す */
   createEvent(input: IAdminCreateEventInput): Promise<IAdminEventRecord>;
   /** イベントを更新し、更新後のレコードを返す。存在しない場合は null を返す */

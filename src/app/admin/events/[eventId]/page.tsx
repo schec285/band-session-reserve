@@ -8,6 +8,7 @@ import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDelete
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { formatDatetime } from "@/lib/utils/date";
 import { PartBadgeList } from "@/components/PartBadgeList";
+import { AdminCollectionButton } from "@/features/admin/events/AdminCollectionButton";
 
 /**
  * 管理者用イベント詳細ページ。
@@ -149,18 +150,22 @@ export default async function AdminEventDetailPage({
               <tr className="border-b text-left text-muted-foreground">
                 <th className="pb-2 pr-4 font-medium w-8">#</th>
                 <th className="pb-2 pr-4 font-medium">ユーザ名</th>
-                <th className="pb-2 font-medium">パート</th>
+                <th className="pb-2 pr-4 font-medium">パート</th>
+                <th className="pb-2 font-medium">徴収</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {[...entrants]
                 .sort((a, b) => a.username.localeCompare(b.username, "ja"))
-                .map(({ username, parts }, index) => (
-                  <tr key={username}>
+                .map(({ userId, username, parts, collected }, index) => (
+                  <tr key={userId}>
                     <td className="py-2 pr-4 text-muted-foreground tabular-nums">{index + 1}</td>
                     <td className="py-2 pr-4 font-medium whitespace-nowrap">{username}</td>
-                    <td className="py-2">
+                    <td className="py-2 pr-4">
                       <PartBadgeList parts={parts.map((p) => ({ part: p, entered: true }))} />
+                    </td>
+                    <td className="py-2">
+                      <AdminCollectionButton eventId={eventId} userId={userId} collected={collected} />
                     </td>
                   </tr>
                 ))}

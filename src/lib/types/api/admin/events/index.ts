@@ -81,3 +81,13 @@ export const AdminEventResponseSchema = z.object({
 });
 
 export type AdminEventResponse = z.infer<typeof AdminEventResponseSchema>;
+
+/**
+ * PATCH /api/admin/events/[eventId]/collections のリクエストボディスキーマ。
+ */
+export const SetCollectionSchema = z.object({
+  userId: z.string().uuid("userId は UUID 形式で指定してください"),
+  collected: z.boolean(),
+});
+
+export type SetCollectionInput = z.infer<typeof SetCollectionSchema>;

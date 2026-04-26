@@ -1,5 +1,5 @@
 import type { Mocked } from "vitest";
-import { createEvent, updateEvent, deleteEvent, getEventForEdit } from "@/server/services/admin/events";
+import { createEvent, updateEvent, deleteEvent, getEventForEdit, setCollection } from "@/server/services/admin/events";
 import type { IAdminEventRepository } from "@/server/repositories/admin/event-repository";
 
 const now = new Date();
@@ -41,9 +41,9 @@ const mockSongs = [
     title: "千本桜",
     artist: "黒うさP",
     reservations: [
-      { part: "vocal",      username: "yamada_taro" },
-      { part: "drums",      username: null },
-      { part: "bass",       username: null },
+      { part: "vocal", username: "yamada_taro", userId: "user-uuid-1" },
+      { part: "drums", username: null,           userId: null },
+      { part: "bass",  username: null,           userId: null },
     ],
   },
 ];
@@ -55,6 +55,8 @@ beforeEach(() => {
     findAllEvents: vi.fn(),
     findEventById: vi.fn(),
     findEventSongsWithReservations: vi.fn(),
+    findCollectedUserIds: vi.fn().mockResolvedValue(new Set<string>()),
+    setCollected: vi.fn().mockResolvedValue(true),
     createEvent: vi.fn(),
     updateEvent: vi.fn(),
     deleteEvent: vi.fn(),
@@ -218,6 +220,35 @@ describe("getEventForEdit", () => {
     });
   });
 
+  it("ok: エントラントに userId と collected（未徴収）が含まれる", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEventRecord);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+    mockRepo.findCollectedUserIds.mockResolvedValue(new Set<string>());
+
+    const result = await getEventForEdit(mockRepo, "event-uuid-1");
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.entrants).toHaveLength(1);
+    expect(result.entrants[0]).toMatchObject({
+      userId: "user-uuid-1",
+      username: "yamada_taro",
+      collected: false,
+    });
+  });
+
+  it("ok: エントラントに collected: true が反映される", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEventRecord);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue(mockSongs);
+    mockRepo.findCollectedUserIds.mockResolvedValue(new Set(["user-uuid-1"]));
+
+    const result = await getEventForEdit(mockRepo, "event-uuid-1");
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.entrants[0].collected).toBe(true);
+  });
+
   it("ok: 曲が 0 件の場合は songs が空配列", async () => {
     mockRepo.findEventById.mockResolvedValue(mockEventRecord);
     mockRepo.findEventSongsWithReservations.mockResolvedValue([]);
@@ -233,5 +264,37 @@ describe("getEventForEdit", () => {
     const result = await getEventForEdit(mockRepo, "nonexistent-uuid");
 
     expect(result).toEqual({ status: "not-found" });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// setCollection
+// ---------------------------------------------------------------------------
+
+describe("setCollection", () => {
+  it("ok: 徴収済みに更新する", async () => {
+    mockRepo.setCollected.mockResolvedValue(true);
+
+    const result = await setCollection(mockRepo, "event-uuid-1", "user-uuid-1", true);
+
+    expect(result.status).toBe("ok");
+    expect(mockRepo.setCollected).toHaveBeenCalledWith("event-uuid-1", "user-uuid-1", true);
+  });
+
+  it("ok: 未徴収に更新する", async () => {
+    mockRepo.setCollected.mockResolvedValue(true);
+
+    const result = await setCollection(mockRepo, "event-uuid-1", "user-uuid-1", false);
+
+    expect(result.status).toBe("ok");
+    expect(mockRepo.setCollected).toHaveBeenCalledWith("event-uuid-1", "user-uuid-1", false);
+  });
+
+  it("not-found: イベントが存在しない場合", async () => {
+    mockRepo.setCollected.mockResolvedValue(false);
+
+    const result = await setCollection(mockRepo, "nonexistent-uuid", "user-uuid-1", true);
+
+    expect(result.status).toBe("not-found");
   });
 });

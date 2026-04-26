@@ -1,6 +1,6 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { events, eventSongs, eventSongParts, songs, reservations, users } from "@drizzle/schema";
+import { events, eventSongs, eventSongParts, songs, reservations, users, eventCollections } from "@drizzle/schema";
 import type { IAdminEventRecord, IAdminCreateEventInput, IAdminEventRepository, IAdminSongWithReservations } from "./event-repository";
 
 const adminEventFields = {
@@ -88,6 +88,7 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         eventSongId: reservations.eventSongId,
         part: reservations.part,
         username: users.name,
+        userId: users.id,
       })
       .from(reservations)
       .innerJoin(users, eq(reservations.userId, users.id))
@@ -98,7 +99,7 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
       const songReservations = reservationRows.filter((r) => r.eventSongId === songRow.eventSongId);
       const reservationList = parts.map((part) => {
         const existing = songReservations.find((r) => r.part === part);
-        return { part, username: existing?.username ?? null };
+        return { part, username: existing?.username ?? null, userId: existing?.userId ?? null };
       });
       return {
         id: songRow.songId,
@@ -108,6 +109,47 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
         reservations: reservationList,
       };
     });
+  }
+
+  /**
+   * イベントの徴収済みユーザーIDセットを返す。
+   */
+  async findCollectedUserIds(eventId: string): Promise<Set<string>> {
+    const rows = await db
+      .select({ userId: eventCollections.userId })
+      .from(eventCollections)
+      .where(eq(eventCollections.eventId, eventId));
+
+    return new Set(rows.map((r) => r.userId));
+  }
+
+  /**
+   * 徴収状況を更新する。
+   * collected: true → 行を upsert（既存なら何もしない）
+   * collected: false → 行を削除
+   * イベントが存在しない場合は false を返す。
+   */
+  async setCollected(eventId: string, userId: string, collected: boolean): Promise<boolean> {
+    const eventExists = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+
+    if (eventExists.length === 0) return false;
+
+    if (collected) {
+      await db
+        .insert(eventCollections)
+        .values({ eventId, userId })
+        .onConflictDoNothing();
+    } else {
+      await db
+        .delete(eventCollections)
+        .where(and(eq(eventCollections.eventId, eventId), eq(eventCollections.userId, userId)));
+    }
+
+    return true;
   }
 
   /**
