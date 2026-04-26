@@ -134,16 +134,17 @@ export function MyReservationList({ reservations }: Props) {
                       {song.title}
                       <span className="text-muted-foreground font-normal ml-2">{song.artist}</span>
                     </p>
-                    <ul className="mt-1.5 space-y-0.5 pl-3 border-l border-border">
+                    <div className="mt-1.5 flex flex-wrap gap-1">
                       {song.items.map((item) => (
-                        <li key={item.reservationId} className="text-sm text-muted-foreground">
-                          パート：{PART_LABELS[item.part as Part]}
-                          {item.isTransferable && (
-                            <span className="text-green-600 ml-1">（譲渡可）</span>
-                          )}
-                        </li>
+                        <span
+                          key={item.reservationId}
+                          className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 border border-green-300"
+                        >
+                          {PART_LABELS[item.part as Part]}
+                          {item.isTransferable && <span className="ml-0.5">（譲渡可）</span>}
+                        </span>
                       ))}
-                    </ul>
+                    </div>
                   </li>
                 ))}
               </ul>
