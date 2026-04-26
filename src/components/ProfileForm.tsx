@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PART_ORDER, PART_LABELS } from "@/lib/utils/parts";
 import type { GetProfileResponse } from "@/lib/types/api/user";
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 
 const COMMENT_TEMPLATE = "・好きなアーティスト\n\n・演奏歴など";
 
@@ -20,6 +21,7 @@ export function ProfileForm({ profile }: Props) {
   const [comment, setComment] = useState(profile.comment ?? "");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [templateConfirmOpen, setTemplateConfirmOpen] = useState(false);
 
   async function handleSave() {
     setSaving(true);
@@ -90,8 +92,14 @@ export function ProfileForm({ profile }: Props) {
           <label className="text-xs text-muted-foreground">自由コメント</label>
           <button
             type="button"
-            onClick={() => setComment(COMMENT_TEMPLATE)}
-            className="text-xs text-muted-foreground border border-border rounded px-2 py-1 hover:bg-accent transition-colors"
+            onClick={() => {
+              if (comment.length > 0) {
+                setTemplateConfirmOpen(true);
+              } else {
+                setComment(COMMENT_TEMPLATE);
+              }
+            }}
+            className="text-xs text-foreground border border-border rounded px-2 py-1 hover:bg-accent transition-colors"
           >
             テンプレートを使用する
           </button>
@@ -121,6 +129,31 @@ export function ProfileForm({ profile }: Props) {
           {saving ? "保存中..." : "保存"}
         </button>
       </div>
+      <Dialog open={templateConfirmOpen} onClose={() => setTemplateConfirmOpen(false)}>
+        <DialogHeader title="テンプレートを使用する" onClose={() => setTemplateConfirmOpen(false)} />
+        <DialogContent>
+          <p className="text-sm">入力済みの内容がクリアされます。テンプレートを使用しますか？</p>
+        </DialogContent>
+        <DialogFooter>
+          <button
+            type="button"
+            onClick={() => setTemplateConfirmOpen(false)}
+            className="text-sm px-4 py-2 rounded-md border border-border hover:bg-accent transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setComment(COMMENT_TEMPLATE);
+              setTemplateConfirmOpen(false);
+            }}
+            className="text-sm font-medium px-4 py-2 rounded-md bg-foreground text-background hover:opacity-80 transition-opacity"
+          >
+            使用する
+          </button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }
