@@ -1,3 +1,5 @@
+import { Part } from "@drizzle/schema";
+
 export interface IUserRepository {
   /** メールアドレスでユーザーを検索する */
   findByEmail(email: string): Promise<{ id: string; name: string; emailVerified: Date | null } | null>;
@@ -24,5 +26,5 @@ export interface IUserRepository {
   /** プロフィール情報（メール・名前・パート・コメント）を取得する */
   getProfile(id: string): Promise<{ email: string; name: string; part: string | null; comment: string | null } | null>;
   /** プロフィール情報（名前・パート・コメント）を更新する */
-  updateProfile(id: string, data: { name?: string; part?: string | null; comment?: string | null }): Promise<void>;
+  updateProfile(id: string, data: { name?: string; part?: Part | null; comment?: string | null }): Promise<void>;
 }

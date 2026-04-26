@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { users } from "@drizzle/schema";
+import { users, Part } from "@drizzle/schema";
 import { eq } from "drizzle-orm";
 import { IUserRepository } from "./user-repository";
 
@@ -106,7 +106,7 @@ export class DrizzleUserRepository implements IUserRepository {
   /**
    * プロフィール情報（名前・パート・コメント）を更新する。
    */
-  async updateProfile(id: string, data: { name?: string; part?: string | null; comment?: string | null }): Promise<void> {
+  async updateProfile(id: string, data: { name?: string; part?: Part | null; comment?: string | null }): Promise<void> {
     await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, id));
   }
 }
