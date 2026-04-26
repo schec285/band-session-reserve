@@ -164,6 +164,68 @@
     .cancel-btn:hover {
       background-color: #f9fafb;
     }
+
+    /* 自由コメント */
+    .comment-field {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1rem 0;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .comment-header .field-label {
+      margin-bottom: 0;
+    }
+
+    .template-btn {
+      font-size: 0.8125rem;
+      font-family: inherit;
+      color: #6b7280;
+      background: none;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .template-btn:hover {
+      background-color: #f9fafb;
+    }
+
+    .comment-textarea {
+      width: 100%;
+      min-height: 7rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      line-height: 1.7;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      background-color: #fff;
+      color: #1a1a1a;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    .comment-textarea:focus {
+      outline: none;
+      border-color: #1a1a1a;
+      box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.15);
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 
@@ -222,30 +284,25 @@
     </div>
   </div>
 
-  <!-- 演奏歴 -->
-  <div class="field">
-    <div class="field-label">演奏歴</div>
-    <div class="field-row" id="years-display">
-      <div class="field-value placeholder" id="years-value">未設定</div>
-      <button class="edit-btn" onclick="startEdit('years')">編集</button>
+  <!-- 自由コメント -->
+  <div class="comment-field">
+    <div class="comment-header">
+      <div class="field-label">自由コメント</div>
+      <button class="template-btn" onclick="useTemplate()">テンプレートを使用する</button>
     </div>
-    <div class="edit-form" id="years-edit">
-      <select id="years-input">
-        <option value="">選択してください</option>
-        <option value="1年未満">1年未満</option>
-        <option value="1〜3年">1〜3年</option>
-        <option value="3〜5年">3〜5年</option>
-        <option value="5〜10年">5〜10年</option>
-        <option value="10年以上">10年以上</option>
-      </select>
-      <div class="edit-actions">
-        <button class="save-btn" onclick="saveEdit('years')">保存</button>
-        <button class="cancel-btn" onclick="cancelEdit('years')">キャンセル</button>
-      </div>
+    <textarea
+      id="comment-input"
+      class="comment-textarea"
+      placeholder="・好きなアーティスト&#10;&#10;・演奏歴など"
+    ></textarea>
+    <div class="comment-actions">
+      <button class="save-btn" onclick="saveComment()">保存</button>
     </div>
   </div>
 
   <script>
+    const COMMENT_TEMPLATE = '・好きなアーティスト\n\n・演奏歴など';
+
     function startEdit(field) {
       const display = document.getElementById(field + '-display');
       const editForm = document.getElementById(field + '-edit');
@@ -282,6 +339,17 @@
 
       display.style.display = '';
       editForm.classList.remove('active');
+    }
+
+    function useTemplate() {
+      const textarea = document.getElementById('comment-input');
+      textarea.value = COMMENT_TEMPLATE;
+      textarea.focus();
+    }
+
+    function saveComment() {
+      // モックなので保存の確認のみ表示
+      alert('保存しました');
     }
   </script>
 </body>

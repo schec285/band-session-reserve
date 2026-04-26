@@ -21,4 +21,8 @@ export interface IUserRepository {
   setEmailVerified(id: string): Promise<void>;
   /** パスワードハッシュのみを更新する */
   updatePassword(id: string, passwordHash: string): Promise<void>;
+  /** プロフィール情報（メール・名前・パート・コメント）を取得する */
+  getProfile(id: string): Promise<{ email: string; name: string; part: string | null; comment: string | null } | null>;
+  /** プロフィール情報（名前・パート・コメント）を更新する */
+  updateProfile(id: string, data: { name?: string; part?: string | null; comment?: string | null }): Promise<void>;
 }

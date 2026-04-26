@@ -71,6 +71,20 @@
       "when": 1777086271343,
       "tag": "0009_clean_ted_forrester",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777211925958,
+      "tag": "0010_wise_hiroim",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1777212532179,
+      "tag": "0011_stale_warbird",
+      "breakpoints": true
     }
   ]
 }

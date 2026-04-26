@@ -1,4 +1,5 @@
-import { pgTable, uuid, varchar, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, text } from "drizzle-orm/pg-core";
+import { partEnum } from "./enums";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -8,6 +9,8 @@ export const users = pgTable("users", {
   image: varchar("image", { length: 255 }),
   passwordHash: varchar("password_hash", { length: 255 }),
   role: varchar("role", { length: 50 }).notNull().default("member"),
+  part: partEnum("part"),
+  comment: text("comment"),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 });

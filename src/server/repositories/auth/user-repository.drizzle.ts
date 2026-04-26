@@ -90,4 +90,23 @@ export class DrizzleUserRepository implements IUserRepository {
   async updatePassword(id: string, passwordHash: string): Promise<void> {
     await db.update(users).set({ passwordHash }).where(eq(users.id, id));
   }
+
+  /**
+   * プロフィール情報（メール・名前・パート・コメント）を取得する。
+   */
+  async getProfile(id: string): Promise<{ email: string; name: string; part: string | null; comment: string | null } | null> {
+    const [user] = await db
+      .select({ email: users.email, name: users.name, part: users.part, comment: users.comment })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return user ?? null;
+  }
+
+  /**
+   * プロフィール情報（名前・パート・コメント）を更新する。
+   */
+  async updateProfile(id: string, data: { name?: string; part?: string | null; comment?: string | null }): Promise<void> {
+    await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, id));
+  }
 }
