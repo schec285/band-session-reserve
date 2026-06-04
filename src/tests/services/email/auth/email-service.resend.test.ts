@@ -2,6 +2,8 @@ import type { Resend } from "resend";
 import type { Mocked } from "vitest";
 import { ResendEmailService } from "@/server/services/email/auth/email-service.resend";
 
+const fromEmail = "test-from@example.com";
+
 const mockResend = (): Mocked<Pick<Resend, "emails">> => ({
   emails: {
     send: vi.fn(),
@@ -9,6 +11,10 @@ const mockResend = (): Mocked<Pick<Resend, "emails">> => ({
 });
 
 describe("ResendEmailService", () => {
+  beforeEach(() => {
+    process.env.RESEND_FROM_EMAIL = fromEmail;
+  });
+
   describe("sendVerificationEmail", () => {
     describe("正常系", () => {
       it("認証コードを含むメールを送信して ok を返す", async () => {
@@ -25,6 +31,7 @@ describe("ResendEmailService", () => {
         expect(result.status).toBe("ok");
         expect(resend.emails.send).toHaveBeenCalledTimes(1);
         const callArg = (resend.emails.send as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(callArg.from).toBe(fromEmail);
         expect(callArg.to).toBe("test@example.com");
         expect(callArg.html).toContain("123456");
       });
@@ -65,6 +72,7 @@ describe("ResendEmailService", () => {
         expect(result.status).toBe("ok");
         expect(resend.emails.send).toHaveBeenCalledTimes(1);
         const callArg = (resend.emails.send as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(callArg.from).toBe(fromEmail);
         expect(callArg.to).toBe("test@example.com");
       });
     });

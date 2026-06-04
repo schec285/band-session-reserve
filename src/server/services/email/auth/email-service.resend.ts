@@ -12,8 +12,10 @@ export class ResendEmailService implements IEmailService {
    * 共通フィールド（from・headers）を付与してメールを送信する。
    */
   private async send(params: { to: string; subject: string; html: string }): Promise<{ status: "ok" } | { status: "error" }> {
+    if (!process.env.RESEND_FROM_EMAIL) throw new Error("RESEND_FROM_EMAIL environment variable is not set");
+
     const { data, error } = await this.resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: process.env.RESEND_FROM_EMAIL,
       to: params.to,
       subject: params.subject,
       html: params.html,
