@@ -79,7 +79,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
             <p className="text-sm text-destructive">{error}</p>
           )}
           <div className="space-y-1">
-            <Label htmlFor="name">名前</Label>
+            <Label htmlFor="name">ハンドルネーム</Label>
             <Input
               id="name"
               type="text"
