@@ -8,8 +8,26 @@ import { UserMenu } from "@/features/user/UserMenu";
 import { Footer } from "@/features/layout/Footer";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-const prod = process.env.APP_ENV === "production";
-const title = prod ? "OTONOWA" : "OTONOWA (開発環境)";
+
+const envSettings = {
+  production: {
+    title: "OTONOWA",
+    headerBgColor: "bg-background",
+  },
+  preview: {
+    title: "OTONOWA (検証環境)",
+    headerBgColor: "bg-green-200",
+  },
+  local: {
+    title: "OTONOWA (開発環境)",
+    headerBgColor: "bg-yellow-200",
+  },
+};
+
+const env = process.env.APP_ENV ?? "local";
+const { title, headerBgColor } =
+  envSettings[env as keyof typeof envSettings] ?? envSettings.local;
+
 export const metadata: Metadata = {
   title: title,
   description: "バンドセッションの参加予約システム",
@@ -21,7 +39,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  const headerBgColor = prod ? "bg-background" : "bg-yellow-400";
   return (
     <html lang="ja" className={cn("font-sans", geist.variable)}>
       <body className="min-h-screen flex flex-col bg-background">
