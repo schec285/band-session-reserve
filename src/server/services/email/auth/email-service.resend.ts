@@ -1,6 +1,7 @@
 import type { Resend } from "resend";
 import type { IEmailService } from "./email-service";
 import { buildHtml } from "../html";
+import { APP_NAME } from "@/lib/constants/app";
 
 /**
  * Resend を使ったメール送信サービスの実装。
@@ -36,8 +37,21 @@ export class ResendEmailService implements IEmailService {
   }): Promise<{ status: "ok" } | { status: "error" }> {
     return this.send({
       to: params.to,
-      subject: "メールアドレスの確認",
-      html: buildHtml(`<p>${params.name} さん。<br>認証コードは <strong>${params.code}</strong> です。10分以内に入力してください。</p>`),
+      subject: `【${APP_NAME}】メールアドレス確認のご案内`,
+      html: buildHtml(`
+        <p>
+          ${params.name} さん。<br>
+          <br>
+          ${APP_NAME}へのご登録ありがとうございます。<br>
+          メールアドレス確認のため、以下の認証コードを入力してください。<br>
+          認証コードは <strong>${params.code}</strong> です。<br>
+          有効期限は10分です。<br>
+          <br>
+          万一メールに心当たりがない場合は無視してください。<br>
+          <br>
+          ※このメールは送信専用です。返信してもお答えできませんのでご了承ください。
+        </p>
+      `),
     });
   }
 
@@ -50,8 +64,21 @@ export class ResendEmailService implements IEmailService {
   }): Promise<{ status: "ok" } | { status: "error" }> {
     return this.send({
       to: params.to,
-      subject: "OTONOWAへようこそ",
-      html: buildHtml(`<p>${params.name} さん。<br>メール認証が完了しました。ご登録ありがとうございます。</p>`),
+      subject: `【${APP_NAME}】${APP_NAME}へようこそ`,
+      html: buildHtml(`
+        <p>
+          ${params.name} さん。<br>
+          <br>
+          ${APP_NAME}へのご登録ありがとうございます。<br>
+          メールアドレスの確認が完了しました。<br>
+          イベントへの参加予約は、以下のページからご利用いただけます。<br>
+          <a href="${process.env.APP_BASE_URL}">${process.env.APP_BASE_URL}</a><br>
+          <br>
+          引き続き${APP_NAME}をよろしくお願いいたします。<br>
+          <br>
+          ※このメールは送信専用です。返信してもお答えできませんのでご了承ください。
+        </p>
+      `),
     });
   }
 
@@ -65,8 +92,20 @@ export class ResendEmailService implements IEmailService {
   }): Promise<{ status: "ok" } | { status: "error" }> {
     return this.send({
       to: params.to,
-      subject: "パスワードリセットのご確認",
-      html: buildHtml(`<p>${params.name} さん。<br>パスワードリセットの認証コードは <strong>${params.code}</strong> です。10分以内に入力してください。</p>`),
+      subject: `【${APP_NAME}】パスワードリセットのご案内`,
+      html: buildHtml(`
+        <p>
+          ${params.name} さん。<br>
+          <br>
+          パスワードリセットのため、以下の認証コードを入力してください。<br>
+          認証コードは <strong>${params.code}</strong> です。<br>
+          有効期限は10分です。<br>
+          <br>
+          万一このメールに心当たりがない場合は無視してください。<br>
+          <br>
+          ※このメールは送信専用です。返信してもお答えできませんのでご了承ください。
+        </p>
+      `),
     });
   }
 }

@@ -1,3 +1,5 @@
+import { APP_NAME } from "@/lib/constants/app";
+
 /**
  * サイト共通フッター。
  * HP・各種SNSリンクとコピーライトを表示する。
@@ -26,7 +28,7 @@ export function Footer() {
             </a>
           ))}
         </nav>
-        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} OTONOWA</p>
+        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} {APP_NAME}</p>
       </div>
     </footer>
   );

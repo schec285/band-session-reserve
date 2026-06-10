@@ -6,20 +6,21 @@ import { auth } from "@/auth";
 import { SessionProvider } from "@/features/auth/SessionProvider";
 import { UserMenu } from "@/features/user/UserMenu";
 import { Footer } from "@/features/layout/Footer";
+import { APP_NAME } from "@/lib/constants/app";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const envSettings = {
   production: {
-    title: "OTONOWA",
+    title: APP_NAME,
     headerBgColor: "bg-background",
   },
   preview: {
-    title: "OTONOWA (検証環境)",
+    title: `${APP_NAME} (検証環境)`,
     headerBgColor: "bg-green-200",
   },
   local: {
-    title: "OTONOWA (開発環境)",
+    title: `${APP_NAME} (開発環境)`,
     headerBgColor: "bg-yellow-200",
   },
 };
