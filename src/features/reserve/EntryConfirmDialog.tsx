@@ -195,7 +195,6 @@ export function EntryConfirmDialog({
             <input
               id="confirm-snsConsent"
               type="checkbox"
-              checked={snsConsent}
               onChange={(e) => setSnsConsent(e.target.checked)}
               className="mt-0.5 h-4 w-4 cursor-pointer"
             />
