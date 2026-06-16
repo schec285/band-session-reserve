@@ -13,6 +13,7 @@ export const events = pgTable("events", {
   description: text("description").notNull().default(""),
   vocalEntryLimit: integer("vocal_entry_limit"),
   instrumentEntryLimit: integer("instrument_entry_limit"),
+  movieUrl: varchar("movie_url", { length: 255 }),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 });
