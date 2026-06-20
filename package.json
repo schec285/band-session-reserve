@@ -44,6 +44,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.2",
+    "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "node-mocks-http": "^1.17.2",
     "ts-node": "^10.9.2",
