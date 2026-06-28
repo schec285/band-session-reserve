@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 50 }).notNull().default("member"),
   part: partEnum("part"),
   comment: text("comment"),
+  lastLoginAt: timestamp("last_login_at", { mode: "date", withTimezone: true }),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 });
