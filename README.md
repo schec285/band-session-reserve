@@ -7,6 +7,13 @@
 - **Next.js 16** (App Router)
 - **React 19**
 - **TypeScript**
+- **NextAuth**
+- **Drizzle**
+- **Zod**
+- **Tailwind**
+- **Vitest**
+- **PostgreSQL**
+- **Docker**
 
 ## セットアップ
 
