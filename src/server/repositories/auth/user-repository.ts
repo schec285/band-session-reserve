@@ -8,6 +8,7 @@ export interface IUserListRecord {
   name: string;
   email: string;
   role: string;
+  emailVerified: Date | null;
   createdAt: Date;
 }
 

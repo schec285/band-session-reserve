@@ -11,6 +11,7 @@ export const AdminUserResponseSchema = z.object({
   name: z.string(),
   email: z.string(),
   role: RoleSchema,
+  isVerified: z.boolean(),
   createdAt: z.string(),
 });
 
