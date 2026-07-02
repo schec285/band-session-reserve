@@ -13,8 +13,8 @@ import { auth } from "@/auth";
 import { getAllUsers } from "@/server/services/admin/users";
 
 const mockUsers = [
-  { id: "user-uuid-1", name: "山田 太郎", email: "yamada@example.com", role: "admin", createdAt: "2026-01-01T00:00:00.000Z" },
-  { id: "user-uuid-2", name: "鈴木 花子", email: "suzuki@example.com", role: "member", createdAt: "2026-02-01T00:00:00.000Z" },
+  { id: "user-uuid-1", name: "山田 太郎", email: "yamada@example.com", role: "admin", isVerified: true, createdAt: "2026-01-01T00:00:00.000Z" },
+  { id: "user-uuid-2", name: "鈴木 花子", email: "suzuki@example.com", role: "member", isVerified: false, createdAt: "2026-02-01T00:00:00.000Z" },
 ];
 
 function makeRequest() {

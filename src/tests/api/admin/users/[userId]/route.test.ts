@@ -19,6 +19,7 @@ const mockUser = {
   name: "山田 太郎",
   email: "yamada@example.com",
   role: "admin",
+  isVerified: true,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
