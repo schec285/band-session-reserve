@@ -7,6 +7,7 @@ const mockUserRecord = {
   name: "山田 太郎",
   email: "yamada@example.com",
   role: "member",
+  emailVerified: new Date("2026-01-01T00:00:00.000Z"),
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
 };
 
@@ -44,6 +45,7 @@ describe("getAllUsers", () => {
       name: "山田 太郎",
       email: "yamada@example.com",
       role: "member",
+      isVerified: true,
       createdAt: "2026-01-01T00:00:00.000Z",
     });
   });
@@ -54,6 +56,14 @@ describe("getAllUsers", () => {
     const result = await getAllUsers(mockRepo);
 
     expect(result).toEqual([]);
+  });
+
+  it("emailVerified が null のユーザーは isVerified: false を返す", async () => {
+    mockRepo.findAll.mockResolvedValue([{ ...mockUserRecord, emailVerified: null }]);
+
+    const result = await getAllUsers(mockRepo);
+
+    expect(result[0].isVerified).toBe(false);
   });
 });
 

@@ -12,6 +12,7 @@ interface User {
   name: string;
   email: string;
   role: Role;
+  isVerified: boolean;
   createdAt: string;
 }
 
@@ -36,6 +37,12 @@ export function AdminUserList({ users, currentUserId }: Props) {
   const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
+  const [showVerified, setShowVerified] = useState(true);
+  const [showUnverified, setShowUnverified] = useState(false);
+
+  const filteredUsers = users.filter(
+    (user) => (user.isVerified && showVerified) || (!user.isVerified && showUnverified)
+  );
 
   function handleSelectChange(user: User, toRole: Role) {
     if (toRole === user.role) return;
@@ -79,50 +86,87 @@ export function AdminUserList({ users, currentUserId }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left font-medium p-3">氏名</th>
-              <th className="text-left font-medium p-3">メールアドレス</th>
-              <th className="text-left font-medium p-3">ロール</th>
-              <th className="text-left font-medium p-3">登録日時</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => {
-              const isSelf = user.id === currentUserId;
-              const createdAtLabel = new Date(user.createdAt).toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              });
-
-              return (
-                <tr key={user.id} className="border-t">
-                  <td className="p-3">{user.name}</td>
-                  <td className="p-3 text-muted-foreground">{user.email}</td>
-                  <td className="p-3">
-                    <select
-                      value={user.role}
-                      disabled={isSelf || isPending}
-                      onChange={(e) => handleSelectChange(user, e.target.value as Role)}
-                      className="border rounded-md px-2 py-1 text-sm bg-background disabled:opacity-50"
-                    >
-                      <option value="member">{ROLE_LABELS.member}</option>
-                      <option value="admin">{ROLE_LABELS.admin}</option>
-                    </select>
-                    {isSelf && (
-                      <span className="ml-2 text-xs text-muted-foreground">(自分自身)</span>
-                    )}
-                  </td>
-                  <td className="p-3 text-muted-foreground">{createdAtLabel}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="flex gap-4">
+        <label className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showVerified}
+            onChange={(e) => setShowVerified(e.target.checked)}
+            className="h-4 w-4 cursor-pointer"
+          />
+          登録済み
+        </label>
+        <label className="flex items-center gap-1.5 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showUnverified}
+            onChange={(e) => setShowUnverified(e.target.checked)}
+            className="h-4 w-4 cursor-pointer"
+          />
+          未登録
+        </label>
       </div>
+
+      {filteredUsers.length === 0 ? (
+        <p className="text-muted-foreground text-sm">該当するユーザーがいません。</p>
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="text-left font-medium p-3">氏名</th>
+                <th className="text-left font-medium p-3">メールアドレス</th>
+                <th className="text-left font-medium p-3">ステータス</th>
+                <th className="text-left font-medium p-3">ロール</th>
+                <th className="text-left font-medium p-3">登録日時</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => {
+                const isSelf = user.id === currentUserId;
+                const createdAtLabel = new Date(user.createdAt).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                });
+
+                return (
+                  <tr key={user.id} className="border-t">
+                    <td className="p-3">{user.name}</td>
+                    <td className="p-3 text-muted-foreground">{user.email}</td>
+                    <td className="p-3">
+                      <span
+                        className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                          user.isVerified
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {user.isVerified ? "登録済み" : "未登録"}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <select
+                        value={user.role}
+                        disabled={isSelf || isPending}
+                        onChange={(e) => handleSelectChange(user, e.target.value as Role)}
+                        className="border rounded-md px-2 py-1 text-sm bg-background disabled:opacity-50"
+                      >
+                        <option value="member">{ROLE_LABELS.member}</option>
+                        <option value="admin">{ROLE_LABELS.admin}</option>
+                      </select>
+                      {isSelf && (
+                        <span className="ml-2 text-xs text-muted-foreground">(自分自身)</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-muted-foreground">{createdAtLabel}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Dialog open={pendingChange !== null} onClose={handleCancel}>
         <DialogHeader title="ロール変更の確認" onClose={handleCancel} />
