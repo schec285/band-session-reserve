@@ -16,6 +16,7 @@ const openEventNear: IEventRecord = {
   endAt: new Date(nearFuture.getTime() + 1000 * 60 * 60 * 8),
   closedAt: null,
   venue: "渋谷スタジオ A",
+  mapEmbedUrl: null,
   participationFee: 500,
   description: "",
   vocalEntryLimit: null,
@@ -30,6 +31,7 @@ const openEventFar: IEventRecord = {
   endAt: new Date(farFuture.getTime() + 1000 * 60 * 60 * 8),
   closedAt: null,
   venue: "新宿スタジオ B",
+  mapEmbedUrl: null,
   participationFee: 0,
   description: "",
   vocalEntryLimit: null,
@@ -44,6 +46,7 @@ const closedEventRecent: IEventRecord = {
   endAt: new Date(recentPast.getTime() + 1000 * 60 * 60 * 8),
   closedAt: new Date(recentPast.getTime() - 1000 * 60 * 60),
   venue: "池袋スタジオ C",
+  mapEmbedUrl: null,
   participationFee: 0,
   description: "",
   vocalEntryLimit: null,
@@ -58,6 +61,7 @@ const closedEventDistant: IEventRecord = {
   endAt: new Date(distantPast.getTime() + 1000 * 60 * 60 * 8),
   closedAt: null,
   venue: "品川スタジオ D",
+  mapEmbedUrl: null,
   participationFee: 0,
   description: "",
   vocalEntryLimit: null,
@@ -147,6 +151,14 @@ describe("getEvents", () => {
 
     expect(result[0].closedAt).toMatch(/\+09:00$/);
   });
+
+  it("mapEmbedUrl が null の場合は null のまま返す", async () => {
+    mockRepo.findAllEvents.mockResolvedValue([openEventNear]);
+
+    const result = await getEvents(mockRepo);
+
+    expect(result[0].mapEmbedUrl).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -161,6 +173,7 @@ describe("getEventSongs", () => {
     endAt: new Date(nearFuture.getTime() + 1000 * 60 * 60 * 8),
     closedAt: null,
     venue: "渋谷スタジオ A",
+    mapEmbedUrl: "https://www.google.com/maps/embed?pb=1",
     participationFee: 500,
     description: "春のセッションです",
     vocalEntryLimit: null,
@@ -195,6 +208,7 @@ describe("getEventSongs", () => {
     expect(result.event.id).toBe("event-uuid-1");
     expect(result.event.title).toBe("春のセッション");
     expect(result.event.startAt).toMatch(/\+09:00$/);
+    expect(result.event.mapEmbedUrl).toBe("https://www.google.com/maps/embed?pb=1");
     expect(mockRepo.findEventById).toHaveBeenCalledWith("event-uuid-1");
     expect(mockRepo.findEventSongsWithReservations).toHaveBeenCalledWith("event-uuid-1");
   });

@@ -14,6 +14,7 @@ const mockEventRecord = {
   endAt: futureEnd,
   closedAt: null,
   venue: "渋谷スタジオ A",
+  mapEmbedUrl: null,
   venueFee: 3000,
   participationFee: 500,
   description: "春のセッションです",
@@ -27,6 +28,7 @@ const validInput = {
   endAt: futureEnd.toISOString(),
   closedAt: null,
   venue: "渋谷スタジオ A",
+  mapEmbedUrl: null,
   venueFee: 3000,
   participationFee: 500,
   description: "春のセッションです",
@@ -108,12 +110,27 @@ describe("createEvent", () => {
       endAt: new Date(validInput.endAt),
       closedAt: null,
       venue: validInput.venue,
+      mapEmbedUrl: null,
       venueFee: 3000,
       participationFee: 500,
       description: validInput.description,
       vocalEntryLimit: null,
       instrumentEntryLimit: null,
     });
+  });
+
+  it("ok: mapEmbedUrl が指定された場合はそのままリポジトリに渡し、レスポンスに含める", async () => {
+    const mapEmbedUrl = "https://www.google.com/maps/embed?pb=1";
+    mockRepo.createEvent.mockResolvedValue({ ...mockEventRecord, mapEmbedUrl });
+
+    const result = await createEvent(mockRepo, { ...validInput, mapEmbedUrl });
+
+    expect(mockRepo.createEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ mapEmbedUrl })
+    );
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.event.mapEmbedUrl).toBe(mapEmbedUrl);
   });
 });
 
@@ -158,6 +175,7 @@ describe("updateEvent", () => {
       endAt: new Date(validInput.endAt),
       closedAt: null,
       venue: validInput.venue,
+      mapEmbedUrl: null,
       venueFee: 3000,
       participationFee: 500,
       description: validInput.description,

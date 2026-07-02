@@ -51,6 +51,7 @@ function toResponse(record: {
   endAt: Date;
   closedAt: Date | null;
   venue: string;
+  mapEmbedUrl: string | null;
   venueFee: number;
   participationFee: number;
   description: string;
@@ -64,6 +65,7 @@ function toResponse(record: {
     endAt: toJST(record.endAt),
     closedAt: record.closedAt ? toJST(record.closedAt) : null,
     venue: record.venue,
+    mapEmbedUrl: record.mapEmbedUrl,
     venueFee: record.venueFee,
     participationFee: record.participationFee,
     description: record.description,
@@ -85,6 +87,7 @@ export async function createEvent(
     endAt: new Date(input.endAt),
     closedAt: input.closedAt ? new Date(input.closedAt) : null,
     venue: input.venue,
+    mapEmbedUrl: input.mapEmbedUrl ?? null,
     venueFee: input.venueFee ?? 0,
     participationFee: input.participationFee ?? 0,
     description: input.description,
@@ -109,6 +112,7 @@ export async function updateEvent(
     endAt: new Date(input.endAt),
     closedAt: input.closedAt ? new Date(input.closedAt) : null,
     venue: input.venue,
+    mapEmbedUrl: input.mapEmbedUrl ?? null,
     venueFee: input.venueFee ?? 0,
     participationFee: input.participationFee ?? 0,
     description: input.description,

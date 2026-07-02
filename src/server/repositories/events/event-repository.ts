@@ -10,6 +10,7 @@ export interface IEventRecord {
   endAt: Date;
   closedAt: Date | null;
   venue: string;
+  mapEmbedUrl: string | null;
   participationFee: number;
   description: string;
   vocalEntryLimit: number | null;

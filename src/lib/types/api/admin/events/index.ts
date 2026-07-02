@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { extractGoogleMapsEmbedUrl } from "@/lib/utils/googleMapsEmbed";
 
 /**
  * イベントフォームの共通フィールド定義。
@@ -10,6 +11,27 @@ const EventFields = {
   endAt: z.string().min(1, "終了日時は必須です"),
   closedAt: z.string().nullable().optional(),
   venue: z.string().min(1, "会場は必須です"),
+  /**
+   * Google マップの埋め込みHTML（<iframe> タグ）または URL を受け取り、
+   * 検証済みの src URL のみを保存する。管理者が入力した属性やスクリプトは破棄する。
+   */
+  mapEmbedUrl: z
+    .string()
+    .trim()
+    .optional()
+    .nullable()
+    .transform((val, ctx) => {
+      if (!val) return null;
+      const url = extractGoogleMapsEmbedUrl(val);
+      if (!url) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Googleマップの埋め込みHTML（またはURL）が正しくありません",
+        });
+        return z.NEVER;
+      }
+      return url;
+    }),
   venueFee: z.number().int().min(0, "会場費は0以上の整数で入力してください").optional(),
   participationFee: z.number().int().min(0, "参加費は0以上の整数で入力してください").optional(),
   description: z.string().min(1, "説明は必須です"),
@@ -73,6 +95,7 @@ export const AdminEventResponseSchema = z.object({
   endAt: z.string(),
   closedAt: z.string().nullable(),
   venue: z.string(),
+  mapEmbedUrl: z.string().nullable(),
   venueFee: z.number(),
   participationFee: z.number(),
   description: z.string(),

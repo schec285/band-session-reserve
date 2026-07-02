@@ -7,6 +7,7 @@ export const events = pgTable("events", {
   endAt: timestamp("end_at", { mode: "date", withTimezone: true }).notNull(),
   closedAt: timestamp("closed_at", { mode: "date", withTimezone: true }),
   venue: varchar("venue", { length: 255 }).notNull(),
+  mapEmbedUrl: text("map_embed_url"),
   venueFee: integer("venue_fee").notNull().default(0),
   participationFee: integer("participation_fee").notNull().default(0),
   description: text("description").notNull().default(""),

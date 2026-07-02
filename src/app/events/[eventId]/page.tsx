@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
+import { MapEmbed } from "@/features/events/MapEmbed";
 import { formatDate, formatTime } from "@/lib/utils/date";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
@@ -60,6 +61,7 @@ export default async function EventDetailPage({
             <MapPin className="w-4 h-4 shrink-0" />
             <span className="font-medium text-foreground">{event.venue}</span>
           </div>
+          <MapEmbed mapEmbedUrl={event.mapEmbedUrl} />
           <div className="flex items-center gap-3 text-muted-foreground">
             <Ticket className="w-4 h-4 shrink-0" />
             <span className="font-medium text-foreground">参加費 {event.participationFee.toLocaleString()}円</span>
