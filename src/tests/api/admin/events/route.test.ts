@@ -122,5 +122,56 @@ describe("POST /api/admin/events", () => {
         message: "受付締切日時は開始日時以前に設定してください",
       });
     });
+
+    it("400: mapEmbedUrl が Google マップの埋め込みURLとして不正（script混入）", async () => {
+      const res = await POST(
+        makeRequest({ ...validBody, mapEmbedUrl: `<script>alert(1)</script><iframe src="javascript:alert(1)"></iframe>` })
+      );
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({
+        field: "mapEmbedUrl",
+        message: "Googleマップの埋め込みHTML（またはURL）が正しくありません",
+      });
+    });
+
+    it("400: mapEmbedUrl のホストが google.com でない（オープンリダイレクト風）", async () => {
+      const res = await POST(
+        makeRequest({ ...validBody, mapEmbedUrl: `<iframe src="https://evil.com/maps/embed?pb=1"></iframe>` })
+      );
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({
+        field: "mapEmbedUrl",
+        message: "Googleマップの埋め込みHTML（またはURL）が正しくありません",
+      });
+    });
+  });
+
+  describe("mapEmbedUrl", () => {
+    it("201: 埋め込みHTMLから src の URL のみを抽出して作成する", async () => {
+      const embedUrl = "https://www.google.com/maps/embed?pb=1";
+      const html = `<iframe src="${embedUrl}" width="600" height="450" style="border:0;" allowfullscreen loading="lazy"></iframe>`;
+
+      const res = await POST(makeRequest({ ...validBody, mapEmbedUrl: html }));
+
+      expect(res.status).toBe(201);
+      expect(createEvent).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ mapEmbedUrl: embedUrl })
+      );
+    });
+
+    it("201: 未指定の場合は null として作成する", async () => {
+      const res = await POST(makeRequest(validBody));
+
+      expect(res.status).toBe(201);
+      expect(createEvent).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ mapEmbedUrl: null })
+      );
+    });
   });
 });

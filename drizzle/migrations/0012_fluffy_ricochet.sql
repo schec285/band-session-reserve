@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "map_embed_url" text;

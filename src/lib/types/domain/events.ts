@@ -9,6 +9,7 @@ export type Event = {
   endAt: string;
   closedAt: string | null;
   venue: string;
+  mapEmbedUrl: string | null;
   participationFee: number;
   description: string;
   vocalEntryLimit: number | null;

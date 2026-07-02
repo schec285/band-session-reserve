@@ -31,6 +31,7 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
     event?.closedAt ? toDatetimeLocal(event.closedAt) : ""
   );
   const [venue, setVenue] = useState(event?.venue ?? "");
+  const [mapEmbedUrl, setMapEmbedUrl] = useState(event?.mapEmbedUrl ?? "");
   const [venueFee, setVenueFee] = useState<number>(event?.venueFee ?? 0);
   const [participationFee, setParticipationFee] = useState<number>(event?.participationFee ?? 0);
   const [vocalEntryLimit, setVocalEntryLimit] = useState<number | "">(event?.vocalEntryLimit ?? "");
@@ -54,6 +55,7 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
       endAt: `${endAt}:00+09:00`,
       closedAt: closedAt ? `${closedAt}:00+09:00` : null,
       venue,
+      mapEmbedUrl: mapEmbedUrl || null,
       venueFee,
       participationFee,
       vocalEntryLimit: vocalEntryLimit === "" ? null : vocalEntryLimit,
@@ -124,6 +126,21 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
         />
         {fieldError("venue") && (
           <p className="text-destructive text-sm">{fieldError("venue")}</p>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="mapEmbedUrl">Googleマップ埋め込み（任意）</Label>
+        <textarea
+          id="mapEmbedUrl"
+          value={mapEmbedUrl}
+          onChange={(e) => setMapEmbedUrl(e.target.value)}
+          rows={3}
+          placeholder={'Googleマップの「共有 → 地図を埋め込む」でコピーした <iframe> タグを貼り付けてください'}
+          className="w-full border rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        {fieldError("mapEmbedUrl") && (
+          <p className="text-destructive text-sm">{fieldError("mapEmbedUrl")}</p>
         )}
       </div>
 
