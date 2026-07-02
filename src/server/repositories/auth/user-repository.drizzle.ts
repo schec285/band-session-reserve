@@ -115,7 +115,14 @@ export class DrizzleUserRepository implements IUserRepository {
    */
   async findAll(): Promise<IUserListRecord[]> {
     return await db
-      .select({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt })
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        emailVerified: users.emailVerified,
+        createdAt: users.createdAt,
+      })
       .from(users)
       .orderBy(desc(users.createdAt));
   }
@@ -128,7 +135,14 @@ export class DrizzleUserRepository implements IUserRepository {
       .update(users)
       .set({ role, updatedAt: new Date() })
       .where(eq(users.id, id))
-      .returning({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt });
+      .returning({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        emailVerified: users.emailVerified,
+        createdAt: users.createdAt,
+      });
     return user ?? null;
   }
 }
