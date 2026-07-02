@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { label: "イベント管理", href: "/admin/events" },
   { label: "曲管理", href: "/admin/songs" },
+  { label: "ユーザー管理", href: "/admin/users" },
 ];
 
 /**

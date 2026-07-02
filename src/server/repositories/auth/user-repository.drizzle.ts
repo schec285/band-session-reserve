@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { users, Part } from "@drizzle/schema";
-import { eq } from "drizzle-orm";
-import { IUserRepository } from "./user-repository";
+import { desc, eq } from "drizzle-orm";
+import { IUserRepository, IUserListRecord } from "./user-repository";
 
 /**
  * Drizzle ORM を使ったユーザーリポジトリの実装。
@@ -108,5 +108,27 @@ export class DrizzleUserRepository implements IUserRepository {
    */
   async updateProfile(id: string, data: { name?: string; part?: Part | null; comment?: string | null }): Promise<void> {
     await db.update(users).set({ ...data, updatedAt: new Date() }).where(eq(users.id, id));
+  }
+
+  /**
+   * 全ユーザーを登録日時の降順で取得する。
+   */
+  async findAll(): Promise<IUserListRecord[]> {
+    return await db
+      .select({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt })
+      .from(users)
+      .orderBy(desc(users.createdAt));
+  }
+
+  /**
+   * ロールを更新する。存在しない場合は null を返す。
+   */
+  async updateRole(id: string, role: string): Promise<IUserListRecord | null> {
+    const [user] = await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning({ id: users.id, name: users.name, email: users.email, role: users.role, createdAt: users.createdAt });
+    return user ?? null;
   }
 }

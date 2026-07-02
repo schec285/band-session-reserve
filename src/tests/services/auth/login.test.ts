@@ -8,6 +8,8 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   findByEmailForAuth: vi.fn(),
   create: vi.fn(),
   setEmailVerified: vi.fn(),
+  findAll: vi.fn(),
+  updateRole: vi.fn(),
 });
 
 const VALID_PASSWORD = "password123";
