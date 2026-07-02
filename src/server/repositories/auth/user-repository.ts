@@ -1,5 +1,16 @@
 import { Part } from "@drizzle/schema";
 
+/**
+ * ユーザー一覧・ロール更新で扱うユーザー1件のレコード型。
+ */
+export interface IUserListRecord {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: Date;
+}
+
 export interface IUserRepository {
   /** メールアドレスでユーザーを検索する */
   findByEmail(email: string): Promise<{ id: string; name: string; emailVerified: Date | null } | null>;
@@ -27,4 +38,8 @@ export interface IUserRepository {
   getProfile(id: string): Promise<{ email: string; name: string; part: string | null; comment: string | null } | null>;
   /** プロフィール情報（名前・パート・コメント）を更新する */
   updateProfile(id: string, data: { name?: string; part?: Part | null; comment?: string | null }): Promise<void>;
+  /** 全ユーザーを登録日時の降順で取得する */
+  findAll(): Promise<IUserListRecord[]>;
+  /** ロールを更新する。存在しない場合は null を返す */
+  updateRole(id: string, role: string): Promise<IUserListRecord | null>;
 }

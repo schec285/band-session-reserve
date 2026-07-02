@@ -18,6 +18,8 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   update: vi.fn(),
   setEmailVerified: vi.fn(),
   updatePassword: vi.fn(),
+  findAll: vi.fn(),
+  updateRole: vi.fn(),
 });
 
 const mockTokenRepo = (): Mocked<IVerificationTokenRepository> => ({
