@@ -33,6 +33,8 @@ export interface IUserRepository {
   update(id: string, data: { passwordHash: string; name: string }): Promise<void>;
   /** email_verified を現在時刻でセットする */
   setEmailVerified(id: string): Promise<void>;
+  /** 最終ログイン日時を現在時刻でセットする */
+  updateLastLogin(id: string): Promise<void>;
   /** パスワードハッシュのみを更新する */
   updatePassword(id: string, passwordHash: string): Promise<void>;
   /** プロフィール情報（メール・名前・パート・コメント）を取得する */

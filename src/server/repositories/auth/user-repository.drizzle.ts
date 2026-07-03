@@ -92,6 +92,13 @@ export class DrizzleUserRepository implements IUserRepository {
   }
 
   /**
+   * 最終ログイン日時を現在時刻でセットする。
+   */
+  async updateLastLogin(id: string): Promise<void> {
+    await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, id));
+  }
+
+  /**
    * プロフィール情報（メール・名前・パート・コメント）を取得する。
    */
   async getProfile(id: string): Promise<{ email: string; name: string; part: string | null; comment: string | null } | null> {
