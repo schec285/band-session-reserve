@@ -21,6 +21,7 @@ const mockUser = {
   role: "admin",
   isVerified: true,
   createdAt: "2026-01-01T00:00:00.000Z",
+  lastLoginAt: "2026-03-01T12:00:00.000Z",
 };
 
 function makeRequest(body?: unknown) {

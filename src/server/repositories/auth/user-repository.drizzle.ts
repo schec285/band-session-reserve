@@ -129,6 +129,7 @@ export class DrizzleUserRepository implements IUserRepository {
         role: users.role,
         emailVerified: users.emailVerified,
         createdAt: users.createdAt,
+        lastLoginAt: users.lastLoginAt,
       })
       .from(users)
       .orderBy(desc(users.createdAt));
@@ -149,6 +150,7 @@ export class DrizzleUserRepository implements IUserRepository {
         role: users.role,
         emailVerified: users.emailVerified,
         createdAt: users.createdAt,
+        lastLoginAt: users.lastLoginAt,
       });
     return user ?? null;
   }

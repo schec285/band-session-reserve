@@ -13,6 +13,7 @@ export const AdminUserResponseSchema = z.object({
   role: RoleSchema,
   isVerified: z.boolean(),
   createdAt: z.string(),
+  lastLoginAt: z.string().nullable(),
 });
 
 export type AdminUserResponse = z.infer<typeof AdminUserResponseSchema>;

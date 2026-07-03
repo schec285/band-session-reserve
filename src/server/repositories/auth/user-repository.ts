@@ -10,6 +10,7 @@ export interface IUserListRecord {
   role: string;
   emailVerified: Date | null;
   createdAt: Date;
+  lastLoginAt: Date | null;
 }
 
 export interface IUserRepository {
