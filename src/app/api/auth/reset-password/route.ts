@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { resetPassword } from "@/server/services/auth/reset-password";
 import { DrizzleUserRepository } from "@/server/repositories/auth/user-repository.drizzle";
 import { DrizzleVerificationTokenRepository } from "@/server/repositories/auth/verification-token-repository.drizzle";
+import { ResendEmailService } from "@/server/services/email/auth/email-service.resend";
 import { parseVerifyCookie } from "@/lib/auth/hmac";
 import { withApiHandler } from "@/lib/api/error-handler";
 import { ResetPasswordSchema } from "@/lib/types/api/auth/reset-password";
@@ -40,8 +42,9 @@ export async function POST(request: Request) {
 
     const userRepo = new DrizzleUserRepository();
     const tokenRepo = new DrizzleVerificationTokenRepository();
+    const emailService = new ResendEmailService(new Resend(process.env.RESEND_API_KEY));
 
-    const result = await resetPassword(userRepo, tokenRepo, { tokenId, emailHash, newPassword: parsedBody.data.password });
+    const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId, emailHash, newPassword: parsedBody.data.password });
 
     if (result.status === "error") {
       const response = NextResponse.json({ message: "パスワードリセットに失敗しました", reason: result.reason }, { status: 400 });

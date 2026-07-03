@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
 import type { IVerificationTokenRepository } from "@/server/repositories/auth/verification-token-repository";
+import type { IEmailService } from "@/server/services/email/auth/email-service";
 
 const SALT_ROUNDS = 10;
 
@@ -13,11 +14,12 @@ type ResetPasswordResult =
  * パスワードリセットを実行する。
  * token.codeHash が null（コード検証済み）であることを確認し、
  * emailHash を照合してパスワードを更新する。
- * 成功後はトークンを削除する。
+ * 成功後はトークンを削除し、登録メールアドレス宛に変更完了メールを送信する。
  */
 export async function resetPassword(
   userRepo: IUserRepository,
   tokenRepo: IVerificationTokenRepository,
+  emailService: IEmailService,
   data: { tokenId: string; emailHash: string; newPassword: string }
 ): Promise<ResetPasswordResult> {
   const token = await tokenRepo.findById(data.tokenId);
@@ -39,5 +41,6 @@ export async function resetPassword(
   const passwordHash = await bcrypt.hash(data.newPassword, SALT_ROUNDS);
   await userRepo.updatePassword(token.userId, passwordHash);
   await tokenRepo.deleteById(data.tokenId);
+  await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name });
   return { status: "ok" };
 }

@@ -3,6 +3,7 @@ import type { Mocked } from "vitest";
 import { resetPassword } from "@/server/services/auth/reset-password";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
 import type { IVerificationTokenRepository } from "@/server/repositories/auth/verification-token-repository";
+import type { IEmailService } from "@/server/services/email/auth/email-service";
 
 const USER_ID = "user-id-1";
 const TOKEN_ID = "token-id-1";
@@ -32,17 +33,26 @@ const mockTokenRepo = (): Mocked<IVerificationTokenRepository> => ({
   deleteById: vi.fn(),
 });
 
+const mockEmailService = (): Mocked<IEmailService> => ({
+  sendVerificationEmail: vi.fn(),
+  sendWelcomeEmail: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
+  sendPasswordChangedEmail: vi.fn(),
+});
+
 describe("resetPassword", () => {
   describe("正常系", () => {
     it("有効なトークンと新パスワードでパスワードを更新してトークンを削除する", async () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
       tokenRepo.findById.mockResolvedValue({ id: TOKEN_ID, userId: USER_ID, codeHash: null, attempts: 0, expiresAt: FUTURE });
       userRepo.findById.mockResolvedValue({ id: USER_ID, email: EMAIL, name: "テスト" });
       userRepo.updatePassword.mockResolvedValue();
       tokenRepo.deleteById.mockResolvedValue();
+      emailService.sendPasswordChangedEmail.mockResolvedValue({ status: "ok" });
 
-      const result = await resetPassword(userRepo, tokenRepo, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
+      const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
 
       expect(result).toEqual({ status: "ok" });
 
@@ -54,56 +64,79 @@ describe("resetPassword", () => {
 
       expect(tokenRepo.deleteById).toHaveBeenCalledWith(TOKEN_ID);
     });
+
+    it("パスワード更新後、登録メールアドレス宛に変更通知メールを送信する", async () => {
+      const userRepo = mockUserRepo();
+      const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
+      tokenRepo.findById.mockResolvedValue({ id: TOKEN_ID, userId: USER_ID, codeHash: null, attempts: 0, expiresAt: FUTURE });
+      userRepo.findById.mockResolvedValue({ id: USER_ID, email: EMAIL, name: "テスト" });
+      userRepo.updatePassword.mockResolvedValue();
+      tokenRepo.deleteById.mockResolvedValue();
+      emailService.sendPasswordChangedEmail.mockResolvedValue({ status: "ok" });
+
+      await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
+
+      expect(emailService.sendPasswordChangedEmail).toHaveBeenCalledWith({ to: EMAIL, name: "テスト" });
+    });
   });
 
   describe("異常系", () => {
     it("トークンが存在しない場合: error: invalid", async () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
       tokenRepo.findById.mockResolvedValue(null);
 
-      const result = await resetPassword(userRepo, tokenRepo, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
+      const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
 
       expect(result).toEqual({ status: "error", reason: "invalid" });
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
     });
 
     it("codeHash が null でない（未検証トークン）の場合: error: invalid", async () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
       tokenRepo.findById.mockResolvedValue({ id: TOKEN_ID, userId: USER_ID, codeHash: "somehash", attempts: 0, expiresAt: FUTURE });
       userRepo.findById.mockResolvedValue({ id: USER_ID, email: EMAIL, name: "テスト" });
 
-      const result = await resetPassword(userRepo, tokenRepo, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
+      const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
 
       expect(result).toEqual({ status: "error", reason: "invalid" });
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
     });
 
     it("emailHash が不一致の場合: error: invalid", async () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
       tokenRepo.findById.mockResolvedValue({ id: TOKEN_ID, userId: USER_ID, codeHash: null, attempts: 0, expiresAt: FUTURE });
       userRepo.findById.mockResolvedValue({ id: USER_ID, email: "other@example.com", name: "他ユーザー" });
 
-      const result = await resetPassword(userRepo, tokenRepo, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
+      const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
 
       expect(result).toEqual({ status: "error", reason: "invalid" });
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
     });
 
     it("トークンが期限切れの場合: トークン削除して error: expired", async () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
       tokenRepo.findById.mockResolvedValue({ id: TOKEN_ID, userId: USER_ID, codeHash: null, attempts: 0, expiresAt: new Date(Date.now() - 1000) });
       userRepo.findById.mockResolvedValue({ id: USER_ID, email: EMAIL, name: "テスト" });
       tokenRepo.deleteById.mockResolvedValue();
 
-      const result = await resetPassword(userRepo, tokenRepo, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
+      const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
 
       expect(result).toEqual({ status: "error", reason: "expired" });
       expect(tokenRepo.deleteById).toHaveBeenCalledWith(TOKEN_ID);
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
     });
   });
 });
