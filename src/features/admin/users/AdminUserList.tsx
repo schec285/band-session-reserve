@@ -112,8 +112,8 @@ export function AdminUserList({ users, currentUserId }: Props) {
       {filteredUsers.length === 0 ? (
         <p className="text-muted-foreground text-sm">該当するユーザーがいません。</p>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="border rounded-lg overflow-x-auto">
+          <table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left font-medium p-3">氏名</th>
