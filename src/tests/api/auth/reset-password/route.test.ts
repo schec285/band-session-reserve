@@ -9,6 +9,14 @@ vi.mock("@/server/repositories/auth/verification-token-repository.drizzle", () =
   DrizzleVerificationTokenRepository: class {},
 }));
 
+vi.mock("resend", () => ({
+  Resend: class {},
+}));
+
+vi.mock("@/server/services/email/auth/email-service.resend", () => ({
+  ResendEmailService: class {},
+}));
+
 vi.mock("@/server/services/auth/reset-password", () => ({
   resetPassword: vi.fn(),
 }));

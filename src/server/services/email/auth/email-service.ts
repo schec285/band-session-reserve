@@ -30,4 +30,13 @@ export interface IEmailService {
     name: string;
     code: string;
   }): Promise<SendEmailResult>;
+
+  /**
+   * パスワード変更完了の通知メールを送信する。
+   */
+  sendPasswordChangedEmail(params: {
+    to: string;
+    name: string;
+    changedAt: Date;
+  }): Promise<SendEmailResult>;
 }

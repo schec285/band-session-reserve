@@ -15,6 +15,7 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   findByEmail: vi.fn(),
   findById: vi.fn(),
   findByEmailForAuth: vi.fn(),
+  findByIdForAuth: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   setEmailVerified: vi.fn(),
@@ -36,6 +37,7 @@ const mockEmailService = (): Mocked<IEmailService> => ({
   sendVerificationEmail: vi.fn(),
   sendWelcomeEmail: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
+  sendPasswordChangedEmail: vi.fn(),
 });
 
 function makeToken(overrides?: Partial<{ id: string; userId: string; codeHash: string | null; attempts: number; expiresAt: Date }>) {

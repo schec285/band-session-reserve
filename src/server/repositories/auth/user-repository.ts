@@ -28,6 +28,13 @@ export interface IUserRepository {
     passwordHash: string | null;
     emailVerified: Date | null;
   } | null>;
+  /** 認証用にIDでユーザーを検索する（email・name・passwordHash 含む） */
+  findByIdForAuth(id: string): Promise<{
+    id: string;
+    email: string;
+    name: string | null;
+    passwordHash: string | null;
+  } | null>;
   /** ユーザーを新規作成する */
   create(data: { email: string; passwordHash: string; name: string }): Promise<{ id: string }>;
   /** 名前とパスワードハッシュを更新する */
