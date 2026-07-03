@@ -8,6 +8,7 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   findByEmail: vi.fn(),
   findById: vi.fn(),
   findByEmailForAuth: vi.fn(),
+  findByIdForAuth: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   setEmailVerified: vi.fn(),

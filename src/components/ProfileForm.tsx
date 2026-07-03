@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PART_ORDER, PART_LABELS } from "@/lib/utils/parts";
 import type { GetProfileResponse } from "@/lib/types/api/user";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { PasswordChangeForm } from "@/components/PasswordChangeForm";
 
 const COMMENT_TEMPLATE = "・好きなアーティスト\n\n・演奏歴など";
 
@@ -56,6 +57,9 @@ export function ProfileForm({ profile }: Props) {
         <p className="text-xs text-muted-foreground mb-1">メールアドレス</p>
         <p className="text-sm">{profile.email}</p>
       </div>
+
+      {/* パスワード */}
+      <PasswordChangeForm />
 
       {/* 名前 */}
       <div className="py-5">

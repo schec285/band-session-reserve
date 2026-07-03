@@ -60,6 +60,23 @@ export class DrizzleUserRepository implements IUserRepository {
   }
 
   /**
+   * 認証用にIDでユーザーを検索する。
+   */
+  async findByIdForAuth(id: string): Promise<{
+    id: string;
+    email: string;
+    name: string | null;
+    passwordHash: string | null;
+  } | null> {
+    const [user] = await db
+      .select({ id: users.id, email: users.email, name: users.name, passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return user ?? null;
+  }
+
+  /**
    * ユーザーを新規作成する。
    */
   async create(data: { email: string; passwordHash: string; name: string }): Promise<{ id: string }> {
@@ -85,10 +102,10 @@ export class DrizzleUserRepository implements IUserRepository {
   }
 
   /**
-   * パスワードハッシュのみを更新する。
+   * パスワードハッシュを更新する。
    */
   async updatePassword(id: string, passwordHash: string): Promise<void> {
-    await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, id));
   }
 
   /**

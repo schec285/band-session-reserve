@@ -21,3 +21,19 @@ export const UpdateProfileSchema = z.object({
 });
 
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;
+
+/**
+ * PUT /api/user/password のリクエストボディスキーマ。
+ */
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "現在のパスワードを入力してください"),
+    newPassword: z.string().min(8, "パスワードは8文字以上で入力してください"),
+    confirmNewPassword: z.string().min(1, "確認用パスワードを入力してください"),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "パスワードが一致しません",
+    path: ["confirmNewPassword"],
+  });
+
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;

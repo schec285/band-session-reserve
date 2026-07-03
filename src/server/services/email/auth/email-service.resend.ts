@@ -56,6 +56,30 @@ export class ResendEmailService implements IEmailService {
   }
 
   /**
+   * パスワード変更完了の通知メールを送信する。
+   */
+  async sendPasswordChangedEmail(params: {
+    to: string;
+    name: string;
+  }): Promise<{ status: "ok" } | { status: "error" }> {
+    return this.send({
+      to: params.to,
+      subject: `【${APP_NAME}】パスワード変更のお知らせ`,
+      html: buildHtml(`
+        <p>
+          ${params.name} さん。<br>
+          <br>
+          ${APP_NAME}のアカウントのパスワードが変更されました。<br>
+          <br>
+          万一この変更に心当たりがない場合は、お手数ですがパスワードリセットをお試しいただくか、サポートまでご連絡ください。<br>
+          <br>
+          ※このメールは送信専用です。返信してもお答えできませんのでご了承ください。
+        </p>
+      `),
+    });
+  }
+
+  /**
    * ユーザー登録完了のウェルカムメールを送信する。
    */
   async sendWelcomeEmail(params: {
