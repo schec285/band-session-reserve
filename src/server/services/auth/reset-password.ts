@@ -41,6 +41,6 @@ export async function resetPassword(
   const passwordHash = await bcrypt.hash(data.newPassword, SALT_ROUNDS);
   await userRepo.updatePassword(token.userId, passwordHash);
   await tokenRepo.deleteById(data.tokenId);
-  await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name });
+  await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name, changedAt: new Date() });
   return { status: "ok" };
 }

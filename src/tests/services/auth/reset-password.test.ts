@@ -77,7 +77,7 @@ describe("resetPassword", () => {
 
       await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "newpassword123" });
 
-      expect(emailService.sendPasswordChangedEmail).toHaveBeenCalledWith({ to: EMAIL, name: "テスト" });
+      expect(emailService.sendPasswordChangedEmail).toHaveBeenCalledWith({ to: EMAIL, name: "テスト", changedAt: expect.any(Date) });
     });
   });
 

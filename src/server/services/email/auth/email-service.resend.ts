@@ -2,6 +2,7 @@ import type { Resend } from "resend";
 import type { IEmailService } from "./email-service";
 import { buildHtml } from "../html";
 import { APP_NAME } from "@/lib/constants/app";
+import { formatDatetime } from "@/lib/utils/date";
 
 /**
  * Resend を使ったメール送信サービスの実装。
@@ -61,6 +62,7 @@ export class ResendEmailService implements IEmailService {
   async sendPasswordChangedEmail(params: {
     to: string;
     name: string;
+    changedAt: Date;
   }): Promise<{ status: "ok" } | { status: "error" }> {
     return this.send({
       to: params.to,
@@ -69,9 +71,16 @@ export class ResendEmailService implements IEmailService {
         <p>
           ${params.name} さん。<br>
           <br>
-          ${APP_NAME}のアカウントのパスワードが変更されました。<br>
+          いつもご利用いただきありがとうございます。<br>
           <br>
-          <strong>身に覚えがない場合、第三者による不正アクセスの可能性があります。今すぐパスワードをリセットし、至急サポートまでご連絡ください。</strong><br>
+          お客様のアカウントのパスワードが変更されました。<br>
+          <br>
+          変更日時<br>
+          ${formatDatetime(params.changedAt.toISOString())}（JST）<br>
+          <br>
+          <strong>心当たりがない場合は、第三者による不正アクセスの可能性があります。速やかにパスワードを再設定し、お問い合わせ窓口までご連絡ください。</strong><br>
+          <br>
+          今後ともよろしくお願いいたします。<br>
           <br>
           ※このメールは送信専用です。返信してもお答えできませんのでご了承ください。
         </p>

@@ -28,6 +28,6 @@ export async function changePassword(
 
   const passwordHash = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
   await repo.updatePassword(userId, passwordHash);
-  await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name ?? "" });
+  await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name ?? "", changedAt: new Date() });
   return { status: "ok" };
 }

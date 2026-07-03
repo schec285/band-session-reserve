@@ -120,7 +120,7 @@ describe("changePassword", () => {
         newPassword: NEW_PASSWORD,
       });
 
-      expect(emailService.sendPasswordChangedEmail).toHaveBeenCalledWith({ to: USER_EMAIL, name: USER_NAME });
+      expect(emailService.sendPasswordChangedEmail).toHaveBeenCalledWith({ to: USER_EMAIL, name: USER_NAME, changedAt: expect.any(Date) });
     });
   });
 

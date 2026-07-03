@@ -37,5 +37,6 @@ export interface IEmailService {
   sendPasswordChangedEmail(params: {
     to: string;
     name: string;
+    changedAt: Date;
   }): Promise<SendEmailResult>;
 }
