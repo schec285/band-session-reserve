@@ -6,6 +6,7 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/
 import { Button } from "@/components/ui/button";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
 import { ROLE_LABELS, type Role } from "@/lib/utils/roles";
+import { formatDatetime } from "@/lib/utils/date";
 
 interface User {
   id: string;
@@ -14,6 +15,7 @@ interface User {
   role: Role;
   isVerified: boolean;
   createdAt: string;
+  lastLoginAt: string | null;
 }
 
 interface Props {
@@ -110,14 +112,15 @@ export function AdminUserList({ users, currentUserId }: Props) {
       {filteredUsers.length === 0 ? (
         <p className="text-muted-foreground text-sm">該当するユーザーがいません。</p>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="border rounded-lg overflow-x-auto">
+          <table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-muted/50">
               <tr>
                 <th className="text-left font-medium p-3">氏名</th>
                 <th className="text-left font-medium p-3">メールアドレス</th>
                 <th className="text-left font-medium p-3">ステータス</th>
                 <th className="text-left font-medium p-3">ロール</th>
+                <th className="text-left font-medium p-3">最終ログイン日時</th>
                 <th className="text-left font-medium p-3">登録日時</th>
               </tr>
             </thead>
@@ -158,6 +161,9 @@ export function AdminUserList({ users, currentUserId }: Props) {
                       {isSelf && (
                         <span className="ml-2 text-xs text-muted-foreground">(自分自身)</span>
                       )}
+                    </td>
+                    <td className="p-3 text-muted-foreground">
+                      {user.lastLoginAt ? formatDatetime(user.lastLoginAt) : "未ログイン"}
                     </td>
                     <td className="p-3 text-muted-foreground">{createdAtLabel}</td>
                   </tr>

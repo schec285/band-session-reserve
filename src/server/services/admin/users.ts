@@ -17,6 +17,7 @@ function toResponse(record: IUserListRecord): AdminUserResponse {
     role: record.role as Role,
     isVerified: record.emailVerified !== null,
     createdAt: record.createdAt.toISOString(),
+    lastLoginAt: record.lastLoginAt ? record.lastLoginAt.toISOString() : null,
   };
 }
 

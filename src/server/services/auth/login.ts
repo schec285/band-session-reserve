@@ -12,7 +12,7 @@ type LoginResult = {
 /**
  * メール/パスワードでユーザーを認証する。
  * passwordHash が null（OAuthユーザー）・パスワード不一致・emailVerified が null（未認証）
- * のいずれかの場合は null を返す。
+ * のいずれかの場合は null を返す。認証に成功した場合は最終ログイン日時を更新する。
  */
 export async function login(
   userRepo: IUserRepository,
@@ -25,6 +25,8 @@ export async function login(
   if (!isValid) return null;
 
   if (!user.emailVerified) return null;
+
+  await userRepo.updateLastLogin(user.id);
 
   return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
 }

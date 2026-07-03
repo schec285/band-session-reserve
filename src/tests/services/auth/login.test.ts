@@ -8,6 +8,7 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   findByEmailForAuth: vi.fn(),
   create: vi.fn(),
   setEmailVerified: vi.fn(),
+  updateLastLogin: vi.fn(),
   findAll: vi.fn(),
   updateRole: vi.fn(),
 });
@@ -46,6 +47,7 @@ describe("login", () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe("user-id-1");
       expect(result?.email).toBe("test@example.com");
+      expect(userRepo.updateLastLogin).toHaveBeenCalledWith("user-id-1");
     });
   });
 
@@ -57,6 +59,7 @@ describe("login", () => {
       const result = await login(userRepo, { email: "nouser@example.com", password: VALID_PASSWORD });
 
       expect(result).toBeNull();
+      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
 
     it("passwordHash が null（OAuthユーザー）の場合 null を返す", async () => {
@@ -66,6 +69,7 @@ describe("login", () => {
       const result = await login(userRepo, { email: "test@example.com", password: VALID_PASSWORD });
 
       expect(result).toBeNull();
+      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
 
     it("パスワードが不一致の場合 null を返す", async () => {
@@ -77,6 +81,7 @@ describe("login", () => {
       const result = await login(userRepo, { email: "test@example.com", password: "wrongpassword" });
 
       expect(result).toBeNull();
+      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
 
     it("emailVerified が null（未認証）の場合 null を返す", async () => {
@@ -88,6 +93,7 @@ describe("login", () => {
       const result = await login(userRepo, { email: "test@example.com", password: VALID_PASSWORD });
 
       expect(result).toBeNull();
+      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
   });
 });
