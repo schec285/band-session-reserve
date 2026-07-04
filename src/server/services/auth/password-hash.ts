@@ -1,4 +1,6 @@
 import { hash as argon2Hash, verify as argon2Verify } from "@node-rs/argon2";
+// TODO: 全ユーザーがArgon2idへ移行完了（bcrypt形式のpasswordHashがDBに存在しなくなる）したら、
+// bcryptjs依存とこのimportごと削除できる。
 import bcrypt from "bcryptjs";
 
 // Algorithm は const enum のため isolatedModules 下でインポートできず、値(2 = Argon2id)を直接指定する
@@ -30,6 +32,12 @@ export async function verifyPassword(
   if (storedHash.startsWith("$argon2id$")) {
     return { valid: await argon2Verify(storedHash, password), needsRehash: false };
   }
+
+  // ↓ ここから移行期のみ必要なbcrypt互換コード（旧アルゴリズム判定箇所）。
+  // 全ユーザーのpasswordHashがArgon2id形式に置き換わったら、この分岐と
+  // needsRehashの概念自体・上記ifブロックの早期returnを削除し、
+  // 常にargon2Verifyを呼ぶだけの実装にできる。
   const valid = await bcrypt.compare(password, storedHash);
   return { valid, needsRehash: valid };
+  // ↑ ここまで削除可能
 }

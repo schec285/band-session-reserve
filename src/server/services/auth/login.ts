@@ -29,10 +29,14 @@ export async function login(
 
   await userRepo.updateLastLogin(user.id);
 
+  // ↓ ここから移行期のみ必要な処理（旧bcryptハッシュをArgon2idへ上書きする箇所）。
+  // 全ユーザーのpasswordHashがArgon2id形式に置き換わったら、
+  // needsRehashは常にfalseになるため、このブロックごと削除できる。
   if (needsRehash) {
     const newHash = await hashPassword(credentials.password);
     await userRepo.updatePassword(user.id, newHash);
   }
+  // ↑ ここまで削除可能
 
   return { id: user.id, email: user.email, name: user.name, image: user.image, role: user.role };
 }
