@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
 import { isPasswordPolicySatisfied } from "@/lib/utils/password";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 /**
  * 新パスワード設定フォーム。
@@ -31,7 +32,7 @@ export function ResetPasswordForm() {
       return;
     }
 
-    const res = await fetch("/api/auth/reset-password", {
+    const res = await fetchWithCsrf("/api/auth/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password, confirmPassword }),

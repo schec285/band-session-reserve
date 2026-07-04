@@ -6,6 +6,7 @@ import { DrizzleVerificationTokenRepository } from "@/server/repositories/auth/v
 import { ResendEmailService } from "@/server/services/email/auth/email-service.resend";
 import { parseVerifyCookie } from "@/lib/auth/hmac";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "認証コードが正しくありません",
@@ -20,6 +21,9 @@ const ERROR_MESSAGES: Record<string, string> = {
  */
 export async function POST(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const body = await request.json();
     const { code } = body;
 

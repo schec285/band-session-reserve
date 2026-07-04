@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/Toast";
 import type { ToastVariant } from "@/components/ui/Toast";
 import { clearFlash } from "@/server/actions/flash";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface ResetPasswordRequestFormProps {
   flash?: { type: ToastVariant; message: string } | null;
@@ -35,7 +36,7 @@ export function ResetPasswordRequestForm({ flash }: ResetPasswordRequestFormProp
     setLoading(true);
     setError(null);
 
-    const res = await fetch("/api/auth/reset-password/request", {
+    const res = await fetchWithCsrf("/api/auth/reset-password/request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

@@ -11,6 +11,7 @@ vi.mock("@/server/services/admin/users", () => ({
 
 import { auth } from "@/auth";
 import { updateUserRole } from "@/server/services/admin/users";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const params = Promise.resolve({ userId: "user-uuid-1" });
 
@@ -25,9 +26,10 @@ const mockUser = {
 };
 
 function makeRequest(body?: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/admin/users/user-uuid-1", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
@@ -113,6 +115,22 @@ describe("PATCH /api/admin/users/[userId]", () => {
 
       expect(res.status).toBe(400);
       expect(json.message).toBe("自分自身のロールは変更できません");
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await PATCH(
+        new Request("http://localhost/api/admin/users/user-uuid-1", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "admin" }),
+        }),
+        { params }
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

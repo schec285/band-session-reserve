@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 type Props = {
   eventId: string;
@@ -22,7 +23,7 @@ export function AdminCollectionButton({ eventId, userId, collected: initialColle
     setLoading(true);
     const next = !collected;
     setCollected(next);
-    await fetch(`/api/admin/events/${eventId}/collections`, {
+    await fetchWithCsrf(`/api/admin/events/${eventId}/collections`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, collected: next }),

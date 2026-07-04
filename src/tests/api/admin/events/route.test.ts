@@ -11,6 +11,7 @@ vi.mock("@/server/services/admin/events", () => ({
 
 import { auth } from "@/auth";
 import { createEvent } from "@/server/services/admin/events";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const future = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
 const futureEnd = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7 + 1000 * 60 * 60 * 3).toISOString();
@@ -32,9 +33,10 @@ const mockEventResponse = {
 };
 
 function makeRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/admin/events", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -172,6 +174,21 @@ describe("POST /api/admin/events", () => {
         expect.anything(),
         expect.objectContaining({ mapEmbedUrl: null })
       );
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/admin/events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

@@ -4,6 +4,7 @@ import { createEvent } from "@/server/services/admin/events";
 import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { CreateEventSchema } from "@/lib/types/api/admin/events";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -26,6 +27,9 @@ async function requireAdmin() {
  */
 export async function POST(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const { error } = await requireAdmin();
     if (error) return error;
 

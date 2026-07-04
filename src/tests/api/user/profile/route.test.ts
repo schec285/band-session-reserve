@@ -12,6 +12,7 @@ vi.mock("@/server/services/user/profile", () => ({
 
 import { auth } from "@/auth";
 import { getProfile, updateProfile } from "@/server/services/user/profile";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const validBody = {
   name: "山田 太郎",
@@ -20,9 +21,10 @@ const validBody = {
 };
 
 function makePutRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/user/profile", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -166,6 +168,21 @@ describe("PUT /api/user/profile", () => {
       expect(res.status).toBe(400);
       expect(json.message).toBe("入力内容に誤りがあります");
       expect(json.errors).toContainEqual(expect.objectContaining({ field: "part" }));
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await PUT(
+        new Request("http://localhost/api/user/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

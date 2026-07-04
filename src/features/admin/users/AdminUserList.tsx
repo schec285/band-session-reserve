@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
 import { ROLE_LABELS, type Role } from "@/lib/utils/roles";
 import { formatDatetime } from "@/lib/utils/date";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface User {
   id: string;
@@ -60,7 +61,7 @@ export function AdminUserList({ users, currentUserId }: Props) {
     if (!pendingChange) return;
     setSubmitting(true);
 
-    const res = await fetch(`/api/admin/users/${pendingChange.userId}`, {
+    const res = await fetchWithCsrf(`/api/admin/users/${pendingChange.userId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role: pendingChange.toRole }),

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface Props {
   eventId: string;
@@ -20,7 +21,7 @@ export function AdminEventActions({ eventId }: Props) {
   async function handleDelete() {
     if (!confirm("このイベントを削除しますか？")) return;
 
-    const res = await fetch(`/api/admin/events/${eventId}`, { method: "DELETE" });
+    const res = await fetchWithCsrf(`/api/admin/events/${eventId}`, { method: "DELETE" });
 
     if (res.ok) {
       startTransition(() => router.refresh());

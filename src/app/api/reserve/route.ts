@@ -5,6 +5,7 @@ import { DrizzleReservationRepository } from "@/server/repositories/reserve/rese
 import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import type { ErrorResponse } from "@/lib/types/api";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * 予約一括作成エンドポイント。
@@ -13,6 +14,9 @@ import { withApiHandler } from "@/lib/api/error-handler";
  */
 export async function POST(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });

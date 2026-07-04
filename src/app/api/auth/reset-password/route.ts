@@ -6,6 +6,7 @@ import { DrizzleVerificationTokenRepository } from "@/server/repositories/auth/v
 import { ResendEmailService } from "@/server/services/email/auth/email-service.resend";
 import { parseVerifyCookie } from "@/lib/auth/hmac";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 import { ResetPasswordSchema } from "@/lib/types/api/auth/reset-password";
 
 /**
@@ -15,6 +16,9 @@ import { ResetPasswordSchema } from "@/lib/types/api/auth/reset-password";
  */
 export async function POST(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const body = await request.json();
     const parsedBody = ResetPasswordSchema.safeParse(body);
 

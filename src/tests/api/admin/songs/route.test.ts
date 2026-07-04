@@ -12,6 +12,7 @@ vi.mock("@/server/services/admin/songs", () => ({
 
 import { auth } from "@/auth";
 import { getAllSongs, createSong } from "@/server/services/admin/songs";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const mockSongs = [
   { id: "song-uuid-1", title: "千本桜", artist: "黒うさP" },
@@ -19,9 +20,10 @@ const mockSongs = [
 ];
 
 function makeRequest(method: string, body?: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/admin/songs", {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
@@ -126,6 +128,21 @@ describe("POST /api/admin/songs", () => {
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual({ field: "artist", message: "アーティスト名は必須です" });
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/admin/songs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

@@ -11,6 +11,7 @@ import type { ToastVariant } from "@/components/ui/Toast";
 import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
 import { clearFlash } from "@/server/actions/flash";
 import { isPasswordPolicySatisfied } from "@/lib/utils/password";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface SignUpFormProps {
   flash?: { type: ToastVariant; message: string } | null;
@@ -46,7 +47,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
       return;
     }
 
-    const res = await fetch("/api/auth/signup", {
+    const res = await fetchWithCsrf("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, confirmPassword }),

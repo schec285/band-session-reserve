@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface Props {
   eventId: string;
@@ -19,7 +20,7 @@ export function AdminEventDeleteButton({ eventId }: Props) {
   const [isPending, startTransition] = useTransition();
 
   async function handleDelete() {
-    const res = await fetch(`/api/admin/events/${eventId}`, { method: "DELETE" });
+    const res = await fetchWithCsrf(`/api/admin/events/${eventId}`, { method: "DELETE" });
 
     if (res.ok) {
       setOpen(false);

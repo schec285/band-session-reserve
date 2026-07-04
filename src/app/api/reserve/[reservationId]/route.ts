@@ -6,6 +6,7 @@ import { UpdateTransferableSchema } from "@/lib/types/api/reserve";
 import type { ErrorResponse } from "@/lib/types/api";
 import type { CancelReservationResponse } from "@/lib/types/api/reserve";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * 予約の譲渡可否変更エンドポイント。
@@ -16,6 +17,9 @@ export async function PUT(
   { params }: { params: Promise<{ reservationId: string }> }
 ) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });
@@ -59,10 +63,13 @@ export async function PUT(
  * 予約レコードを削除する。
  */
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ reservationId: string }> }
 ) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });

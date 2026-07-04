@@ -19,6 +19,7 @@ vi.mock("@/server/services/user/password", () => ({
 
 import { auth } from "@/auth";
 import { changePassword } from "@/server/services/user/password";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const validBody = {
   currentPassword: "currentpassword123",
@@ -27,9 +28,10 @@ const validBody = {
 };
 
 function makePutRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/user/password", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -187,6 +189,21 @@ describe("PUT /api/user/password", () => {
       expect(json.errors).toContainEqual(
         expect.objectContaining({ field: "newPassword", message: "パスワードにメールアドレスやお客様の名前を含めることはできません" })
       );
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await PUT(
+        new Request("http://localhost/api/user/password", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

@@ -11,12 +11,15 @@ vi.mock("@/server/services/admin/songs", () => ({
 
 import { auth } from "@/auth";
 import { deleteEventSong } from "@/server/services/admin/songs";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const params = Promise.resolve({ eventSongId: "event-song-uuid-1" });
 
 function makeRequest() {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/admin/event-songs/event-song-uuid-1", {
     method: "DELETE",
+    headers: { Cookie: cookieHeader, ...headers },
   });
 }
 

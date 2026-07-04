@@ -11,6 +11,7 @@ import { CreateReservationsSchema } from "@/lib/types/api/reserve";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/Toast";
 import { EntryConfirmDialog, type EntryItem } from "@/features/reserve/EntryConfirmDialog";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 
 /**
@@ -141,7 +142,7 @@ export function SongList({
       throw new Error(parsed.error.issues[0].message);
     }
 
-    const res = await fetch("/api/reserve", {
+    const res = await fetchWithCsrf("/api/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -177,7 +178,7 @@ export function SongList({
   async function handleToggleTransferable() {
     if (!manageTarget) return;
     setManageLoading(true);
-    const res = await fetch(`/api/reserve/${manageTarget.reservationId}`, {
+    const res = await fetchWithCsrf(`/api/reserve/${manageTarget.reservationId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isTransferable: !manageTarget.isTransferable }),
@@ -200,7 +201,7 @@ export function SongList({
   async function handleCancel() {
     if (!manageTarget) return;
     setManageLoading(true);
-    const res = await fetch(`/api/reserve/${manageTarget.reservationId}`, { method: "DELETE" });
+    const res = await fetchWithCsrf(`/api/reserve/${manageTarget.reservationId}`, { method: "DELETE" });
     if (!res.ok) {
       setManageLoading(false);
       const json = await res.json();
