@@ -1,10 +1,9 @@
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
 import type { IVerificationTokenRepository } from "@/server/repositories/auth/verification-token-repository";
 import type { IEmailService } from "@/server/services/email/auth/email-service";
+import { hashPassword } from "@/server/services/auth/password-hash";
 
-const SALT_ROUNDS = 10;
 const CODE_EXPIRY_MS = 10 * 60 * 1000; // 10分
 
 type SignUpResult = { status: "ok"; tokenId: string };
@@ -29,13 +28,13 @@ export async function signUp(
 
   if (!existing) {
     // 新規ユーザー
-    const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+    const passwordHash = await hashPassword(data.password);
     const created = await userRepo.create({ email: data.email, passwordHash, name: data.name });
     userId = created.id;
     sendCode = true;
   } else if (!existing.emailVerified) {
     // 未認証の既存ユーザー: 名前とパスワードを更新
-    const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+    const passwordHash = await hashPassword(data.password);
     await userRepo.update(existing.id, { passwordHash, name: data.name });
     userId = existing.id;
     sendCode = true;

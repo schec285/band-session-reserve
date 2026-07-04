@@ -47,6 +47,13 @@ export async function POST(request: Request) {
     const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId, emailHash, newPassword: parsedBody.data.password });
 
     if (result.status === "error") {
+      if (result.reason === "password_similar_to_identity") {
+        // トークン自体は有効なため reset_token クッキーは維持し、同じ画面で再入力できるようにする
+        return NextResponse.json(
+          { message: "パスワードにメールアドレスやお客様の名前を含めることはできません", reason: result.reason },
+          { status: 400 }
+        );
+      }
       const response = NextResponse.json({ message: "パスワードリセットに失敗しました", reason: result.reason }, { status: 400 });
       response.cookies.delete("reset_token");
       return response;

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
+import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
+import { isPasswordPolicySatisfied } from "@/lib/utils/password";
 
 /**
  * プロフィール画面の「パスワード」行。
@@ -87,7 +89,7 @@ export function PasswordChangeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground mb-1 block">新しいパスワード（8文字以上）</label>
+            <label className="text-xs text-muted-foreground mb-1 block">新しいパスワード</label>
             <input
               type="password"
               value={newPassword}
@@ -95,6 +97,7 @@ export function PasswordChangeForm() {
               autoComplete="new-password"
               className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
+            <PasswordPolicyChecklist password={newPassword} />
           </div>
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground mb-1 block">新しいパスワード（確認）</label>
@@ -118,7 +121,7 @@ export function PasswordChangeForm() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={saving}
+            disabled={saving || !isPasswordPolicySatisfied(newPassword)}
             className="text-sm font-medium px-4 py-2 rounded-md bg-foreground text-background hover:opacity-80 transition-opacity disabled:opacity-50"
           >
             {saving ? "変更中..." : "変更する"}

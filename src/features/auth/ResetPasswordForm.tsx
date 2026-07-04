@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
+import { isPasswordPolicySatisfied } from "@/lib/utils/password";
 
 /**
  * 新パスワード設定フォーム。
@@ -56,7 +58,7 @@ export function ResetPasswordForm() {
             <p className="text-sm text-destructive">{error}</p>
           )}
           <div className="space-y-1">
-            <Label htmlFor="password">新しいパスワード（8文字以上）</Label>
+            <Label htmlFor="password">新しいパスワード</Label>
             <Input
               id="password"
               type="password"
@@ -65,6 +67,7 @@ export function ResetPasswordForm() {
               required
               autoComplete="new-password"
             />
+            <PasswordPolicyChecklist password={password} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="confirmPassword">パスワード（確認）</Label>
@@ -77,7 +80,7 @@ export function ResetPasswordForm() {
               autoComplete="new-password"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || !isPasswordPolicySatisfied(password)}>
             {loading ? "変更中..." : "パスワードを変更"}
           </Button>
         </form>

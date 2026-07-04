@@ -60,7 +60,7 @@ describe("resetPassword", () => {
       const [calledId, calledHash] = userRepo.updatePassword.mock.calls[0];
       expect(calledId).toBe(USER_ID);
       expect(calledHash).not.toBe("newpassword123"); // ハッシュ化されている
-      expect(calledHash).toBeTruthy();
+      expect(calledHash).toMatch(/^\$argon2id\$/);
 
       expect(tokenRepo.deleteById).toHaveBeenCalledWith(TOKEN_ID);
     });
@@ -120,6 +120,21 @@ describe("resetPassword", () => {
 
       expect(result).toEqual({ status: "error", reason: "invalid" });
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
+    });
+
+    it("新パスワードがメールアドレス/名前と類似している場合: error: password_similar_to_identity", async () => {
+      const userRepo = mockUserRepo();
+      const tokenRepo = mockTokenRepo();
+      const emailService = mockEmailService();
+      tokenRepo.findById.mockResolvedValue({ id: TOKEN_ID, userId: USER_ID, codeHash: null, attempts: 0, expiresAt: FUTURE });
+      userRepo.findById.mockResolvedValue({ id: USER_ID, email: EMAIL, name: "テスト" });
+
+      const result = await resetPassword(userRepo, tokenRepo, emailService, { tokenId: TOKEN_ID, emailHash: EMAIL_HASH, newPassword: "MyTest1234!" });
+
+      expect(result).toEqual({ status: "error", reason: "password_similar_to_identity" });
+      expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(tokenRepo.deleteById).not.toHaveBeenCalled();
       expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
     });
 

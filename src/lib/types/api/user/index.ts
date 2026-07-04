@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PartSchema } from "@/lib/utils/parts";
+import { passwordPolicySchema } from "@/lib/utils/password";
 
 /**
  * GET /api/user/profile のレスポンス型。
@@ -28,7 +29,7 @@ export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>;
 export const ChangePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "現在のパスワードを入力してください"),
-    newPassword: z.string().min(8, "パスワードは8文字以上で入力してください"),
+    newPassword: passwordPolicySchema("パスワードを入力してください"),
     confirmNewPassword: z.string().min(1, "確認用パスワードを入力してください"),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
