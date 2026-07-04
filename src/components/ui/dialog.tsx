@@ -4,27 +4,31 @@ import { useEffect, useRef } from "react";
 
 /**
  * モーダルダイアログの基本コンポーネント。
- * open が true のときにオーバーレイ付きで表示し、背景クリックまたは Escape キーで閉じる。
+ * open が true のときにオーバーレイ付きで表示する。
+ * dismissible（デフォルト true）が false の場合、背景クリック・Escapeキーでは閉じず、
+ * onClose を明示的に呼び出す操作（閉じるボタン等）でのみ閉じる。
  */
 export function Dialog({
   open,
   onClose,
+  dismissible = true,
   children,
 }: {
   open: boolean;
   onClose: () => void;
+  dismissible?: boolean;
   children: React.ReactNode;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !dismissible) return;
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
+  }, [open, dismissible, onClose]);
 
   if (!open) return null;
 
@@ -33,7 +37,7 @@ export function Dialog({
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        if (dismissible && e.target === overlayRef.current) onClose();
       }}
     >
       <div className="w-full max-w-2xl mx-4 rounded-xl bg-background border shadow-lg">

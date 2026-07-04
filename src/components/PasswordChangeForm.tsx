@@ -75,7 +75,7 @@ export function PasswordChangeForm() {
         </button>
       </div>
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
+      <Dialog open={open} onClose={() => setOpen(false)} dismissible={false}>
         <DialogHeader title="パスワード変更" onClose={() => setOpen(false)} />
         <DialogContent>
           <div className="space-y-1">
