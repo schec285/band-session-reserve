@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Toast } from "@/components/ui/Toast";
 import type { ToastVariant } from "@/components/ui/Toast";
+import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
 import { clearFlash } from "@/server/actions/flash";
+import { isPasswordPolicySatisfied } from "@/lib/utils/password";
 
 interface SignUpFormProps {
   flash?: { type: ToastVariant; message: string } | null;
@@ -101,7 +103,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
             />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="password">パスワード（8文字以上）</Label>
+            <Label htmlFor="password">パスワード</Label>
             <Input
               id="password"
               type="password"
@@ -110,6 +112,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
               required
               autoComplete="new-password"
             />
+            <PasswordPolicyChecklist password={password} />
           </div>
           <div className="space-y-1">
             <Label htmlFor="confirmPassword">パスワード（確認）</Label>
@@ -122,7 +125,7 @@ export function SignUpForm({ flash }: SignUpFormProps) {
               autoComplete="new-password"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || !isPasswordPolicySatisfied(password)}>
             {loading ? "登録中..." : "登録する"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">

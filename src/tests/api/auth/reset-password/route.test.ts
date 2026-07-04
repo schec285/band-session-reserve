@@ -54,7 +54,7 @@ describe("POST /api/auth/reset-password", () => {
     it("200: パスワード更新成功・reset_token クッキー削除・flash クッキー発行", async () => {
       (resetPassword as Mock).mockResolvedValue({ status: "ok" });
 
-      const res = await POST(makeRequest({ password: "newpassword123", confirmPassword: "newpassword123" }, makeValidCookie()));
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }, makeValidCookie()));
       const json = await res.json();
 
       expect(res.status).toBe(200);
@@ -67,14 +67,14 @@ describe("POST /api/auth/reset-password", () => {
 
   describe("異常系 — バリデーション", () => {
     it("400: password が未指定", async () => {
-      const res = await POST(makeRequest({ confirmPassword: "newpassword123" }, makeValidCookie()));
+      const res = await POST(makeRequest({ confirmPassword: "NewP@ssw0rd1" }, makeValidCookie()));
       const json = await res.json();
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual(expect.objectContaining({ field: "password" }));
     });
 
-    it("400: パスワードが8文字未満", async () => {
+    it("400: パスワードが12文字未満", async () => {
       const res = await POST(makeRequest({ password: "short", confirmPassword: "short" }, makeValidCookie()));
       const json = await res.json();
 
@@ -82,8 +82,33 @@ describe("POST /api/auth/reset-password", () => {
       expect(json.errors).toContainEqual(expect.objectContaining({ field: "password" }));
     });
 
+    it("400: パスワードが128文字を超える", async () => {
+      const longPassword = "Aa1!" + "a".repeat(126);
+      const res = await POST(makeRequest({ password: longPassword, confirmPassword: longPassword }, makeValidCookie()));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual(expect.objectContaining({ field: "password" }));
+    });
+
+    it("400: パスワードに大文字を含まない", async () => {
+      const res = await POST(makeRequest({ password: "newp@ssw0rd1", confirmPassword: "newp@ssw0rd1" }, makeValidCookie()));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "大文字を含めてください" });
+    });
+
+    it("400: パスワードに記号を含まない", async () => {
+      const res = await POST(makeRequest({ password: "NewPassw0rd12", confirmPassword: "NewPassw0rd12" }, makeValidCookie()));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "記号を含めてください" });
+    });
+
     it("400: パスワードが不一致", async () => {
-      const res = await POST(makeRequest({ password: "newpassword123", confirmPassword: "different123" }, makeValidCookie()));
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "different123" }, makeValidCookie()));
       const json = await res.json();
 
       expect(res.status).toBe(400);
@@ -91,12 +116,12 @@ describe("POST /api/auth/reset-password", () => {
     });
 
     it("401: クッキーがない", async () => {
-      const res = await POST(makeRequest({ password: "newpassword123", confirmPassword: "newpassword123" }));
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }));
       expect(res.status).toBe(401);
     });
 
     it("401: HMAC が不正", async () => {
-      const res = await POST(makeRequest({ password: "newpassword123", confirmPassword: "newpassword123" }, "reset_token=invalid.data.here.badsig"));
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }, "reset_token=invalid.data.here.badsig"));
       expect(res.status).toBe(401);
     });
   });
@@ -105,7 +130,7 @@ describe("POST /api/auth/reset-password", () => {
     it("400: invalid → reset_token 削除", async () => {
       (resetPassword as Mock).mockResolvedValue({ status: "error", reason: "invalid" });
 
-      const res = await POST(makeRequest({ password: "newpassword123", confirmPassword: "newpassword123" }, makeValidCookie()));
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }, makeValidCookie()));
       const json = await res.json();
 
       expect(res.status).toBe(400);
@@ -115,11 +140,22 @@ describe("POST /api/auth/reset-password", () => {
     it("400: expired → reset_token 削除", async () => {
       (resetPassword as Mock).mockResolvedValue({ status: "error", reason: "expired" });
 
-      const res = await POST(makeRequest({ password: "newpassword123", confirmPassword: "newpassword123" }, makeValidCookie()));
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }, makeValidCookie()));
       const json = await res.json();
 
       expect(res.status).toBe(400);
       expect(res.headers.get("set-cookie")).toMatch(/reset_token=;/);
+    });
+
+    it("400: password_similar_to_identity → 専用メッセージを返し reset_token は維持する", async () => {
+      (resetPassword as Mock).mockResolvedValue({ status: "error", reason: "password_similar_to_identity" });
+
+      const res = await POST(makeRequest({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }, makeValidCookie()));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("パスワードにメールアドレスやお客様の名前を含めることはできません");
+      expect(res.headers.get("set-cookie")).toBeNull();
     });
   });
 });

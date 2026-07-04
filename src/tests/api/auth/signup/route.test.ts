@@ -25,8 +25,8 @@ import { signUp } from "@/server/services/auth/signup";
 
 const validBody = {
   email: "test@example.com",
-  password: "password123",
-  confirmPassword: "password123",
+  password: "Str0ngP@ss12",
+  confirmPassword: "Str0ngP@ss12",
   name: "テストユーザー",
 };
 
@@ -88,12 +88,72 @@ describe("POST /api/auth/signup", () => {
       expect(json.errors).toContainEqual({ field: "name", message: "名前を入力してください" });
     });
 
-    it("400: password が8文字未満", async () => {
-      const res = await POST(makeRequest({ ...validBody, password: "short", confirmPassword: "short" }));
+    it("400: password が12文字未満", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "Sh0rt!", confirmPassword: "Sh0rt!" }));
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.errors).toContainEqual({ field: "password", message: "パスワードは8文字以上で入力してください" });
+      expect(json.errors).toContainEqual({ field: "password", message: "パスワードは12文字以上で入力してください" });
+    });
+
+    it("400: password が128文字を超える", async () => {
+      const longPassword = "Aa1!" + "a".repeat(126);
+      const res = await POST(makeRequest({ ...validBody, password: longPassword, confirmPassword: longPassword }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "パスワードは128文字以下で入力してください" });
+    });
+
+    it("400: password に大文字を含まない", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "str0ngp@ss12", confirmPassword: "str0ngp@ss12" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "大文字を含めてください" });
+    });
+
+    it("400: password に小文字を含まない", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "STR0NGP@SS12", confirmPassword: "STR0NGP@SS12" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "小文字を含めてください" });
+    });
+
+    it("400: password に数字を含まない", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "StrongPass@@", confirmPassword: "StrongPass@@" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "数字を含めてください" });
+    });
+
+    it("400: password に記号を含まない", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "Str0ngPass12", confirmPassword: "Str0ngPass12" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "記号を含めてください" });
+    });
+
+    it("400: password の先頭・末尾に空白を含む", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: " Str0ngP@ss12", confirmPassword: " Str0ngP@ss12" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "password", message: "先頭・末尾に空白を含めないでください" });
+    });
+
+    it("400: password がメールアドレスのローカル部と類似している", async () => {
+      const res = await POST(makeRequest({ ...validBody, password: "MyTest12345!", confirmPassword: "MyTest12345!" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({
+        field: "password",
+        message: "パスワードにメールアドレスや名前を含めることはできません",
+      });
     });
 
     it("400: confirmPassword が未指定", async () => {

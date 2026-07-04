@@ -46,6 +46,15 @@ export async function PUT(request: Request) {
           { status: 400 }
         );
       }
+      if (result.reason === "password_similar_to_identity") {
+        return NextResponse.json(
+          {
+            message: "パスワードにメールアドレスやお客様の名前を含めることはできません",
+            errors: [{ field: "newPassword", message: "パスワードにメールアドレスやお客様の名前を含めることはできません" }],
+          } satisfies ErrorResponse,
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         {
           message: "現在のパスワードが正しくありません",

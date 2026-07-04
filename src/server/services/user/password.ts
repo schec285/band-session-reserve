@@ -1,12 +1,14 @@
-import bcrypt from "bcryptjs";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
 import type { IEmailService } from "@/server/services/email/auth/email-service";
-
-const SALT_ROUNDS = 10;
+import { hashPassword, verifyPassword } from "@/server/services/auth/password-hash";
+import { isPasswordSimilarToIdentity } from "@/lib/utils/password";
 
 type ChangePasswordResult =
   | { status: "ok" }
-  | { status: "error"; reason: "user_not_found" | "no_password" | "invalid_current_password" };
+  | {
+      status: "error";
+      reason: "user_not_found" | "no_password" | "invalid_current_password" | "password_similar_to_identity";
+    };
 
 /**
  * ログイン中ユーザーのパスワードを変更する。
@@ -23,10 +25,14 @@ export async function changePassword(
   if (!user) return { status: "error", reason: "user_not_found" };
   if (user.passwordHash === null) return { status: "error", reason: "no_password" };
 
-  const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
+  const { valid } = await verifyPassword(input.currentPassword, user.passwordHash);
   if (!valid) return { status: "error", reason: "invalid_current_password" };
 
-  const passwordHash = await bcrypt.hash(input.newPassword, SALT_ROUNDS);
+  if (isPasswordSimilarToIdentity(input.newPassword, { email: user.email, name: user.name })) {
+    return { status: "error", reason: "password_similar_to_identity" };
+  }
+
+  const passwordHash = await hashPassword(input.newPassword);
   await repo.updatePassword(userId, passwordHash);
   await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name ?? "", changedAt: new Date() });
   return { status: "ok" };

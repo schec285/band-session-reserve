@@ -1,14 +1,13 @@
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import type { IUserRepository } from "@/server/repositories/auth/user-repository";
 import type { IVerificationTokenRepository } from "@/server/repositories/auth/verification-token-repository";
 import type { IEmailService } from "@/server/services/email/auth/email-service";
-
-const SALT_ROUNDS = 10;
+import { hashPassword } from "@/server/services/auth/password-hash";
+import { isPasswordSimilarToIdentity } from "@/lib/utils/password";
 
 type ResetPasswordResult =
   | { status: "ok" }
-  | { status: "error"; reason: "invalid" | "expired" };
+  | { status: "error"; reason: "invalid" | "expired" | "password_similar_to_identity" };
 
 /**
  * パスワードリセットを実行する。
@@ -38,7 +37,11 @@ export async function resetPassword(
     return { status: "error", reason: "expired" };
   }
 
-  const passwordHash = await bcrypt.hash(data.newPassword, SALT_ROUNDS);
+  if (isPasswordSimilarToIdentity(data.newPassword, { email: user.email, name: user.name })) {
+    return { status: "error", reason: "password_similar_to_identity" };
+  }
+
+  const passwordHash = await hashPassword(data.newPassword);
   await userRepo.updatePassword(token.userId, passwordHash);
   await tokenRepo.deleteById(data.tokenId);
   await emailService.sendPasswordChangedEmail({ to: user.email, name: user.name, changedAt: new Date() });

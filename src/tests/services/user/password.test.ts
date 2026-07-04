@@ -69,7 +69,24 @@ describe("changePassword", () => {
       const [calledId, calledHash] = userRepo.updatePassword.mock.calls[0];
       expect(calledId).toBe(USER_ID);
       expect(calledHash).not.toBe(NEW_PASSWORD); // ハッシュ化されている
-      expect(calledHash).toBeTruthy();
+      expect(calledHash).toMatch(/^\$argon2id\$/);
+    });
+
+    it("現在のパスワードがArgon2id形式（移行済みユーザー）でも正しければ更新する", async () => {
+      const userRepo = mockUserRepo();
+      const emailService = mockEmailService();
+      const { hashPassword } = await import("@/server/services/auth/password-hash");
+      const hash = await hashPassword(CURRENT_PASSWORD);
+      userRepo.findByIdForAuth.mockResolvedValue({ id: USER_ID, email: USER_EMAIL, name: USER_NAME, passwordHash: hash });
+      userRepo.updatePassword.mockResolvedValue();
+      emailService.sendPasswordChangedEmail.mockResolvedValue({ status: "ok" });
+
+      const result = await changePassword(userRepo, emailService, USER_ID, {
+        currentPassword: CURRENT_PASSWORD,
+        newPassword: NEW_PASSWORD,
+      });
+
+      expect(result).toEqual({ status: "ok" });
     });
 
     it("findByIdForAuth が正しい userId で呼ばれる", async () => {
@@ -168,6 +185,23 @@ describe("changePassword", () => {
       });
 
       expect(result).toEqual({ status: "error", reason: "invalid_current_password" });
+      expect(userRepo.updatePassword).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
+    });
+
+    it("新パスワードがメールアドレス/名前と類似している場合、password_similar_to_identity を返し updatePassword・メール送信は呼ばれない", async () => {
+      const userRepo = mockUserRepo();
+      const emailService = mockEmailService();
+      const bcrypt = await import("bcryptjs");
+      const hash = await bcrypt.hash(CURRENT_PASSWORD, 10);
+      userRepo.findByIdForAuth.mockResolvedValue({ id: USER_ID, email: USER_EMAIL, name: USER_NAME, passwordHash: hash });
+
+      const result = await changePassword(userRepo, emailService, USER_ID, {
+        currentPassword: CURRENT_PASSWORD,
+        newPassword: "MyTest1234!",
+      });
+
+      expect(result).toEqual({ status: "error", reason: "password_similar_to_identity" });
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
       expect(emailService.sendPasswordChangedEmail).not.toHaveBeenCalled();
     });

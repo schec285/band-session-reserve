@@ -22,8 +22,8 @@ import { changePassword } from "@/server/services/user/password";
 
 const validBody = {
   currentPassword: "currentpassword123",
-  newPassword: "newpassword123",
-  confirmNewPassword: "newpassword123",
+  newPassword: "NewP@ssw0rd1",
+  confirmNewPassword: "NewP@ssw0rd1",
 };
 
 function makePutRequest(body: unknown) {
@@ -58,7 +58,7 @@ describe("PUT /api/user/password", () => {
 
       expect(changePassword).toHaveBeenCalledWith(expect.anything(), expect.anything(), "user-uuid", {
         currentPassword: "currentpassword123",
-        newPassword: "newpassword123",
+        newPassword: "NewP@ssw0rd1",
       });
     });
   });
@@ -94,12 +94,37 @@ describe("PUT /api/user/password", () => {
       expect(json.message).toBe("入力内容に誤りがあります");
     });
 
-    it("400: newPassword が8文字未満", async () => {
+    it("400: newPassword が12文字未満", async () => {
       const res = await PUT(makePutRequest({ ...validBody, newPassword: "short1", confirmNewPassword: "short1" }));
       const json = await res.json();
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual(expect.objectContaining({ field: "newPassword" }));
+    });
+
+    it("400: newPassword が128文字を超える", async () => {
+      const longPassword = "Aa1!" + "a".repeat(126);
+      const res = await PUT(makePutRequest({ ...validBody, newPassword: longPassword, confirmNewPassword: longPassword }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual(expect.objectContaining({ field: "newPassword" }));
+    });
+
+    it("400: newPassword に大文字を含まない", async () => {
+      const res = await PUT(makePutRequest({ ...validBody, newPassword: "newp@ssw0rd1", confirmNewPassword: "newp@ssw0rd1" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "newPassword", message: "大文字を含めてください" });
+    });
+
+    it("400: newPassword に記号を含まない", async () => {
+      const res = await PUT(makePutRequest({ ...validBody, newPassword: "NewPassw0rd12", confirmNewPassword: "NewPassw0rd12" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "newPassword", message: "記号を含めてください" });
     });
 
     it("400: newPassword と confirmNewPassword が不一致", async () => {
@@ -148,6 +173,19 @@ describe("PUT /api/user/password", () => {
       expect(json.message).toBe("現在のパスワードが正しくありません");
       expect(json.errors).toContainEqual(
         expect.objectContaining({ field: "currentPassword", message: "現在のパスワードが正しくありません" })
+      );
+    });
+
+    it("400: password_similar_to_identity", async () => {
+      (changePassword as Mock).mockResolvedValue({ status: "error", reason: "password_similar_to_identity" });
+
+      const res = await PUT(makePutRequest(validBody));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.message).toBe("パスワードにメールアドレスやお客様の名前を含めることはできません");
+      expect(json.errors).toContainEqual(
+        expect.objectContaining({ field: "newPassword", message: "パスワードにメールアドレスやお客様の名前を含めることはできません" })
       );
     });
   });

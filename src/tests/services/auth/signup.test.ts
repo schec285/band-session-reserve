@@ -57,6 +57,7 @@ describe("signUp", () => {
       const createArg = userRepo.create.mock.calls[0][0];
       expect(createArg.email).toBe("test@example.com");
       expect(createArg.passwordHash).not.toBe("password123");
+      expect(createArg.passwordHash).toMatch(/^\$argon2id\$/);
 
       // 既存トークン削除 → 新規トークン保存（codeHash あり）
       expect(tokenRepo.deleteByUserId).toHaveBeenCalledWith("new-user-id");
@@ -98,6 +99,7 @@ describe("signUp", () => {
       const updateArg = userRepo.update.mock.calls[0];
       expect(updateArg[0]).toBe("existing-user-id");
       expect(updateArg[1].passwordHash).not.toBe("password123");
+      expect(updateArg[1].passwordHash).toMatch(/^\$argon2id\$/);
       expect(updateArg[1].name).toBe("テストユーザー");
       expect(tokenRepo.create.mock.calls[0][0].codeHash).toBeTruthy();
       expect(emailService.sendVerificationEmail).toHaveBeenCalledTimes(1);
