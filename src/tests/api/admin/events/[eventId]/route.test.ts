@@ -12,6 +12,7 @@ vi.mock("@/server/services/admin/events", () => ({
 
 import { auth } from "@/auth";
 import { updateEvent, deleteEvent } from "@/server/services/admin/events";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const future = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
 const futureEnd = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7 + 1000 * 60 * 60 * 3).toISOString();
@@ -35,9 +36,10 @@ const mockEventResponse = {
 const params = Promise.resolve({ eventId: "event-uuid-1" });
 
 function makeRequest(method: string, body?: unknown) {
+  const { cookieHeader, headers: csrfHeaders } = makeCsrfPair();
   return new Request("http://localhost/api/admin/events/event-uuid-1", {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...csrfHeaders },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
@@ -131,6 +133,22 @@ describe("PUT /api/admin/events/[eventId]", () => {
       expect(json.message).toBe("イベントが見つかりません");
     });
   });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await PUT(
+        new Request("http://localhost/api/admin/events/event-uuid-1", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        }),
+        { params }
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -179,6 +197,18 @@ describe("DELETE /api/admin/events/[eventId]", () => {
 
       expect(res.status).toBe(404);
       expect(json.message).toBe("イベントが見つかりません");
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await DELETE(
+        new Request("http://localhost/api/admin/events/event-uuid-1", { method: "DELETE" }),
+        { params }
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

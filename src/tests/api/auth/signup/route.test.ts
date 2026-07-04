@@ -1,5 +1,6 @@
 import type { Mock } from "vitest";
 import { POST } from "@/app/api/auth/signup/route";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 vi.mock("@/server/repositories/auth/user-repository.drizzle", () => ({
   DrizzleUserRepository: class {},
@@ -31,9 +32,10 @@ const validBody = {
 };
 
 function makeRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/auth/signup", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -171,6 +173,21 @@ describe("POST /api/auth/signup", () => {
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual({ field: "confirmPassword", message: "パスワードが一致しません" });
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

@@ -11,13 +11,15 @@ vi.mock("@/server/services/admin/events", () => ({
 
 import { auth } from "@/auth";
 import { setCollection } from "@/server/services/admin/events";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const params = Promise.resolve({ eventId: "event-uuid-1" });
 
 function makeRequest(body?: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/admin/events/event-uuid-1/collections", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
@@ -104,6 +106,22 @@ describe("PATCH /api/admin/events/[eventId]/collections", () => {
 
       expect(res.status).toBe(404);
       expect(json.message).toBe("イベントが見つかりません");
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await PATCH(
+        new Request("http://localhost/api/admin/events/event-uuid-1/collections", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: "11111111-1111-1111-8111-111111111111", collected: true }),
+        }),
+        { params }
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

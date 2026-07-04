@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface Song {
   id: string;
@@ -36,7 +37,7 @@ export function AdminSongList({ songs }: Props) {
     setErrors([]);
     setSubmitting(true);
 
-    const res = await fetch("/api/admin/songs", {
+    const res = await fetchWithCsrf("/api/admin/songs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, artist }),

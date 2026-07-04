@@ -7,12 +7,16 @@ import { ResendEmailService } from "@/server/services/email/auth/email-service.r
 import { ChangePasswordSchema } from "@/lib/types/api/user";
 import type { ErrorResponse } from "@/lib/types/api";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * ログイン中ユーザーのパスワード変更エンドポイント。
  */
 export async function PUT(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });

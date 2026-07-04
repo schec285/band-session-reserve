@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { AdminEventResponse } from "@/lib/types/api/admin/events";
 import { toDatetimeLocal } from "@/lib/utils/date";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface Props {
   /** 編集時は既存イベントを渡す。新規作成時は undefined */
@@ -66,7 +67,7 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
     const url = isEdit ? `/api/admin/events/${event!.id}` : "/api/admin/events";
     const method = isEdit ? "PUT" : "POST";
 
-    const res = await fetch(url, {
+    const res = await fetchWithCsrf(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

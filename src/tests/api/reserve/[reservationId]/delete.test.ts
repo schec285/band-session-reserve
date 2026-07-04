@@ -11,12 +11,15 @@ vi.mock("@/server/services/reserve/reservation", () => ({
 
 import { auth } from "@/auth";
 import { cancelReservation } from "@/server/services/reserve/reservation";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const validParams = Promise.resolve({ reservationId: "reservation-uuid" });
 
 function makeRequest() {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/reserve/reservation-uuid", {
     method: "DELETE",
+    headers: { Cookie: cookieHeader, ...headers },
   });
 }
 
@@ -78,6 +81,18 @@ describe("DELETE /api/reserve/:reservationId", () => {
 
       expect(res.status).toBe(422);
       expect(json.message).toBe("このイベントの受付は終了しています");
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await DELETE(
+        new Request("http://localhost/api/reserve/reservation-uuid", { method: "DELETE" }),
+        { params: validParams }
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

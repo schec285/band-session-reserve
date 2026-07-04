@@ -4,6 +4,7 @@ import { getAllSongs, createSong } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
 import { CreateSongSchema } from "@/lib/types/api/admin/songs";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -42,6 +43,9 @@ export async function GET(_request: Request) {
  */
 export async function POST(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const { error } = await requireAdmin();
     if (error) return error;
 

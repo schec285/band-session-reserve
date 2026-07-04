@@ -6,6 +6,7 @@ import { UpdateProfileSchema } from "@/lib/types/api/user";
 import type { ErrorResponse } from "@/lib/types/api";
 import type { GetProfileResponse } from "@/lib/types/api/user";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * ログイン中ユーザーのプロフィール取得エンドポイント。
@@ -33,6 +34,9 @@ export async function GET(_request: Request) {
  */
 export async function PUT(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ message: "認証が必要です" } satisfies ErrorResponse, { status: 401 });

@@ -2,6 +2,7 @@
 
 > 認証: すべてのエンドポイントで admin ロールが必要。
 > 未認証は 401、admin 以外は 403 を返す。共通エラー形式は [shared.md](../shared.md) を参照。
+> すべてのエンドポイントで CSRF トークン検証が必須（`X-CSRF-Token` ヘッダー）。詳細は [shared.md](../shared.md#403-forbidden--csrfトークン不正) を参照。
 
 ---
 

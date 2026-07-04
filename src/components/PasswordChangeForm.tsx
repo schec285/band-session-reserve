@@ -5,6 +5,7 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
 import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
 import { isPasswordPolicySatisfied } from "@/lib/utils/password";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 /**
  * プロフィール画面の「パスワード」行。
@@ -39,7 +40,7 @@ export function PasswordChangeForm() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/user/password", {
+      const res = await fetchWithCsrf("/api/user/password", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),

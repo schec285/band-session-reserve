@@ -11,6 +11,7 @@ vi.mock("@/server/services/reserve/reservation", () => ({
 
 import { auth } from "@/auth";
 import { createReservations } from "@/server/services/reserve/reservation";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const VALID_UUID = "7c9e6679-7425-40de-944b-e07fc1f90ae7";
 const VALID_UUID_2 = "8d0f7780-8536-51ef-a55c-f18fd2a01bf8";
@@ -25,9 +26,10 @@ const validBody = {
 };
 
 function makeRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/reserve", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -275,6 +277,21 @@ describe("POST /api/reserve", () => {
       expect(res.status).toBe(422);
       expect(json.message).toBe("同じ曲で登録できないパートの組み合わせです");
       expect(json.errors).toContainEqual({ field: "part", message: "同じ曲で登録できないパートの組み合わせです" });
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/reserve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

@@ -23,6 +23,7 @@ vi.mock("@/server/services/auth/resend-reset-code", () => ({
 
 import { resendResetCode } from "@/server/services/auth/resend-reset-code";
 import { createVerifyCookieValue } from "@/lib/auth/hmac";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 import crypto from "crypto";
 
 const EMAIL = "test@example.com";
@@ -36,8 +37,11 @@ function makeValidCookie() {
 }
 
 function makeRequest(cookie?: string) {
-  const headers: Record<string, string> = {};
-  if (cookie) headers["Cookie"] = cookie;
+  const { cookieHeader, headers: csrfHeaders } = makeCsrfPair();
+  const headers: Record<string, string> = {
+    Cookie: cookie ? `${cookie}; ${cookieHeader}` : cookieHeader,
+    ...csrfHeaders,
+  };
   return new Request("http://localhost/api/auth/reset-password/resend", {
     method: "POST",
     headers,
@@ -97,6 +101,20 @@ describe("POST /api/auth/reset-password/resend", () => {
       expect(res.status).toBe(401);
       expect(json.reason).toBe("expired");
       expect(res.headers.get("set-cookie")).toMatch(/reset_verify_token=;/);
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/auth/reset-password/resend", {
+          method: "POST",
+          headers: { Cookie: makeValidCookie() },
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

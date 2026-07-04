@@ -23,6 +23,7 @@ vi.mock("@/server/services/auth/reset-password", () => ({
 
 import { resetPassword } from "@/server/services/auth/reset-password";
 import { createVerifyCookieValue } from "@/lib/auth/hmac";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 import crypto from "crypto";
 
 const EMAIL = "test@example.com";
@@ -36,8 +37,12 @@ function makeValidCookie() {
 }
 
 function makeRequest(body: unknown, cookie?: string) {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (cookie) headers["Cookie"] = cookie;
+  const { cookieHeader, headers: csrfHeaders } = makeCsrfPair();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Cookie: cookie ? `${cookie}; ${cookieHeader}` : cookieHeader,
+    ...csrfHeaders,
+  };
   return new Request("http://localhost/api/auth/reset-password", {
     method: "POST",
     headers,
@@ -156,6 +161,21 @@ describe("POST /api/auth/reset-password", () => {
       expect(res.status).toBe(400);
       expect(json.message).toBe("パスワードにメールアドレスやお客様の名前を含めることはできません");
       expect(res.headers.get("set-cookie")).toBeNull();
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Cookie: makeValidCookie() },
+          body: JSON.stringify({ password: "NewP@ssw0rd1", confirmPassword: "NewP@ssw0rd1" }),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

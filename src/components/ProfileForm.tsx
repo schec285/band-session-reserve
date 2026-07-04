@@ -5,6 +5,7 @@ import { PART_ORDER, PART_LABELS } from "@/lib/utils/parts";
 import type { GetProfileResponse } from "@/lib/types/api/user";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { PasswordChangeForm } from "@/components/PasswordChangeForm";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 const COMMENT_TEMPLATE = "・好きなアーティスト\n\n・演奏歴など";
 
@@ -28,7 +29,7 @@ export function ProfileForm({ profile }: Props) {
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/user/profile", {
+      const res = await fetchWithCsrf("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

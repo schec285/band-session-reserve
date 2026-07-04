@@ -11,6 +11,7 @@ vi.mock("@/server/services/admin/songs", () => ({
 
 import { auth } from "@/auth";
 import { addEventSong } from "@/server/services/admin/songs";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const mockEventSong = {
   eventSongId: "event-song-uuid-1",
@@ -23,9 +24,10 @@ const mockEventSong = {
 const params = Promise.resolve({ eventId: "event-uuid-1" });
 
 function makeRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/admin/events/event-uuid-1/songs", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -90,6 +92,22 @@ describe("POST /api/admin/events/[eventId]/songs", () => {
         field: "parts",
         message: "パートを1つ以上選択してください",
       });
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/admin/events/event-uuid-1/songs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(validBody),
+        }),
+        { params }
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

@@ -8,6 +8,7 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/
 import { PART_LABELS, PART_ORDER } from "@/lib/utils/parts";
 import { PartBadgeList } from "@/components/PartBadgeList";
 import type { Part } from "@drizzle/schema";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 const ALL_PARTS = Object.keys(PART_LABELS) as Part[];
 
@@ -112,7 +113,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     setError("");
     setAdding(true);
 
-    const res = await fetch(`/api/admin/events/${eventId}/songs`, {
+    const res = await fetchWithCsrf(`/api/admin/events/${eventId}/songs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ songId: selectedSongId, parts: selectedParts }),
@@ -136,7 +137,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   async function handleDelete(eventSongId: string) {
     if (!confirm("この曲をイベントから削除しますか？")) return;
 
-    const res = await fetch(`/api/admin/event-songs/${eventSongId}`, {
+    const res = await fetchWithCsrf(`/api/admin/event-songs/${eventSongId}`, {
       method: "DELETE",
     });
 
@@ -209,7 +210,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     setEditError("");
     setUpdating(true);
 
-    const res = await fetch(`/api/admin/event-songs/${editingSong.eventSongId}`, {
+    const res = await fetchWithCsrf(`/api/admin/event-songs/${editingSong.eventSongId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ parts: editSelectedParts }),

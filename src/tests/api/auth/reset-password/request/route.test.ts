@@ -22,15 +22,17 @@ vi.mock("@/server/services/auth/reset-password-request", () => ({
 }));
 
 import { requestPasswordReset } from "@/server/services/auth/reset-password-request";
+import { makeCsrfPair } from "@/tests/helpers/csrf";
 import crypto from "crypto";
 
 const EMAIL = "test@example.com";
 const EMAIL_HASH = crypto.createHash("sha256").update(EMAIL).digest("hex");
 
 function makeRequest(body: unknown) {
+  const { cookieHeader, headers } = makeCsrfPair();
   return new Request("http://localhost/api/auth/reset-password/request", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader, ...headers },
     body: JSON.stringify(body),
   });
 }
@@ -62,6 +64,21 @@ describe("POST /api/auth/reset-password/request", () => {
 
       expect(res.status).toBe(400);
       expect(json.errors).toContainEqual(expect.objectContaining({ field: "email" }));
+    });
+  });
+
+  describe("異常系 — CSRF", () => {
+    it("403: CSRFトークンが不正な場合", async () => {
+      const res = await POST(
+        new Request("http://localhost/api/auth/reset-password/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: EMAIL }),
+        })
+      );
+
+      expect(res.status).toBe(403);
+      expect(res.headers.get("X-CSRF-Error")).toBe("1");
     });
   });
 });

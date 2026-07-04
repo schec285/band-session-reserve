@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface VerifyCodeFormProps {
   verifyEndpoint: string;
@@ -50,7 +51,7 @@ export function VerifyCodeForm({
     setLoading(true);
     setError(null);
 
-    const res = await fetch(verifyEndpoint, {
+    const res = await fetchWithCsrf(verifyEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
@@ -75,7 +76,7 @@ export function VerifyCodeForm({
     setResendLoading(true);
     setResendError(null);
 
-    const res = await fetch(resendEndpoint, { method: "POST" });
+    const res = await fetchWithCsrf(resendEndpoint, { method: "POST" });
 
     setResendLoading(false);
 

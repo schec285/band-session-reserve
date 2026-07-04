@@ -7,6 +7,7 @@ import { DrizzleVerificationTokenRepository } from "@/server/repositories/auth/v
 import { ResendEmailService } from "@/server/services/email/auth/email-service.resend";
 import { parseVerifyCookie, createVerifyCookieValue } from "@/lib/auth/hmac";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 const COOKIE_MAX_AGE = 10 * 60; // 10分（秒）
 
@@ -17,6 +18,9 @@ const COOKIE_MAX_AGE = 10 * 60; // 10分（秒）
  */
 export async function POST(request: Request) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const cookieHeader = request.headers.get("cookie") ?? "";
     const match = cookieHeader.match(/signup_verify_token=([^;]+)/);
     const cookieValue = match?.[1] ?? "";

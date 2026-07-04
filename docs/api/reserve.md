@@ -84,6 +84,10 @@ Content-Type: application/json
 
 > [共通仕様](./shared.md#401-unauthorized--未認証) を参照。
 
+#### 403 Forbidden — CSRFトークン不正
+
+> [共通仕様](./shared.md#403-forbidden--csrfトークン不正) を参照。
+
 #### 404 Not Found — イベント曲が存在しない
 
 ```json
@@ -177,6 +181,10 @@ Content-Type: application/json
 
 > [共通仕様](./shared.md#401-unauthorized--未認証) を参照。
 
+#### 403 Forbidden — CSRFトークン不正
+
+> [共通仕様](./shared.md#403-forbidden--csrfトークン不正) を参照。
+
 #### 403 Forbidden — 他ユーザーの予約を操作しようとした
 
 ```json
@@ -235,6 +243,10 @@ X-CSRF-Token: <csrf_token>
 #### 401 Unauthorized — 未認証
 
 > [共通仕様](./shared.md#401-unauthorized--未認証) を参照。
+
+#### 403 Forbidden — CSRFトークン不正
+
+> [共通仕様](./shared.md#403-forbidden--csrfトークン不正) を参照。
 
 #### 403 Forbidden — 他ユーザーの予約を操作しようとした
 

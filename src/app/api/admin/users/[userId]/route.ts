@@ -4,6 +4,7 @@ import { updateUserRole } from "@/server/services/admin/users";
 import { DrizzleUserRepository } from "@/server/repositories/auth/user-repository.drizzle";
 import { UpdateUserRoleSchema } from "@/lib/types/api/admin/users";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 
 /**
  * admin 権限を確認するヘルパー。
@@ -29,6 +30,9 @@ export async function PATCH(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const { error, userId: currentUserId } = await requireAdmin();
     if (error) return error;
 

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { deleteEventSong, updateEventSongParts } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
 import { withApiHandler } from "@/lib/api/error-handler";
+import { verifyCsrfToken } from "@/lib/api/csrf";
 import { UpdateEventSongPartsSchema } from "@/lib/types/api/admin/songs";
 
 /**
@@ -29,6 +30,9 @@ export async function PATCH(
   { params }: { params: Promise<{ eventSongId: string }> }
 ) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const { error } = await requireAdmin();
     if (error) return error;
 
@@ -60,10 +64,13 @@ export async function PATCH(
  * admin のみアクセス可。
  */
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ eventSongId: string }> }
 ) {
   return withApiHandler(async () => {
+    const csrfError = verifyCsrfToken(request);
+    if (csrfError) return csrfError;
+
     const { error } = await requireAdmin();
     if (error) return error;
 
