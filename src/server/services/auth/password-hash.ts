@@ -1,6 +1,14 @@
 import { hash as argon2Hash, verify as argon2Verify } from "@node-rs/argon2";
-// TODO: 全ユーザーがArgon2idへ移行完了（bcrypt形式のpasswordHashがDBに存在しなくなる）したら、
-// bcryptjs依存とこのimportごと削除できる。
+// TODO: bcrypt移行期コードの削除手順（全ユーザーのpasswordHashがArgon2id形式に
+// 置き換わったこと＝DB上にbcrypt形式（$2a$/$2b$等で始まる）のハッシュが
+// 存在しないことを確認できたら、以下を全て実施する）
+// 1. このimportと下記 verifyPassword() 内のbcrypt分岐を削除する
+// 2. src/server/services/auth/login.ts の needsRehash による上書きブロックを削除する
+// 3. src/tests/services/auth/password-hash.test.ts のbcryptを使うテスト2件を削除する
+// 4. src/tests/services/auth/login.test.ts のbcryptハッシュ移行テスト1件を削除し、
+//    残る2件（bcryptを単なるハッシュ生成の便宜で使っているだけのテスト）は
+//    hashPassword() を使うよう書き換える
+// 5. `npm uninstall bcryptjs` を実行し package.json / package-lock.json から除去する
 import bcrypt from "bcryptjs";
 
 // Algorithm は const enum のため isolatedModules 下でインポートできず、値(2 = Argon2id)を直接指定する

@@ -40,6 +40,7 @@ const makeUser = (overrides: Partial<{
 
 describe("login", () => {
   describe("正常系", () => {
+    // bcrypt移行期のみ必要なテスト。削除手順は password-hash.ts の import 部分のコメントを参照。
     it("bcryptハッシュ（移行期の既存ユーザー）でも有効な認証情報でユーザー情報を返し、Argon2idへ遅延リハッシュする", async () => {
       const userRepo = mockUserRepo();
 
@@ -97,6 +98,7 @@ describe("login", () => {
 
     it("パスワードが不一致の場合 null を返す", async () => {
       const userRepo = mockUserRepo();
+      // bcrypt除去時はhashPassword()に置き換える（migration固有のテストではなく単なるハッシュ生成の便宜利用のため）
       const bcrypt = await import("bcryptjs");
       const hash = await bcrypt.hash(VALID_PASSWORD, 10);
       userRepo.findByEmailForAuth.mockResolvedValue(makeUser({ passwordHash: hash }));
@@ -110,6 +112,7 @@ describe("login", () => {
 
     it("emailVerified が null（未認証）の場合 null を返す", async () => {
       const userRepo = mockUserRepo();
+      // bcrypt除去時はhashPassword()に置き換える（migration固有のテストではなく単なるハッシュ生成の便宜利用のため）
       const bcrypt = await import("bcryptjs");
       const hash = await bcrypt.hash(VALID_PASSWORD, 10);
       userRepo.findByEmailForAuth.mockResolvedValue(makeUser({ passwordHash: hash, emailVerified: null }));

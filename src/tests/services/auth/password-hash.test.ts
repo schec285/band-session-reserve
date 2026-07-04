@@ -25,6 +25,7 @@ describe("verifyPassword", () => {
       expect(result).toEqual({ valid: true, needsRehash: false });
     });
 
+    // bcrypt移行期のみ必要なテスト。削除手順は password-hash.ts の import 部分のコメントを参照。
     it("bcryptハッシュ（移行期の既存ユーザー）に対して正しいパスワードは valid: true, needsRehash: true を返す", async () => {
       const bcryptHash = await bcrypt.hash(PASSWORD, 10);
       const result = await verifyPassword(PASSWORD, bcryptHash);
@@ -39,6 +40,7 @@ describe("verifyPassword", () => {
       expect(result).toEqual({ valid: false, needsRehash: false });
     });
 
+    // bcrypt移行期のみ必要なテスト。削除手順は password-hash.ts の import 部分のコメントを参照。
     it("bcryptハッシュに対して誤ったパスワードは valid: false, needsRehash: false を返す", async () => {
       const bcryptHash = await bcrypt.hash(PASSWORD, 10);
       const result = await verifyPassword("wrongpassword", bcryptHash);

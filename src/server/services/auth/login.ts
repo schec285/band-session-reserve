@@ -32,6 +32,7 @@ export async function login(
   // ↓ ここから移行期のみ必要な処理（旧bcryptハッシュをArgon2idへ上書きする箇所）。
   // 全ユーザーのpasswordHashがArgon2id形式に置き換わったら、
   // needsRehashは常にfalseになるため、このブロックごと削除できる。
+  // 削除手順の全体像は password-hash.ts の import 部分のコメントを参照。
   if (needsRehash) {
     const newHash = await hashPassword(credentials.password);
     await userRepo.updatePassword(user.id, newHash);
