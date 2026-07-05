@@ -57,3 +57,18 @@ export function formatTime(iso: string): string {
 export function formatDatetime(iso: string): string {
   return `${formatDate(iso)} ${formatTime(iso)}`;
 }
+
+/**
+ * 開始・終了日時を JST で範囲表示用にフォーマットする。
+ * 同じ日付内: 「YYYY年M月D日 HH:mm〜HH:mm」
+ * 日付をまたぐ場合: 「YYYY年M月D日 HH:mm〜YYYY年M月D日 HH:mm」
+ */
+export function formatDateRange(startAt: string, endAt: string): string {
+  const startDate = formatDate(startAt);
+  const endDate = formatDate(endAt);
+  const startTime = formatTime(startAt);
+  const endTime = formatTime(endAt);
+  return startDate === endDate
+    ? `${startDate} ${startTime}〜${endTime}`
+    : `${startDate} ${startTime}〜${endDate} ${endTime}`;
+}

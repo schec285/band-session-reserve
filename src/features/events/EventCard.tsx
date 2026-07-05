@@ -1,7 +1,7 @@
-import { AlarmClock, Calendar, Clock, MapPin, Ticket } from "lucide-react";
+import { AlarmClock, Calendar, MapPin, Ticket } from "lucide-react";
 import type { Event } from "@/lib/types/domain/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
-import { formatDate, formatDatetime, formatTime } from "@/lib/utils/date";
+import { formatDateRange, formatDatetime } from "@/lib/utils/date";
 
 /**
  * イベント 1 件のカード表示。
@@ -31,11 +31,7 @@ export function EventCard({ event }: { event: Event }) {
           <div className="space-y-1.5 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 shrink-0" />
-              <span>{formatDate(event.startAt)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 shrink-0" />
-              <span>{formatTime(event.startAt)}〜{formatTime(event.endAt)}</span>
+              <span>{formatDateRange(event.startAt, event.endAt)}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 shrink-0" />

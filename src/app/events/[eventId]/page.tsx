@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { AlarmClock, Calendar, Clock, MapPin, Ticket } from "lucide-react";
+import { AlarmClock, Calendar, MapPin, Ticket } from "lucide-react";
 import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
 import { MapEmbed } from "@/features/events/MapEmbed";
-import { formatDate, formatDatetime, formatTime } from "@/lib/utils/date";
+import { formatDateRange, formatDatetime } from "@/lib/utils/date";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
 /**
@@ -51,11 +51,7 @@ export default async function EventDetailPage({
         <div className="px-6 py-4 space-y-3 text-sm">
           <div className="flex items-center gap-3 text-muted-foreground">
             <Calendar className="w-4 h-4 shrink-0" />
-            <span className="font-medium text-foreground">{formatDate(event.startAt)}</span>
-          </div>
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <Clock className="w-4 h-4 shrink-0" />
-            <span className="font-medium text-foreground">{formatTime(event.startAt)}〜{formatTime(event.endAt)}</span>
+            <span className="font-medium text-foreground">{formatDateRange(event.startAt, event.endAt)}</span>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
             <MapPin className="w-4 h-4 shrink-0" />
