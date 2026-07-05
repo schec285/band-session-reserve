@@ -1,4 +1,12 @@
-import { toJST, toDatetimeLocal, formatDate, formatTime, formatDatetime } from "@/lib/utils/date";
+import {
+  toJST,
+  toDatetimeLocal,
+  formatDate,
+  formatTime,
+  formatDatetime,
+  formatDateRange,
+  calcRemainingDays,
+} from "@/lib/utils/date";
 
 // UTC 2026-04-12T06:00:00Z = JST 2026-04-12T15:00:00+09:00
 const UTC_6AM = new Date("2026-04-12T06:00:00.000Z");
@@ -102,5 +110,59 @@ describe("formatDatetime", () => {
 
   it("UTC Z 付き ISO 文字列を JST で正しく表示する", () => {
     expect(formatDatetime(UTC_6AM.toISOString())).toBe("2026年4月12日 15:00");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// formatDateRange
+// ---------------------------------------------------------------------------
+
+describe("formatDateRange", () => {
+  it("同じ日付内の場合は「YYYY年M月D日 HH:mm 〜 HH:mm」形式にする", () => {
+    expect(formatDateRange("2026-04-12T15:00:00+09:00", "2026-04-12T18:00:00+09:00")).toBe(
+      "2026年4月12日 15:00 〜 18:00"
+    );
+  });
+
+  it("日付が異なる場合は「YYYY年M月D日 HH:mm 〜 YYYY年M月D日 HH:mm」形式にする", () => {
+    expect(formatDateRange("2026-04-12T23:00:00+09:00", "2026-04-13T01:00:00+09:00")).toBe(
+      "2026年4月12日 23:00 〜 2026年4月13日 01:00"
+    );
+  });
+
+  it("UTC の ISO 文字列でも JST に変換した上で日付をまたぐか判定する", () => {
+    // startAt: UTC 2026-04-12T15:30:00Z = JST 2026-04-13T00:30:00
+    // endAt:   UTC 2026-04-12T16:00:00Z = JST 2026-04-13T01:00:00（同じ JST 日付）
+    expect(
+      formatDateRange("2026-04-12T15:30:00.000Z", "2026-04-12T16:00:00.000Z")
+    ).toBe("2026年4月13日 00:30 〜 01:00");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// calcRemainingDays
+// ---------------------------------------------------------------------------
+
+describe("calcRemainingDays", () => {
+  it("締切と現在時刻が同じ JST の日付の場合は 0 を返す", () => {
+    const now = new Date("2026-04-12T01:00:00+09:00");
+    expect(calcRemainingDays("2026-04-12T23:00:00+09:00", now)).toBe(0);
+  });
+
+  it("締切が JST で 3 日後の場合は 3 を返す（時刻は問わない）", () => {
+    const now = new Date("2026-04-12T23:00:00+09:00");
+    expect(calcRemainingDays("2026-04-15T00:00:00+09:00", now)).toBe(3);
+  });
+
+  it("締切が過去の場合は null を返す", () => {
+    const now = new Date("2026-04-12T10:00:00+09:00");
+    expect(calcRemainingDays("2026-04-10T23:00:00+09:00", now)).toBeNull();
+  });
+
+  it("UTC の ISO 文字列でも JST の暦日に変換してから計算する", () => {
+    // now: UTC 2026-04-12T15:00:00Z = JST 2026-04-13T00:00:00
+    // closedAt: UTC 2026-04-12T16:00:00Z = JST 2026-04-13T01:00:00（同じ JST 日付なので 0）
+    const now = new Date("2026-04-12T15:00:00.000Z");
+    expect(calcRemainingDays("2026-04-12T16:00:00.000Z", now)).toBe(0);
   });
 });

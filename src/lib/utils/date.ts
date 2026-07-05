@@ -30,9 +30,19 @@ function getJSTParts(date: Date): Record<string, string> {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    // hour12: false だけでは ICU の実装によって 0 時が "24" と表示されることがあるため、
+    // hourCycle を明示して 0〜23 時表記に固定する。
+    hourCycle: "h23",
   });
   return Object.fromEntries(formatter.formatToParts(date).map((p) => [p.type, p.value]));
+}
+
+/**
+ * ISO 8601 文字列の JST 暦日の 0 時（UTC ミリ秒）を返す。
+ */
+function startOfJSTDay(iso: string): number {
+  const p = getJSTParts(new Date(iso));
+  return Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day));
 }
 
 /**
@@ -56,4 +66,29 @@ export function formatTime(iso: string): string {
  */
 export function formatDatetime(iso: string): string {
   return `${formatDate(iso)} ${formatTime(iso)}`;
+}
+
+/**
+ * 開始・終了日時を JST で範囲表示用にフォーマットする。
+ * 同じ日付内: 「YYYY年M月D日 HH:mm 〜 HH:mm」
+ * 日付をまたぐ場合: 「YYYY年M月D日 HH:mm 〜 YYYY年M月D日 HH:mm」
+ */
+export function formatDateRange(startAt: string, endAt: string): string {
+  const startDate = formatDate(startAt);
+  const endDate = formatDate(endAt);
+  const startTime = formatTime(startAt);
+  const endTime = formatTime(endAt);
+  return startDate === endDate
+    ? `${startDate} ${startTime} 〜 ${endTime}`
+    : `${startDate} ${startTime} 〜 ${endDate} ${endTime}`;
+}
+
+/**
+ * 締切日時までの残り日数を JST の暦日ベースで計算する。
+ * 締切が今日より前の場合は null を返す。
+ */
+export function calcRemainingDays(closedAt: string, now: Date = new Date()): number | null {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const diff = Math.round((startOfJSTDay(closedAt) - startOfJSTDay(now.toISOString())) / ONE_DAY_MS);
+  return diff >= 0 ? diff : null;
 }

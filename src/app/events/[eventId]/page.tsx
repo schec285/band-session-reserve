@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { Calendar, Clock, MapPin, Ticket } from "lucide-react";
+import { AlarmClock, Calendar, MapPin, Ticket } from "lucide-react";
 import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
 import { MapEmbed } from "@/features/events/MapEmbed";
-import { formatDate, formatTime } from "@/lib/utils/date";
+import { calcRemainingDays, formatDateRange, formatDatetime } from "@/lib/utils/date";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
 /**
@@ -25,6 +25,7 @@ export default async function EventDetailPage({
 
   const { event, songs } = result;
   const status = getEventStatus(event);
+  const remainingDays = event.closedAt ? calcRemainingDays(event.closedAt) : null;
 
   const now = new Date();
   const isEntryClosed =
@@ -42,30 +43,35 @@ export default async function EventDetailPage({
         {/* ヘッダー帯 */}
         <div className={`px-6 py-4 ${status === "upcoming" ? "bg-blue-50 border-b border-blue-100" : "bg-muted/40 border-b border-border"}`}>
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
-            <EventStatusBadge status={status} />
+            <h1 className="text-2xl font-bold leading-snug">{event.title}</h1>
+            <EventStatusBadge status={status} className="text-sm px-3 py-1" />
           </div>
         </div>
 
         {/* 詳細情報 */}
-        <div className="px-6 py-4 space-y-3 text-sm">
+        <div className="px-6 py-4 space-y-3 text-base">
           <div className="flex items-center gap-3 text-muted-foreground">
-            <Calendar className="w-4 h-4 shrink-0" />
-            <span className="font-medium text-foreground">{formatDate(event.startAt)}</span>
+            <Calendar className="w-5 h-5 shrink-0" />
+            <span className="font-medium text-foreground">{formatDateRange(event.startAt, event.endAt)}</span>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
-            <Clock className="w-4 h-4 shrink-0" />
-            <span className="font-medium text-foreground">{formatTime(event.startAt)}〜{formatTime(event.endAt)}</span>
-          </div>
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <MapPin className="w-4 h-4 shrink-0" />
+            <MapPin className="w-5 h-5 shrink-0" />
             <span className="font-medium text-foreground">{event.venue}</span>
           </div>
           <MapEmbed mapEmbedUrl={event.mapEmbedUrl} />
           <div className="flex items-center gap-3 text-muted-foreground">
-            <Ticket className="w-4 h-4 shrink-0" />
+            <Ticket className="w-5 h-5 shrink-0" />
             <span className="font-medium text-foreground">参加費 {event.participationFee.toLocaleString()}円</span>
           </div>
+          {event.closedAt && (
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <AlarmClock className="w-5 h-5 shrink-0" />
+              <span className="font-medium text-foreground">
+                受付締切 {formatDatetime(event.closedAt)}
+                {remainingDays !== null && `（残り${remainingDays}日）`}
+              </span>
+            </div>
+          )}
           {event.description && (
             <p className="pt-2 text-muted-foreground border-t border-border leading-relaxed">
               {event.description}
