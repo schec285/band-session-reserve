@@ -30,7 +30,9 @@ function getJSTParts(date: Date): Record<string, string> {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    // hour12: false だけでは ICU の実装によって 0 時が "24" と表示されることがあるため、
+    // hourCycle を明示して 0〜23 時表記に固定する。
+    hourCycle: "h23",
   });
   return Object.fromEntries(formatter.formatToParts(date).map((p) => [p.type, p.value]));
 }
