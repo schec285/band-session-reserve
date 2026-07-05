@@ -42,29 +42,29 @@ export default async function EventDetailPage({
         {/* ヘッダー帯 */}
         <div className={`px-6 py-4 ${status === "upcoming" ? "bg-blue-50 border-b border-blue-100" : "bg-muted/40 border-b border-border"}`}>
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl font-bold leading-snug">{event.title}</h1>
-            <EventStatusBadge status={status} />
+            <h1 className="text-2xl font-bold leading-snug">{event.title}</h1>
+            <EventStatusBadge status={status} className="text-sm px-3 py-1" />
           </div>
         </div>
 
         {/* 詳細情報 */}
-        <div className="px-6 py-4 space-y-3 text-sm">
+        <div className="px-6 py-4 space-y-3 text-base">
           <div className="flex items-center gap-3 text-muted-foreground">
-            <Calendar className="w-4 h-4 shrink-0" />
+            <Calendar className="w-5 h-5 shrink-0" />
             <span className="font-medium text-foreground">{formatDateRange(event.startAt, event.endAt)}</span>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
-            <MapPin className="w-4 h-4 shrink-0" />
+            <MapPin className="w-5 h-5 shrink-0" />
             <span className="font-medium text-foreground">{event.venue}</span>
           </div>
           <MapEmbed mapEmbedUrl={event.mapEmbedUrl} />
           <div className="flex items-center gap-3 text-muted-foreground">
-            <Ticket className="w-4 h-4 shrink-0" />
+            <Ticket className="w-5 h-5 shrink-0" />
             <span className="font-medium text-foreground">参加費 {event.participationFee.toLocaleString()}円</span>
           </div>
           {event.closedAt && (
             <div className="flex items-center gap-3 text-muted-foreground">
-              <AlarmClock className="w-4 h-4 shrink-0" />
+              <AlarmClock className="w-5 h-5 shrink-0" />
               <span className="font-medium text-foreground">受付締切 {formatDatetime(event.closedAt)}</span>
             </div>
           )}

@@ -21,7 +21,7 @@ export function EventCard({ event }: { event: Event }) {
         <div className="pl-5 pr-4 py-4">
           {/* タイトル行 + バッジ */}
           <div className="flex items-start justify-between gap-3 mb-3">
-            <h3 className="font-semibold text-lg leading-snug group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-xl leading-snug group-hover:text-primary transition-colors">
               {event.title}
             </h3>
             <EventStatusBadge status={status} className="text-sm px-3 py-1" />
