@@ -25,10 +25,10 @@ npm install
 
 ### 2. 環境変数の設定
 
-`.env.local.example` をコピーして `.env.local` を作成し、各値を設定してください。
+`.env.example` をコピーして `.env` を作成し、各値を設定してください。
 
 ```bash
-cp .env.local.example .env.local
+cp .env.example .env
 ```
 
 `HMAC_SECRET` は以下のコマンドで生成できます。
@@ -47,7 +47,7 @@ docker compose up -d
 
 #### ローカルの PostgreSQL を使う場合
 
-ローカルに PostgreSQL をインストール済みであれば、`.env.local` の `DATABASE_URL` を接続先に合わせて変更してください。
+ローカルに PostgreSQL をインストール済みであれば、`.env` の `DATABASE_URL` を接続先に合わせて変更してください。
 
 ### 4. マイグレーションの実行
 
