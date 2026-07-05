@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { Calendar, Clock, MapPin, Ticket } from "lucide-react";
+import { AlarmClock, Calendar, Clock, MapPin, Ticket } from "lucide-react";
 import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
 import { MapEmbed } from "@/features/events/MapEmbed";
-import { formatDate, formatTime } from "@/lib/utils/date";
+import { formatDate, formatDatetime, formatTime } from "@/lib/utils/date";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
 /**
@@ -66,6 +66,12 @@ export default async function EventDetailPage({
             <Ticket className="w-4 h-4 shrink-0" />
             <span className="font-medium text-foreground">参加費 {event.participationFee.toLocaleString()}円</span>
           </div>
+          {event.closedAt && (
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <AlarmClock className="w-4 h-4 shrink-0" />
+              <span className="font-medium text-foreground">受付締切 {formatDatetime(event.closedAt)}</span>
+            </div>
+          )}
           {event.description && (
             <p className="pt-2 text-muted-foreground border-t border-border leading-relaxed">
               {event.description}

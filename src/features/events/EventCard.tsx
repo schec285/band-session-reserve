@@ -1,11 +1,12 @@
-import { Calendar, Clock, MapPin, Ticket } from "lucide-react";
+import { AlarmClock, Calendar, Clock, MapPin, Ticket } from "lucide-react";
 import type { Event } from "@/lib/types/domain/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
-import { formatDate, formatTime } from "@/lib/utils/date";
+import { formatDate, formatDatetime, formatTime } from "@/lib/utils/date";
 
 /**
  * イベント 1 件のカード表示。
  * 日付・時刻・会場をアイコン付きで表示し、ステータスバッジを右上に配置する。
+ * 受付締切日時が設定されている場合のみ締切行を表示する。
  */
 export function EventCard({ event }: { event: Event }) {
   const status = getEventStatus(event);
@@ -44,6 +45,12 @@ export function EventCard({ event }: { event: Event }) {
               <Ticket className="w-3.5 h-3.5 shrink-0" />
               <span>参加費 {event.participationFee.toLocaleString()}円</span>
             </div>
+            {event.closedAt && (
+              <div className="flex items-center gap-2">
+                <AlarmClock className="w-3.5 h-3.5 shrink-0" />
+                <span>受付締切 {formatDatetime(event.closedAt)}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
