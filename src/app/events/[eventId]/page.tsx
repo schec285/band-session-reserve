@@ -5,7 +5,7 @@ import { getEventSongs } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { SongList } from "@/features/events/SongList";
 import { MapEmbed } from "@/features/events/MapEmbed";
-import { formatDateRange, formatDatetime } from "@/lib/utils/date";
+import { calcRemainingDays, formatDateRange, formatDatetime } from "@/lib/utils/date";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 
 /**
@@ -25,6 +25,7 @@ export default async function EventDetailPage({
 
   const { event, songs } = result;
   const status = getEventStatus(event);
+  const remainingDays = event.closedAt ? calcRemainingDays(event.closedAt) : null;
 
   const now = new Date();
   const isEntryClosed =
@@ -65,7 +66,10 @@ export default async function EventDetailPage({
           {event.closedAt && (
             <div className="flex items-center gap-3 text-muted-foreground">
               <AlarmClock className="w-5 h-5 shrink-0" />
-              <span className="font-medium text-foreground">受付締切 {formatDatetime(event.closedAt)}</span>
+              <span className="font-medium text-foreground">
+                受付締切 {formatDatetime(event.closedAt)}
+                {remainingDays !== null && `（残り${remainingDays}日）`}
+              </span>
             </div>
           )}
           {event.description && (

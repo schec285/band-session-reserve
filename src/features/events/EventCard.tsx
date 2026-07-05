@@ -1,16 +1,17 @@
 import { AlarmClock, Calendar, MapPin, Ticket } from "lucide-react";
 import type { Event } from "@/lib/types/domain/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
-import { formatDateRange, formatDatetime } from "@/lib/utils/date";
+import { calcRemainingDays, formatDateRange, formatDatetime } from "@/lib/utils/date";
 
 /**
  * イベント 1 件のカード表示。
  * 日付・時刻・会場をアイコン付きで表示し、ステータスバッジを右上に配置する。
- * 受付締切日時が設定されている場合のみ締切行を表示する。
+ * 受付締切日時が設定されている場合のみ締切行を表示し、末尾に残り日数を添える。
  */
 export function EventCard({ event }: { event: Event }) {
   const status = getEventStatus(event);
   const isUpcoming = status === "upcoming" || status === "ongoing";
+  const remainingDays = event.closedAt ? calcRemainingDays(event.closedAt) : null;
 
   return (
     <a href={`/events/${event.id}`} className="block group">
@@ -44,7 +45,10 @@ export function EventCard({ event }: { event: Event }) {
             {event.closedAt && (
               <div className="flex items-center gap-2">
                 <AlarmClock className="w-4 h-4 shrink-0" />
-                <span>受付締切 {formatDatetime(event.closedAt)}</span>
+                <span>
+                  受付締切 {formatDatetime(event.closedAt)}
+                  {remainingDays !== null && `（残り${remainingDays}日）`}
+                </span>
               </div>
             )}
           </div>

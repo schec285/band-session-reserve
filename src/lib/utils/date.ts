@@ -36,6 +36,14 @@ function getJSTParts(date: Date): Record<string, string> {
 }
 
 /**
+ * ISO 8601 文字列の JST 暦日の 0 時（UTC ミリ秒）を返す。
+ */
+function startOfJSTDay(iso: string): number {
+  const p = getJSTParts(new Date(iso));
+  return Date.UTC(Number(p.year), Number(p.month) - 1, Number(p.day));
+}
+
+/**
  * ISO 8601 文字列を JST で「YYYY年M月D日」形式にフォーマットする。
  */
 export function formatDate(iso: string): string {
@@ -71,4 +79,14 @@ export function formatDateRange(startAt: string, endAt: string): string {
   return startDate === endDate
     ? `${startDate} ${startTime} 〜 ${endTime}`
     : `${startDate} ${startTime} 〜 ${endDate} ${endTime}`;
+}
+
+/**
+ * 締切日時までの残り日数を JST の暦日ベースで計算する。
+ * 締切が今日より前の場合は null を返す。
+ */
+export function calcRemainingDays(closedAt: string, now: Date = new Date()): number | null {
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const diff = Math.round((startOfJSTDay(closedAt) - startOfJSTDay(now.toISOString())) / ONE_DAY_MS);
+  return diff >= 0 ? diff : null;
 }
