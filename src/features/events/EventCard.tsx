@@ -21,29 +21,29 @@ export function EventCard({ event }: { event: Event }) {
         <div className="pl-5 pr-4 py-4">
           {/* タイトル行 + バッジ */}
           <div className="flex items-start justify-between gap-3 mb-3">
-            <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-lg leading-snug group-hover:text-primary transition-colors">
               {event.title}
             </h3>
-            <EventStatusBadge status={status} />
+            <EventStatusBadge status={status} className="text-sm px-3 py-1" />
           </div>
 
           {/* メタ情報 */}
-          <div className="space-y-1.5 text-sm text-muted-foreground">
+          <div className="space-y-2 text-base text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
+              <Calendar className="w-4 h-4 shrink-0" />
               <span>{formatDateRange(event.startAt, event.endAt)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <MapPin className="w-4 h-4 shrink-0" />
               <span>{event.venue}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Ticket className="w-3.5 h-3.5 shrink-0" />
+              <Ticket className="w-4 h-4 shrink-0" />
               <span>参加費 {event.participationFee.toLocaleString()}円</span>
             </div>
             {event.closedAt && (
               <div className="flex items-center gap-2">
-                <AlarmClock className="w-3.5 h-3.5 shrink-0" />
+                <AlarmClock className="w-4 h-4 shrink-0" />
                 <span>受付締切 {formatDatetime(event.closedAt)}</span>
               </div>
             )}
