@@ -13,6 +13,10 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   create: vi.fn(),
   update: vi.fn(),
   setEmailVerified: vi.fn(),
+  updateLastLogin: vi.fn(),
+  updatePassword: vi.fn(),
+  getProfile: vi.fn(),
+  updateProfile: vi.fn(),
   findAll: vi.fn(),
   updateRole: vi.fn(),
 });
@@ -29,6 +33,7 @@ const mockTokenRepo = (): Mocked<IVerificationTokenRepository> => ({
 const mockEmailService = (): Mocked<IEmailService> => ({
   sendVerificationEmail: vi.fn(),
   sendWelcomeEmail: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
   sendPasswordChangedEmail: vi.fn(),
 });
 

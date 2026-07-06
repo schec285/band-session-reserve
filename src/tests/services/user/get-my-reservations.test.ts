@@ -39,6 +39,7 @@ beforeEach(() => {
     deleteById: vi.fn(),
     createMany: vi.fn(),
     findUpcomingByUserId: vi.fn(),
+    takeoverReservation: vi.fn(),
   };
 });
 

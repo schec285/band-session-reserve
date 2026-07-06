@@ -190,9 +190,9 @@ describe("getEventSongs", () => {
       title: "千本桜",
       artist: "黒うさP",
       reservations: [
-        { part: "readGuitar",    username: "yamada_taro", userId: currentUserId, reservationId: "reservation-uuid-1" },
-        { part: "backingGuitar", username: null,          userId: null,          reservationId: null },
-        { part: "drums",         username: "sato_hanako", userId: otherUserId,   reservationId: "reservation-uuid-2" },
+        { part: "readGuitar",    username: "yamada_taro", userId: currentUserId, reservationId: "reservation-uuid-1", isTransferable: false },
+        { part: "backingGuitar", username: null,          userId: null,          reservationId: null,                 isTransferable: false },
+        { part: "drums",         username: "sato_hanako", userId: otherUserId,   reservationId: "reservation-uuid-2", isTransferable: false },
       ],
     },
   ];

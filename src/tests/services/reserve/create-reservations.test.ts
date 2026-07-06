@@ -32,6 +32,7 @@ let mockRepo: Mocked<IReservationRepository>;
 beforeEach(() => {
   mockRepo = {
     findEventSongWithEvent: vi.fn(),
+    findUpcomingByUserId: vi.fn(),
     countByUserIdAndEventIdAndParts: vi.fn(),
     findByEventSongIdAndPart: vi.fn(),
     findByUserIdAndEventSongId: vi.fn(),
@@ -152,7 +153,7 @@ describe("createReservations", () => {
 
       const result = await createReservations(mockRepo, {
         ...baseParams,
-        entries: [{ eventSongId: "event-song-uuid-1", part: "backingGuitar" }],
+        entries: [{ eventSongId: "event-song-uuid-1", part: "backingGuitar", isTransferable: false }],
       });
 
       expect(result).toEqual({ status: "forbidden-combination" });
@@ -171,7 +172,7 @@ describe("createReservations", () => {
         ...baseParams,
         entries: [
           entry2,
-          { eventSongId: "event-song-uuid-1", part: "backingGuitar" },
+          { eventSongId: "event-song-uuid-1", part: "backingGuitar", isTransferable: false },
         ],
       });
 
@@ -189,7 +190,7 @@ describe("createReservations", () => {
 
       const result = await createReservations(mockRepo, {
         ...baseParams,
-        entries: [{ eventSongId: "event-song-uuid-2", part: "backingGuitar" }],
+        entries: [{ eventSongId: "event-song-uuid-2", part: "backingGuitar", isTransferable: false }],
       });
 
       expect(result).toEqual({ status: "ok" });

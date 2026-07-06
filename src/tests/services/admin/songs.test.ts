@@ -1,6 +1,7 @@
 import type { Mocked } from "vitest";
 import { createSong, addEventSong, deleteEventSong, getAllSongs } from "@/server/services/admin/songs";
 import type { ISongRepository } from "@/server/repositories/songs/song-repository";
+import type { Part } from "@drizzle/schema/enums";
 
 const mockSongRecord = {
   id: "song-uuid-1",
@@ -13,7 +14,7 @@ const mockEventSongRecord = {
   songId: "song-uuid-1",
   title: "千本桜",
   artist: "黒うさP",
-  parts: ["vocal", "drums"] as const,
+  parts: ["vocal", "drums"] as Part[],
 };
 
 let mockRepo: Mocked<ISongRepository>;
@@ -25,6 +26,7 @@ beforeEach(() => {
     createSong: vi.fn(),
     addEventSong: vi.fn(),
     deleteEventSong: vi.fn(),
+    updateEventSongParts: vi.fn(),
   };
 });
 

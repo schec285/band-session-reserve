@@ -16,7 +16,7 @@ const existingReservation = {
 const openEventSong = {
   id: "event-song-uuid",
   parts: ["vocal", "drums"],
-  event: { startAt: future, closedAt: null },
+  event: { id: "event-uuid", startAt: future, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: null },
 };
 
 const params = {
@@ -29,11 +29,15 @@ let mockRepo: Mocked<IReservationRepository>;
 beforeEach(() => {
   mockRepo = {
     findEventSongWithEvent: vi.fn(),
+    findUpcomingByUserId: vi.fn(),
+    countByUserIdAndEventIdAndParts: vi.fn(),
     findByEventSongIdAndPart: vi.fn(),
+    findByUserIdAndEventSongId: vi.fn(),
     findById: vi.fn(),
-    updatePart: vi.fn(),
-    create: vi.fn(),
+    updateTransferable: vi.fn(),
     deleteById: vi.fn(),
+    takeoverReservation: vi.fn(),
+    createMany: vi.fn(),
   };
   mockRepo.findById.mockResolvedValue(existingReservation);
   mockRepo.findEventSongWithEvent.mockResolvedValue(openEventSong);
@@ -65,7 +69,7 @@ describe("cancelReservation", () => {
   it("closed: startAt が過去（closedAt が null）", async () => {
     mockRepo.findEventSongWithEvent.mockResolvedValue({
       ...openEventSong,
-      event: { startAt: past, closedAt: null },
+      event: { id: "event-uuid", startAt: past, closedAt: null, vocalEntryLimit: null, instrumentEntryLimit: null },
     });
 
     const result = await cancelReservation(mockRepo, params);
@@ -75,7 +79,7 @@ describe("cancelReservation", () => {
   it("closed: closedAt が過去", async () => {
     mockRepo.findEventSongWithEvent.mockResolvedValue({
       ...openEventSong,
-      event: { startAt: future, closedAt: past },
+      event: { id: "event-uuid", startAt: future, closedAt: past, vocalEntryLimit: null, instrumentEntryLimit: null },
     });
 
     const result = await cancelReservation(mockRepo, params);
