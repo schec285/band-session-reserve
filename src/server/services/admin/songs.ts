@@ -1,16 +1,19 @@
 import type { ISongRepository } from "@/server/repositories/songs/song-repository";
-import type { AdminSongResponse, AdminEventSongResponse, CreateSongInput, AddEventSongInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
+import type { AdminSongResponse, AdminEventSongResponse, CreateSongInput, AddEventSongsInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
 import type { Part } from "@drizzle/schema/enums";
 
 type CreateSongResult =
   | { status: "ok"; song: AdminSongResponse }
 
-type AddEventSongResult =
-  | { status: "ok"; eventSong: AdminEventSongResponse }
+type AddEventSongsResult =
+  | { status: "ok"; eventSongs: AdminEventSongResponse[] }
+  | { status: "duplicate"; duplicateSongIds: string[] };
 
 type DeleteEventSongResult =
   | { status: "ok" }
   | { status: "not-found" };
+
+type DeleteEventSongsResult = { status: "ok"; deletedEventSongIds: string[] };
 
 type UpdateEventSongPartsResult =
   | { status: "ok"; eventSongId: string; parts: Part[] }
@@ -35,20 +38,29 @@ export async function createSong(
 }
 
 /**
- * イベントに曲を追加する。
+ * イベントに複数の曲を一括追加する。
  * eventId は URL パラメータから、input はリクエストボディから取得する。
+ * 既にイベントに登録済みの songId が含まれる場合は追加を行わず duplicate を返す。
  */
-export async function addEventSong(
+export async function addEventSongs(
   repo: ISongRepository,
   eventId: string,
-  input: AddEventSongInput
-): Promise<AddEventSongResult> {
-  const record = await repo.addEventSong({
+  input: AddEventSongsInput
+): Promise<AddEventSongsResult> {
+  const existingSongIds = await repo.findSongIdsByEventId(eventId);
+  const duplicateSongIds = input.songs
+    .map((song) => song.songId)
+    .filter((songId) => existingSongIds.includes(songId));
+
+  if (duplicateSongIds.length > 0) {
+    return { status: "duplicate", duplicateSongIds };
+  }
+
+  const records = await repo.addEventSongs({
     eventId,
-    songId: input.songId,
-    parts: input.parts as Part[],
+    songs: input.songs.map((song) => ({ songId: song.songId, parts: song.parts as Part[] })),
   });
-  return { status: "ok", eventSong: record };
+  return { status: "ok", eventSongs: records };
 }
 
 /**
@@ -74,4 +86,17 @@ export async function deleteEventSong(
   const deleted = await repo.deleteEventSong(eventSongId);
   if (!deleted) return { status: "not-found" };
   return { status: "ok" };
+}
+
+/**
+ * イベントから複数の曲をまとめて削除する。
+ * eventId に属さない eventSongId は無視される。
+ */
+export async function deleteEventSongs(
+  repo: ISongRepository,
+  eventId: string,
+  eventSongIds: string[]
+): Promise<DeleteEventSongsResult> {
+  const deletedEventSongIds = await repo.deleteEventSongs(eventId, eventSongIds);
+  return { status: "ok", deletedEventSongIds };
 }

@@ -1,5 +1,11 @@
 import type { Mocked } from "vitest";
-import { createSong, addEventSong, deleteEventSong, getAllSongs } from "@/server/services/admin/songs";
+import {
+  createSong,
+  addEventSongs,
+  deleteEventSong,
+  deleteEventSongs,
+  getAllSongs,
+} from "@/server/services/admin/songs";
 import type { ISongRepository } from "@/server/repositories/songs/song-repository";
 import type { Part } from "@drizzle/schema/enums";
 
@@ -24,8 +30,10 @@ beforeEach(() => {
     findAllSongs: vi.fn(),
     findSongById: vi.fn(),
     createSong: vi.fn(),
-    addEventSong: vi.fn(),
+    findSongIdsByEventId: vi.fn(),
+    addEventSongs: vi.fn(),
     deleteEventSong: vi.fn(),
+    deleteEventSongs: vi.fn(),
     updateEventSongParts: vi.fn(),
   };
 });
@@ -85,37 +93,50 @@ describe("createSong", () => {
 });
 
 // ---------------------------------------------------------------------------
-// addEventSong
+// addEventSongs
 // ---------------------------------------------------------------------------
 
-describe("addEventSong", () => {
-  it("ok: イベントに追加した曲を返す", async () => {
-    mockRepo.addEventSong.mockResolvedValue(mockEventSongRecord);
+describe("addEventSongs", () => {
+  it("ok: イベントに追加した曲一覧を返す", async () => {
+    mockRepo.findSongIdsByEventId.mockResolvedValue([]);
+    mockRepo.addEventSongs.mockResolvedValue([mockEventSongRecord]);
 
-    const result = await addEventSong(mockRepo, "event-uuid-1", {
-      songId: "song-uuid-1",
-      parts: ["vocal", "drums"],
+    const result = await addEventSongs(mockRepo, "event-uuid-1", {
+      songs: [{ songId: "song-uuid-1", parts: ["vocal", "drums"] }],
     });
 
     expect(result.status).toBe("ok");
     if (result.status !== "ok") return;
-    expect(result.eventSong.eventSongId).toBe("event-song-uuid-1");
-    expect(result.eventSong.parts).toEqual(["vocal", "drums"]);
+    expect(result.eventSongs).toHaveLength(1);
+    expect(result.eventSongs[0].eventSongId).toBe("event-song-uuid-1");
+    expect(result.eventSongs[0].parts).toEqual(["vocal", "drums"]);
   });
 
   it("リポジトリに正しい入力を渡す", async () => {
-    mockRepo.addEventSong.mockResolvedValue(mockEventSongRecord);
+    mockRepo.findSongIdsByEventId.mockResolvedValue([]);
+    mockRepo.addEventSongs.mockResolvedValue([mockEventSongRecord]);
 
-    await addEventSong(mockRepo, "event-uuid-1", {
-      songId: "song-uuid-1",
-      parts: ["vocal", "drums"],
+    await addEventSongs(mockRepo, "event-uuid-1", {
+      songs: [{ songId: "song-uuid-1", parts: ["vocal", "drums"] }],
     });
 
-    expect(mockRepo.addEventSong).toHaveBeenCalledWith({
+    expect(mockRepo.addEventSongs).toHaveBeenCalledWith({
       eventId: "event-uuid-1",
-      songId: "song-uuid-1",
-      parts: ["vocal", "drums"],
+      songs: [{ songId: "song-uuid-1", parts: ["vocal", "drums"] }],
     });
+  });
+
+  it("duplicate: 既に登録済みの songId が含まれる場合は追加せず duplicate を返す", async () => {
+    mockRepo.findSongIdsByEventId.mockResolvedValue(["song-uuid-1"]);
+
+    const result = await addEventSongs(mockRepo, "event-uuid-1", {
+      songs: [{ songId: "song-uuid-1", parts: ["vocal"] }],
+    });
+
+    expect(result.status).toBe("duplicate");
+    if (result.status !== "duplicate") return;
+    expect(result.duplicateSongIds).toEqual(["song-uuid-1"]);
+    expect(mockRepo.addEventSongs).not.toHaveBeenCalled();
   });
 });
 
@@ -139,5 +160,39 @@ describe("deleteEventSong", () => {
     const result = await deleteEventSong(mockRepo, "nonexistent-uuid");
 
     expect(result.status).toBe("not-found");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteEventSongs
+// ---------------------------------------------------------------------------
+
+describe("deleteEventSongs", () => {
+  it("ok: 削除できた eventSongId 一覧を返す", async () => {
+    mockRepo.deleteEventSongs.mockResolvedValue(["event-song-uuid-1", "event-song-uuid-2"]);
+
+    const result = await deleteEventSongs(mockRepo, "event-uuid-1", [
+      "event-song-uuid-1",
+      "event-song-uuid-2",
+    ]);
+
+    expect(result.status).toBe("ok");
+    expect(result.deletedEventSongIds).toEqual(["event-song-uuid-1", "event-song-uuid-2"]);
+    expect(mockRepo.deleteEventSongs).toHaveBeenCalledWith("event-uuid-1", [
+      "event-song-uuid-1",
+      "event-song-uuid-2",
+    ]);
+  });
+
+  it("一部が存在しない場合も、削除できた分だけを返す", async () => {
+    mockRepo.deleteEventSongs.mockResolvedValue(["event-song-uuid-1"]);
+
+    const result = await deleteEventSongs(mockRepo, "event-uuid-1", [
+      "event-song-uuid-1",
+      "nonexistent-uuid",
+    ]);
+
+    expect(result.status).toBe("ok");
+    expect(result.deletedEventSongIds).toEqual(["event-song-uuid-1"]);
   });
 });

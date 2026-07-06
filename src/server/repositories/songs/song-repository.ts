@@ -29,12 +29,19 @@ export interface ICreateSongInput {
 }
 
 /**
- * イベントへの曲追加時の入力型。
+ * イベントへの曲一括追加時、曲1件分の入力型。
  */
-export interface IAddEventSongInput {
-  eventId: string;
+export interface IAddEventSongItem {
   songId: string;
   parts: Part[];
+}
+
+/**
+ * イベントへの曲一括追加時の入力型。
+ */
+export interface IAddEventSongsInput {
+  eventId: string;
+  songs: IAddEventSongItem[];
 }
 
 export interface ISongRepository {
@@ -44,10 +51,14 @@ export interface ISongRepository {
   findSongById(songId: string): Promise<ISongRecord | null>;
   /** 曲マスタを作成し、作成したレコードを返す */
   createSong(input: ICreateSongInput): Promise<ISongRecord>;
-  /** イベントに曲を追加し、作成したレコードを返す */
-  addEventSong(input: IAddEventSongInput): Promise<IEventSongRecord>;
+  /** イベントに紐づく既存の songId 一覧を取得する。重複登録チェックに使用する */
+  findSongIdsByEventId(eventId: string): Promise<string[]>;
+  /** イベントに複数曲を一括追加し、作成したレコード一覧を返す */
+  addEventSongs(input: IAddEventSongsInput): Promise<IEventSongRecord[]>;
   /** イベント曲IDでイベント曲を削除する。存在しない場合は false を返す */
   deleteEventSong(eventSongId: string): Promise<boolean>;
+  /** 指定した eventSongId 群のうち eventId に属するものを一括削除し、削除できた eventSongId 一覧を返す */
+  deleteEventSongs(eventId: string, eventSongIds: string[]): Promise<string[]>;
   /** イベント曲の募集パートを更新する。存在しない場合は null を返す */
   updateEventSongParts(eventSongId: string, parts: Part[]): Promise<{ eventSongId: string; parts: Part[] } | null>;
 }
