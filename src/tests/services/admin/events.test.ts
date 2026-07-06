@@ -231,9 +231,9 @@ describe("getEventForEdit", () => {
       title: "千本桜",
       artist: "黒うさP",
       parts: [
-        { part: "vocal", entered: true },
-        { part: "drums", entered: false },
-        { part: "bass",  entered: false },
+        { part: "vocal", entered: true,  username: "yamada_taro" },
+        { part: "drums", entered: false, username: null },
+        { part: "bass",  entered: false, username: null },
       ],
     });
   });

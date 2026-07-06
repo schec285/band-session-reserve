@@ -5,6 +5,7 @@ import {
   deleteEventSong,
   deleteEventSongs,
   getAllSongs,
+  removeReservation,
 } from "@/server/services/admin/songs";
 import type { ISongRepository } from "@/server/repositories/songs/song-repository";
 import type { Part } from "@drizzle/schema/enums";
@@ -35,6 +36,7 @@ beforeEach(() => {
     deleteEventSong: vi.fn(),
     deleteEventSongs: vi.fn(),
     updateEventSongParts: vi.fn(),
+    removeReservation: vi.fn(),
   };
 });
 
@@ -194,5 +196,28 @@ describe("deleteEventSongs", () => {
 
     expect(result.status).toBe("ok");
     expect(result.deletedEventSongIds).toEqual(["event-song-uuid-1"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// removeReservation
+// ---------------------------------------------------------------------------
+
+describe("removeReservation", () => {
+  it("ok: エントリー（予約）の削除成功", async () => {
+    mockRepo.removeReservation.mockResolvedValue(true);
+
+    const result = await removeReservation(mockRepo, "event-song-uuid-1", "vocal");
+
+    expect(result.status).toBe("ok");
+    expect(mockRepo.removeReservation).toHaveBeenCalledWith("event-song-uuid-1", "vocal");
+  });
+
+  it("not-found: エントリーが存在しない場合", async () => {
+    mockRepo.removeReservation.mockResolvedValue(false);
+
+    const result = await removeReservation(mockRepo, "event-song-uuid-1", "vocal");
+
+    expect(result.status).toBe("not-found");
   });
 });

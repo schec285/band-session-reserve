@@ -1,6 +1,6 @@
 import { eq, and, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { songs, eventSongs, eventSongParts } from "@drizzle/schema";
+import { songs, eventSongs, eventSongParts, reservations } from "@drizzle/schema";
 import type { Part } from "@drizzle/schema/enums";
 import type {
   ISongRecord,
@@ -158,5 +158,18 @@ export class DrizzleSongRepository implements ISongRepository {
       .returning({ id: eventSongs.id });
 
     return rows.map((row) => row.id);
+  }
+
+  /**
+   * イベント曲の指定パートのエントリー（予約）を削除する。募集パート自体（event_song_parts）は残す。
+   * 存在しない場合は false を返す。
+   */
+  async removeReservation(eventSongId: string, part: Part): Promise<boolean> {
+    const rows = await db
+      .delete(reservations)
+      .where(and(eq(reservations.eventSongId, eventSongId), eq(reservations.part, part)))
+      .returning({ id: reservations.id });
+
+    return rows.length > 0;
   }
 }

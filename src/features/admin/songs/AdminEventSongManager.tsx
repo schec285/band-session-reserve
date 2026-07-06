@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
@@ -16,7 +17,7 @@ interface EventSong {
   songId: string;
   title: string;
   artist: string;
-  parts: { part: Part; entered: boolean }[];
+  parts: { part: Part; entered: boolean; username: string | null }[];
 }
 
 interface Song {
@@ -37,132 +38,143 @@ interface ConfirmRemovePart {
 }
 
 /**
- * パートトグルバッジ1個分。押下時に onToggle を呼ぶ。
- * entered が true の場合は選択状態でも緑バッジで強調する。
+ * サーバー側の登録内容から、編集中のパート選択(draft)の初期値を作る。
  */
-function PartToggleBadge({
-  part,
-  selected,
-  entered,
-  disabled,
-  onToggle,
-}: {
-  part: Part;
-  selected: boolean;
-  entered: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={disabled}
-      className={`px-2.5 py-1 text-xs rounded-full border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-        entered && selected
-          ? "bg-green-100 text-green-700 border-green-300"
-          : selected
-          ? "bg-primary text-primary-foreground border-primary"
-          : "border-border hover:bg-muted"
-      }`}
-    >
-      {PART_LABELS[part]}
-    </button>
-  );
+function buildDraftPartsFromEventSongs(eventSongs: EventSong[]): Map<string, Set<Part>> {
+  return new Map(eventSongs.map((s) => [s.eventSongId, new Set(s.parts.map((p) => p.part))]));
+}
+
+/**
+ * eventSongId・part の組から pendingEntrantRemovals 用のキーを作る。
+ */
+function entrantKey(eventSongId: string, part: Part): string {
+  return `${eventSongId}:${part}`;
 }
 
 /**
  * イベントの曲管理セクション。
- * 登録済み曲テーブル（チェックボックス一括削除・パートバッジのインライン編集・行ごとの単一削除）と
- * 曲追加テーブル（未登録曲をチェックボックスで複数選択し、曲ごとに個別のパートを指定して一括追加）で構成する。
+ * 曲の追加・パート変更・削除はその場でAPIを呼ばず、いったんローカルの編集内容(draft)として保持する。
+ * 既存曲は変更なし=通常色、パート変更あり=オレンジ、削除予定=赤（全操作不可・ボタンは「戻す」に変化）で表示し、
+ * 新規に追加予定の曲は緑（パートはデフォルト全選択）で登録済み曲テーブルに表示する。
+ * 「更新する」ボタンで一括してAPIに送信し、「変更を破棄する」ボタンで編集内容を破棄してサーバーの状態に戻す。
  */
 export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
+  const [committing, setCommitting] = useState(false);
 
-  // 登録済み曲テーブルの状態
-  const [checkedForDelete, setCheckedForDelete] = useState<Set<string>>(new Set());
-  const [partUpdating, setPartUpdating] = useState<Set<string>>(new Set());
+  // 登録済み曲の編集中パート選択（draft）。サーバーの eventSongs が更新されたら同期し直す。
+  const [draftParts, setDraftParts] = useState<Map<string, Set<Part>>>(() =>
+    buildDraftPartsFromEventSongs(eventSongs)
+  );
+  // 削除予定としてマークされた eventSongId の集合。
+  const [markedForDelete, setMarkedForDelete] = useState<Set<string>>(new Set());
+  // 新規追加予定の曲（songId -> 選択パート）。デフォルトで全パートを選択した状態で追加される。
+  const [pendingAdds, setPendingAdds] = useState<Map<string, Set<Part>>>(new Map());
+
   const [confirmRemovePart, setConfirmRemovePart] = useState<ConfirmRemovePart | null>(null);
-  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
-  const [bulkDeleting, setBulkDeleting] = useState(false);
+  // 削除予定としてマークされたエントリー（予約）の集合。キーは `${eventSongId}:${part}`。
+  const [pendingEntrantRemovals, setPendingEntrantRemovals] = useState<Set<string>>(new Set());
 
-  // 曲追加テーブルの状態
-  const [checkedForAdd, setCheckedForAdd] = useState<Set<string>>(new Set());
-  const [addParts, setAddParts] = useState<Map<string, Set<Part>>>(new Map());
-  const [adding, setAdding] = useState(false);
-  const [addError, setAddError] = useState("");
+  /**
+   * サーバーから受け取った eventSongs が変わったら（初回表示・更新後の再読み込み時）、
+   * 編集中の draft をすべてリセットしてサーバーの状態に同期し直す。
+   */
+  useEffect(() => {
+    setDraftParts(buildDraftPartsFromEventSongs(eventSongs));
+    setMarkedForDelete(new Set());
+    setPendingAdds(new Map());
+    setPendingEntrantRemovals(new Set());
+  }, [eventSongs]);
+
+  const disabled = committing || isPending;
 
   const unregisteredSongs = useMemo(() => {
     const registeredSongIds = new Set(eventSongs.map((s) => s.songId));
-    return allSongs.filter((song) => !registeredSongIds.has(song.id));
-  }, [allSongs, eventSongs]);
+    return allSongs.filter((song) => !registeredSongIds.has(song.id) && !pendingAdds.has(song.id));
+  }, [allSongs, eventSongs, pendingAdds]);
 
   /**
-   * 登録済み曲1件のパートバッジ選択を切り替える。
-   * エントリー済みパートを外す場合は確認ダイアログを経由し、それ以外は即座にPATCHする。
+   * 既存曲のパート選択がサーバー側の内容から変更されているかどうかを判定する。
+   */
+  function isPartsChanged(song: EventSong): boolean {
+    const original = new Set(song.parts.map((p) => p.part));
+    const draft = draftParts.get(song.eventSongId) ?? original;
+    if (original.size !== draft.size) return true;
+    for (const part of original) {
+      if (!draft.has(part)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * 既存曲のdraftパート選択を1件更新する。
+   */
+  function applyDraftPartChange(eventSongId: string, part: Part, include: boolean) {
+    setDraftParts((prev) => {
+      const next = new Map(prev);
+      const parts = new Set(next.get(eventSongId) ?? []);
+      if (include) parts.add(part);
+      else parts.delete(part);
+      next.set(eventSongId, parts);
+      return next;
+    });
+  }
+
+  /**
+   * 既存曲のパートチェックボックスを切り替える。
+   * エントリー済みパートを外す場合は確認ダイアログを経由し、最後の1パートは外せないようにする。
    */
   function handlePartToggle(song: EventSong, part: Part) {
-    const current = song.parts.find((p) => p.part === part);
-    if (current) {
-      if (current.entered) {
+    const current = draftParts.get(song.eventSongId) ?? new Set<Part>();
+    const isSelected = current.has(part);
+
+    if (isSelected) {
+      const entered = song.parts.find((p) => p.part === part)?.entered ?? false;
+      if (entered) {
         setConfirmRemovePart({ song, part });
         return;
       }
-      submitPartUpdate(song, song.parts.filter((p) => p.part !== part).map((p) => p.part));
+      if (current.size === 1) {
+        setToast({ message: "パートを1つ以上選択してください", variant: "error" });
+        return;
+      }
+      applyDraftPartChange(song.eventSongId, part, false);
     } else {
-      submitPartUpdate(song, [...song.parts.map((p) => p.part), part]);
+      applyDraftPartChange(song.eventSongId, part, true);
     }
   }
 
   /**
-   * エントリー済みパートの除去を確認後に実行する。
+   * エントリー済みパートの除去を確認後、draftに反映する（APIはまだ呼ばない）。
    */
   function handleConfirmRemovePart() {
     if (!confirmRemovePart) return;
     const { song, part } = confirmRemovePart;
     setConfirmRemovePart(null);
-    submitPartUpdate(song, song.parts.filter((p) => p.part !== part).map((p) => p.part));
+    applyDraftPartChange(song.eventSongId, part, false);
   }
 
   /**
-   * 募集パートの更新をAPIに送信する。成功時はToast表示とページ再読み込みを行う。
+   * エントリー者名をクリックしたときの処理。
+   * 削除予定マークを直接トグルする（APIはまだ呼ばない。募集パート自体は維持される）。
    */
-  async function submitPartUpdate(song: EventSong, newParts: Part[]) {
-    if (newParts.length === 0) {
-      setToast({ message: "パートを1つ以上選択してください", variant: "error" });
-      return;
-    }
-
-    setPartUpdating((prev) => new Set(prev).add(song.eventSongId));
-
-    const res = await fetchWithCsrf(`/api/admin/event-songs/${song.eventSongId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ parts: newParts }),
-    });
-
-    setPartUpdating((prev) => {
+  function handleEntrantClick(song: EventSong, part: Part) {
+    const key = entrantKey(song.eventSongId, part);
+    setPendingEntrantRemovals((prev) => {
       const next = new Set(prev);
-      next.delete(song.eventSongId);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
-
-    if (res.ok) {
-      setToast({ message: `${song.title}のパートを更新しました`, variant: "success" });
-      startTransition(() => router.refresh());
-    } else {
-      const json = await res.json();
-      setToast({ message: json.message ?? "パートの更新に失敗しました", variant: "error" });
-    }
   }
 
   /**
-   * 登録済み曲テーブルの削除チェックボックスを切り替える。
+   * 既存曲の削除予定マークを切り替える（ボタンは「削除」⇔「戻す」に変化する）。
    */
-  function toggleCheckedForDelete(eventSongId: string) {
-    setCheckedForDelete((prev) => {
+  function toggleMarkedForDelete(eventSongId: string) {
+    setMarkedForDelete((prev) => {
       const next = new Set(prev);
       if (next.has(eventSongId)) next.delete(eventSongId);
       else next.add(eventSongId);
@@ -171,75 +183,40 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }
 
   /**
-   * 登録済み曲を1件だけ削除する（行ごとの削除ボタン用）。
+   * 未登録の曲を新規追加予定としてステージングする。パートはデフォルトで全選択にする。
    */
-  async function handleRowDelete(eventSongId: string) {
-    if (!confirm("この曲をイベントから削除しますか？")) return;
-
-    const res = await fetchWithCsrf(`/api/admin/event-songs/${eventSongId}`, {
-      method: "DELETE",
-    });
-
-    if (res.ok) {
-      setToast({ message: "曲を削除しました", variant: "success" });
-      startTransition(() => router.refresh());
-    } else {
-      const json = await res.json();
-      setToast({ message: json.message ?? "削除に失敗しました", variant: "error" });
-    }
-  }
-
-  /**
-   * チェックボックスで選択した登録済み曲をまとめて削除する。
-   */
-  async function handleBulkDelete() {
-    setBulkDeleting(true);
-
-    const res = await fetchWithCsrf(`/api/admin/events/${eventId}/songs`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventSongIds: Array.from(checkedForDelete) }),
-    });
-
-    setBulkDeleting(false);
-    setBulkDeleteConfirmOpen(false);
-
-    if (res.ok) {
-      const json = await res.json();
-      setToast({
-        message: `${json.deletedEventSongIds.length}曲を削除しました`,
-        variant: "success",
-      });
-      setCheckedForDelete(new Set());
-      startTransition(() => router.refresh());
-    } else {
-      const json = await res.json();
-      setToast({ message: json.message ?? "削除に失敗しました", variant: "error" });
-    }
-  }
-
-  /**
-   * 曲追加テーブルの選択チェックボックスを切り替える。未選択にした曲のパート選択もクリアする。
-   */
-  function toggleCheckedForAdd(songId: string) {
-    setCheckedForAdd((prev) => {
-      const next = new Set(prev);
-      if (next.has(songId)) {
-        next.delete(songId);
-      } else {
-        next.add(songId);
-      }
+  function stageAdd(songId: string) {
+    setPendingAdds((prev) => {
+      const next = new Map(prev);
+      next.set(songId, new Set(ALL_PARTS));
       return next;
     });
   }
 
   /**
-   * 曲追加テーブルで、曲ごとに独立したパート選択を切り替える。
+   * 新規追加予定を取り消し、「曲を追加する」テーブルに戻す。
    */
-  function toggleAddPart(songId: string, part: Part) {
-    setAddParts((prev) => {
+  function unstageAdd(songId: string) {
+    setPendingAdds((prev) => {
       const next = new Map(prev);
-      const parts = new Set(next.get(songId) ?? []);
+      next.delete(songId);
+      return next;
+    });
+  }
+
+  /**
+   * 新規追加予定の曲のパートチェックボックスを切り替える。
+   */
+  function togglePendingAddPart(songId: string, part: Part) {
+    setPendingAdds((prev) => {
+      const current = prev.get(songId);
+      if (!current) return prev;
+      if (current.has(part) && current.size === 1) {
+        setToast({ message: "パートを1つ以上選択してください", variant: "error" });
+        return prev;
+      }
+      const next = new Map(prev);
+      const parts = new Set(current);
       if (parts.has(part)) parts.delete(part);
       else parts.add(part);
       next.set(songId, parts);
@@ -248,181 +225,228 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }
 
   /**
-   * チェックした曲を、曲ごとに指定したパートで一括追加する。
+   * 編集中の内容（追加予定・パート変更・削除予定）をすべて破棄し、サーバーの状態に戻す。
    */
-  async function handleBulkAdd() {
-    if (checkedForAdd.size === 0) {
-      setAddError("曲を1つ以上選択してください");
-      return;
-    }
-
-    const songs = Array.from(checkedForAdd).map((songId) => ({
-      songId,
-      parts: Array.from(addParts.get(songId) ?? []),
-    }));
-
-    if (songs.some((s) => s.parts.length === 0)) {
-      setAddError("選択したすべての曲でパートを1つ以上選択してください");
-      return;
-    }
-
-    setAddError("");
-    setAdding(true);
-
-    const res = await fetchWithCsrf(`/api/admin/events/${eventId}/songs`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ songs }),
-    });
-
-    setAdding(false);
-
-    if (res.ok) {
-      const json = await res.json();
-      setToast({ message: `${json.eventSongs.length}曲を追加しました`, variant: "success" });
-      setCheckedForAdd(new Set());
-      setAddParts(new Map());
-      startTransition(() => router.refresh());
-    } else {
-      const json = await res.json();
-      setAddError(json.message ?? "追加に失敗しました");
-    }
+  function handleDiscard() {
+    setDraftParts(buildDraftPartsFromEventSongs(eventSongs));
+    setMarkedForDelete(new Set());
+    setPendingAdds(new Map());
+    setPendingEntrantRemovals(new Set());
+    setToast({ message: "変更を破棄しました", variant: "success" });
   }
+
+  /**
+   * 編集中の内容をまとめてAPIに送信する。
+   * 新規追加はbulk追加API、削除予定はbulk削除API、パート変更は曲ごとにPATCHを呼び、並行して実行する。
+   */
+  async function handleCommit() {
+    const changedSongs = eventSongs.filter(
+      (song) => !markedForDelete.has(song.eventSongId) && isPartsChanged(song)
+    );
+
+    // 曲ごと削除・パート自体の削除ですでにカバーされるエントリー削除は除外する（cascadeで削除されるため）。
+    const entrantRemovalTargets = Array.from(pendingEntrantRemovals)
+      .map((key) => {
+        const [eventSongId, part] = key.split(":") as [string, Part];
+        return { eventSongId, part };
+      })
+      .filter(({ eventSongId, part }) => {
+        if (markedForDelete.has(eventSongId)) return false;
+        const draft = draftParts.get(eventSongId);
+        if (draft && !draft.has(part)) return false;
+        return true;
+      });
+
+    const tasks: Promise<Response>[] = [];
+
+    if (pendingAdds.size > 0) {
+      tasks.push(
+        fetchWithCsrf(`/api/admin/events/${eventId}/songs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            songs: Array.from(pendingAdds.entries()).map(([songId, parts]) => ({
+              songId,
+              parts: Array.from(parts),
+            })),
+          }),
+        })
+      );
+    }
+
+    if (markedForDelete.size > 0) {
+      tasks.push(
+        fetchWithCsrf(`/api/admin/events/${eventId}/songs`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eventSongIds: Array.from(markedForDelete) }),
+        })
+      );
+    }
+
+    for (const song of changedSongs) {
+      tasks.push(
+        fetchWithCsrf(`/api/admin/event-songs/${song.eventSongId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parts: Array.from(draftParts.get(song.eventSongId) ?? []) }),
+        })
+      );
+    }
+
+    for (const { eventSongId, part } of entrantRemovalTargets) {
+      tasks.push(
+        fetchWithCsrf(`/api/admin/event-songs/${eventSongId}/reservations/${part}`, {
+          method: "DELETE",
+        })
+      );
+    }
+
+    if (tasks.length === 0) {
+      setToast({ message: "変更はありません", variant: "warning" });
+      return;
+    }
+
+    setCommitting(true);
+    const results = await Promise.allSettled(tasks);
+    setCommitting(false);
+
+    const failed = results.filter((r) => r.status === "rejected" || !r.value.ok);
+
+    if (failed.length === 0) {
+      setToast({
+        message: `追加${pendingAdds.size}件・変更${changedSongs.length}件・削除${markedForDelete.size}件・エントリー削除${entrantRemovalTargets.length}件を反映しました`,
+        variant: "success",
+      });
+    } else {
+      setToast({ message: `一部の変更に失敗しました（${failed.length}件）`, variant: "error" });
+    }
+
+    startTransition(() => router.refresh());
+  }
+
+  const pendingCount =
+    pendingAdds.size +
+    markedForDelete.size +
+    eventSongs.filter(isPartsChanged).length +
+    pendingEntrantRemovals.size;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold mb-2">イベント曲一覧</h2>
-        {eventSongs.length === 0 ? (
+        {eventSongs.length === 0 && pendingAdds.size === 0 ? (
           <p className="text-muted-foreground text-sm">曲が登録されていません。</p>
         ) : (
           <div className="border rounded-lg overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[720px] text-sm border-collapse">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="p-3 w-10">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer"
-                      checked={checkedForDelete.size === eventSongs.length}
-                      onChange={(e) =>
-                        setCheckedForDelete(
-                          e.target.checked ? new Set(eventSongs.map((s) => s.eventSongId)) : new Set()
-                        )
-                      }
-                    />
-                  </th>
-                  <th className="text-left font-medium p-3">曲名 / アーティスト</th>
-                  <th className="text-left font-medium p-3">募集パート</th>
+                  <th className="text-left font-medium p-3 w-40">曲名 / アーティスト</th>
+                  {ALL_PARTS.map((part) => (
+                    <th key={part} className="text-center font-medium p-2 whitespace-nowrap">
+                      {PART_LABELS[part]}
+                    </th>
+                  ))}
                   <th className="p-3 w-24"></th>
                 </tr>
               </thead>
               <tbody>
-                {eventSongs.map((song) => (
-                  <tr key={song.eventSongId} className="border-t">
-                    <td className="p-3">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 cursor-pointer"
-                        checked={checkedForDelete.has(song.eventSongId)}
-                        onChange={() => toggleCheckedForDelete(song.eventSongId)}
-                      />
-                    </td>
-                    <td className="p-3">
-                      <p className="font-medium">{song.title}</p>
-                      <p className="text-xs text-muted-foreground">{song.artist}</p>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex flex-wrap gap-1.5">
-                        {ALL_PARTS.map((part) => {
-                          const current = song.parts.find((p) => p.part === part);
-                          return (
-                            <PartToggleBadge
-                              key={part}
-                              part={part}
-                              selected={current !== undefined}
-                              entered={current?.entered ?? false}
-                              disabled={partUpdating.has(song.eventSongId) || isPending}
-                              onToggle={() => handlePartToggle(song, part)}
-                            />
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="p-3 text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleRowDelete(song.eventSongId)}
-                        disabled={isPending}
-                      >
-                        削除
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                {eventSongs.map((song) => {
+                  const isDeleted = markedForDelete.has(song.eventSongId);
+                  const changed = !isDeleted && isPartsChanged(song);
+                  const rowClass = isDeleted ? "bg-red-50" : changed ? "bg-orange-50" : "";
+                  const draft = draftParts.get(song.eventSongId) ?? new Set<Part>();
 
-        <div className="flex justify-end mt-2">
-          <Button
-            variant="destructive"
-            size="sm"
-            disabled={checkedForDelete.size === 0 || isPending}
-            onClick={() => setBulkDeleteConfirmOpen(true)}
-          >
-            選択した曲を一括削除（{checkedForDelete.size}）
-          </Button>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold mb-2">曲を追加する</h2>
-        {unregisteredSongs.length === 0 ? (
-          <p className="text-muted-foreground text-sm">追加できる曲がありません。</p>
-        ) : (
-          <div className="border rounded-lg overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="p-3 w-10"></th>
-                  <th className="text-left font-medium p-3">曲名 / アーティスト</th>
-                  <th className="text-left font-medium p-3">募集パート</th>
-                </tr>
-              </thead>
-              <tbody>
-                {unregisteredSongs.map((song) => {
-                  const checked = checkedForAdd.has(song.id);
-                  const selectedParts = addParts.get(song.id) ?? new Set<Part>();
                   return (
-                    <tr key={song.id} className="border-t">
-                      <td className="p-3">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer"
-                          checked={checked}
-                          onChange={() => toggleCheckedForAdd(song.id)}
-                        />
-                      </td>
+                    <tr key={song.eventSongId} className={`border-t ${rowClass}`}>
                       <td className="p-3">
                         <p className="font-medium">{song.title}</p>
                         <p className="text-xs text-muted-foreground">{song.artist}</p>
                       </td>
-                      <td className="p-3">
-                        <div className="flex flex-wrap gap-1.5">
-                          {ALL_PARTS.map((part) => (
-                            <PartToggleBadge
-                              key={part}
-                              part={part}
-                              selected={selectedParts.has(part)}
-                              entered={false}
-                              disabled={!checked || adding}
-                              onToggle={() => toggleAddPart(song.id, part)}
+                      {ALL_PARTS.map((part) => {
+                        const current = song.parts.find((p) => p.part === part);
+                        const entered = current?.entered ?? false;
+                        const username = current?.username ?? null;
+                        const checked = draft.has(part);
+                        const removalMarked =
+                          entered &&
+                          username !== null &&
+                          (isDeleted || !checked || pendingEntrantRemovals.has(entrantKey(song.eventSongId, part)));
+                        return (
+                          <td key={part} className="text-center p-2">
+                            <input
+                              type="checkbox"
+                              aria-label={`${song.title} ${PART_LABELS[part]}`}
+                              className="h-4 w-4 cursor-pointer"
+                              checked={checked}
+                              disabled={isDeleted || disabled}
+                              onChange={() => handlePartToggle(song, part)}
                             />
-                          ))}
-                        </div>
+                            {entered && username ? (
+                              <button
+                                type="button"
+                                onClick={() => handleEntrantClick(song, part)}
+                                disabled={isDeleted || disabled || !checked}
+                                className={`mt-0.5 block h-4 w-full max-w-16 mx-auto truncate text-xs leading-tight disabled:cursor-not-allowed ${
+                                  removalMarked
+                                    ? "text-destructive line-through"
+                                    : "text-muted-foreground hover:underline"
+                                }`}
+                              >
+                                {username}
+                              </button>
+                            ) : (
+                              <p className="mt-0.5 h-4 text-xs leading-tight text-muted-foreground"> </p>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="p-3 text-right">
+                        <Button
+                          variant={isDeleted ? "outline" : "destructive"}
+                          size="icon"
+                          onClick={() => toggleMarkedForDelete(song.eventSongId)}
+                          disabled={disabled}
+                          aria-label={isDeleted ? `${song.title}の削除を取り消す` : `${song.title}を削除`}
+                        >
+                          {isDeleted ? <Undo2 className="size-4.5" /> : <Trash2 className="size-4.5" />}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {Array.from(pendingAdds.entries()).map(([songId, parts]) => {
+                  const song = allSongs.find((s) => s.id === songId);
+                  if (!song) return null;
+                  return (
+                    <tr key={songId} className="border-t bg-green-50">
+                      <td className="p-3">
+                        <p className="font-medium">{song.title}</p>
+                        <p className="text-xs text-muted-foreground">{song.artist}</p>
+                      </td>
+                      {ALL_PARTS.map((part) => (
+                        <td key={part} className="text-center p-2">
+                          <input
+                            type="checkbox"
+                            aria-label={`${song.title} ${PART_LABELS[part]}`}
+                            className="h-4 w-4 cursor-pointer"
+                            checked={parts.has(part)}
+                            disabled={disabled}
+                            onChange={() => togglePendingAddPart(songId, part)}
+                          />
+                        </td>
+                      ))}
+                      <td className="p-3 text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => unstageAdd(songId)}
+                          disabled={disabled}
+                        >
+                          取り消す
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -431,18 +455,57 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
             </table>
           </div>
         )}
+      </div>
 
-        {addError && <p className="text-destructive text-sm mt-2">{addError}</p>}
+      <div>
+        <h2 className="text-xl font-bold mb-2">曲を追加する</h2>
+        {unregisteredSongs.length === 0 ? (
+          <p className="text-muted-foreground text-sm">追加できる曲がありません。</p>
+        ) : (
+          <div className="border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="p-3 w-10"></th>
+                  <th className="text-left font-medium p-3">曲名 / アーティスト</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unregisteredSongs.map((song) => (
+                  <tr key={song.id} className="border-t">
+                    <td className="p-3">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer"
+                        checked={false}
+                        disabled={disabled}
+                        onChange={() => stageAdd(song.id)}
+                      />
+                    </td>
+                    <td className="p-3">
+                      <p className="font-medium">{song.title}</p>
+                      <p className="text-xs text-muted-foreground">{song.artist}</p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-        <div className="flex justify-end mt-2">
-          <Button
-            size="sm"
-            disabled={adding || isPending || unregisteredSongs.length === 0}
-            onClick={handleBulkAdd}
-          >
-            {adding ? "追加中..." : `選択した曲を追加する（${checkedForAdd.size}）`}
-          </Button>
-        </div>
+      <div className="flex justify-end gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDiscard}
+          disabled={disabled || pendingCount === 0}
+        >
+          変更を破棄する
+        </Button>
+        <Button size="sm" onClick={handleCommit} disabled={disabled || pendingCount === 0}>
+          {committing ? "更新中..." : `更新する（${pendingCount}）`}
+        </Button>
       </div>
 
       {/* エントリー済みパート除去確認ダイアログ */}
@@ -463,29 +526,6 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
           </Button>
           <Button variant="destructive" size="sm" onClick={handleConfirmRemovePart}>
             外す
-          </Button>
-        </DialogFooter>
-      </Dialog>
-
-      {/* 一括削除確認ダイアログ */}
-      <Dialog open={bulkDeleteConfirmOpen} onClose={() => setBulkDeleteConfirmOpen(false)}>
-        <DialogHeader title="一括削除の確認" onClose={() => setBulkDeleteConfirmOpen(false)} />
-        <DialogContent>
-          <p className="text-sm">
-            選択した{checkedForDelete.size}曲をイベントから削除します。よろしいですか？
-          </p>
-        </DialogContent>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setBulkDeleteConfirmOpen(false)}
-            disabled={bulkDeleting}
-          >
-            キャンセル
-          </Button>
-          <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={bulkDeleting}>
-            {bulkDeleting ? "削除中..." : "削除する"}
           </Button>
         </DialogFooter>
       </Dialog>

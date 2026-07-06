@@ -61,4 +61,6 @@ export interface ISongRepository {
   deleteEventSongs(eventId: string, eventSongIds: string[]): Promise<string[]>;
   /** イベント曲の募集パートを更新する。存在しない場合は null を返す */
   updateEventSongParts(eventSongId: string, parts: Part[]): Promise<{ eventSongId: string; parts: Part[] } | null>;
+  /** イベント曲の指定パートのエントリー（予約）を削除する。募集パート自体は残す。存在しない場合は false を返す */
+  removeReservation(eventSongId: string, part: Part): Promise<boolean>;
 }
