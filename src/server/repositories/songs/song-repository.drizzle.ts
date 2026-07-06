@@ -49,18 +49,6 @@ export class DrizzleSongRepository implements ISongRepository {
   }
 
   /**
-   * イベントに紐づく既存の songId 一覧を取得する。重複登録チェックに使用する。
-   */
-  async findSongIdsByEventId(eventId: string): Promise<string[]> {
-    const rows = await db
-      .select({ songId: eventSongs.songId })
-      .from(eventSongs)
-      .where(eq(eventSongs.eventId, eventId));
-
-    return rows.map((row) => row.songId);
-  }
-
-  /**
    * イベントに複数曲を一括追加し、作成したレコード一覧を返す。
    * transaction 内で event_songs を bulk INSERT した後、全曲分の event_song_parts を bulk INSERT する。
    */

@@ -60,6 +60,20 @@ describe("POST /api/admin/events/[eventId]/songs", () => {
       expect(json.eventSongs[0].eventSongId).toBe("event-song-uuid-1");
       expect(json.eventSongs[0].parts).toEqual(["vocal", "drums"]);
     });
+
+    it("201: 同じ曲を複数回指定しても許容される", async () => {
+      const res = await POST(
+        makeRequest("POST", {
+          songs: [
+            { songId: "song-uuid-1", parts: ["vocal"] },
+            { songId: "song-uuid-1", parts: ["drums"] },
+          ],
+        }),
+        { params }
+      );
+
+      expect(res.status).toBe(201);
+    });
   });
 
   describe("異常系 — 認証", () => {
@@ -116,40 +130,6 @@ describe("POST /api/admin/events/[eventId]/songs", () => {
         field: "songs.0.parts",
         message: "パートを1つ以上選択してください",
       });
-    });
-
-    it("400: songs 内で songId が重複している", async () => {
-      const res = await POST(
-        makeRequest("POST", {
-          songs: [
-            { songId: "song-uuid-1", parts: ["vocal"] },
-            { songId: "song-uuid-1", parts: ["drums"] },
-          ],
-        }),
-        { params }
-      );
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.errors).toContainEqual({
-        field: "songs",
-        message: "同じ曲が重複して指定されています",
-      });
-    });
-  });
-
-  describe("異常系 — サービスエラー", () => {
-    it("409: 既に登録済みの曲が含まれる場合", async () => {
-      (addEventSongs as Mock).mockResolvedValue({
-        status: "duplicate",
-        duplicateSongIds: ["song-uuid-1"],
-      });
-
-      const res = await POST(makeRequest("POST", validBody), { params });
-      const json = await res.json();
-
-      expect(res.status).toBe(409);
-      expect(json.duplicateSongIds).toEqual(["song-uuid-1"]);
     });
   });
 

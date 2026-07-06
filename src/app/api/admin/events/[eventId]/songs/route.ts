@@ -51,13 +51,6 @@ export async function POST(
     const repo = new DrizzleSongRepository();
     const result = await addEventSongs(repo, eventId, parsed.data);
 
-    if (result.status === "duplicate") {
-      return NextResponse.json(
-        { message: "既に登録済みの曲が含まれています", duplicateSongIds: result.duplicateSongIds },
-        { status: 409 }
-      );
-    }
-
     return NextResponse.json({ eventSongs: result.eventSongs }, { status: 201 });
   });
 }

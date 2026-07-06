@@ -5,9 +5,7 @@ import type { Part } from "@drizzle/schema/enums";
 type CreateSongResult =
   | { status: "ok"; song: AdminSongResponse }
 
-type AddEventSongsResult =
-  | { status: "ok"; eventSongs: AdminEventSongResponse[] }
-  | { status: "duplicate"; duplicateSongIds: string[] };
+type AddEventSongsResult = { status: "ok"; eventSongs: AdminEventSongResponse[] };
 
 type DeleteEventSongResult =
   | { status: "ok" }
@@ -44,22 +42,13 @@ export async function createSong(
 /**
  * イベントに複数の曲を一括追加する。
  * eventId は URL パラメータから、input はリクエストボディから取得する。
- * 既にイベントに登録済みの songId が含まれる場合は追加を行わず duplicate を返す。
+ * 同一イベントに同じ曲を複数回登録することも許容する。
  */
 export async function addEventSongs(
   repo: ISongRepository,
   eventId: string,
   input: AddEventSongsInput
 ): Promise<AddEventSongsResult> {
-  const existingSongIds = await repo.findSongIdsByEventId(eventId);
-  const duplicateSongIds = input.songs
-    .map((song) => song.songId)
-    .filter((songId) => existingSongIds.includes(songId));
-
-  if (duplicateSongIds.length > 0) {
-    return { status: "duplicate", duplicateSongIds };
-  }
-
   const records = await repo.addEventSongs({
     eventId,
     songs: input.songs.map((song) => ({ songId: song.songId, parts: song.parts as Part[] })),

@@ -51,8 +51,6 @@ export interface ISongRepository {
   findSongById(songId: string): Promise<ISongRecord | null>;
   /** 曲マスタを作成し、作成したレコードを返す */
   createSong(input: ICreateSongInput): Promise<ISongRecord>;
-  /** イベントに紐づく既存の songId 一覧を取得する。重複登録チェックに使用する */
-  findSongIdsByEventId(eventId: string): Promise<string[]>;
   /** イベントに複数曲を一括追加し、作成したレコード一覧を返す */
   addEventSongs(input: IAddEventSongsInput): Promise<IEventSongRecord[]>;
   /** イベント曲IDでイベント曲を削除する。存在しない場合は false を返す */

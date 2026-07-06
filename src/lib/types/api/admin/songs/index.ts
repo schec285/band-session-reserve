@@ -17,23 +17,11 @@ const AddEventSongItemSchema = z.object({
 /**
  * POST /api/admin/events/[eventId]/songs のリクエストボディスキーマ。
  * 複数の既存曲をまとめてイベントに追加し、曲ごとに募集するパートを指定する。
- * 同一リクエスト内で songId が重複している場合はエラーとする。
+ * 同一イベントに同じ曲を複数回登録することも許容する。
  * エラーレスポンスは ErrorResponse 型（src/lib/types/api/index.ts）を使用する。
  */
 export const AddEventSongsSchema = z.object({
-  songs: z
-    .array(AddEventSongItemSchema)
-    .min(1, "曲を1つ以上選択してください")
-    .superRefine((songs, ctx) => {
-      const seen = new Set<string>();
-      for (const song of songs) {
-        if (seen.has(song.songId)) {
-          ctx.addIssue({ code: "custom", message: "同じ曲が重複して指定されています" });
-          break;
-        }
-        seen.add(song.songId);
-      }
-    }),
+  songs: z.array(AddEventSongItemSchema).min(1, "曲を1つ以上選択してください"),
 });
 
 export type AddEventSongsInput = z.infer<typeof AddEventSongsSchema>;

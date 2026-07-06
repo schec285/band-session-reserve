@@ -31,7 +31,6 @@ beforeEach(() => {
     findAllSongs: vi.fn(),
     findSongById: vi.fn(),
     createSong: vi.fn(),
-    findSongIdsByEventId: vi.fn(),
     addEventSongs: vi.fn(),
     deleteEventSong: vi.fn(),
     deleteEventSongs: vi.fn(),
@@ -100,7 +99,6 @@ describe("createSong", () => {
 
 describe("addEventSongs", () => {
   it("ok: イベントに追加した曲一覧を返す", async () => {
-    mockRepo.findSongIdsByEventId.mockResolvedValue([]);
     mockRepo.addEventSongs.mockResolvedValue([mockEventSongRecord]);
 
     const result = await addEventSongs(mockRepo, "event-uuid-1", {
@@ -108,14 +106,12 @@ describe("addEventSongs", () => {
     });
 
     expect(result.status).toBe("ok");
-    if (result.status !== "ok") return;
     expect(result.eventSongs).toHaveLength(1);
     expect(result.eventSongs[0].eventSongId).toBe("event-song-uuid-1");
     expect(result.eventSongs[0].parts).toEqual(["vocal", "drums"]);
   });
 
   it("リポジトリに正しい入力を渡す", async () => {
-    mockRepo.findSongIdsByEventId.mockResolvedValue([]);
     mockRepo.addEventSongs.mockResolvedValue([mockEventSongRecord]);
 
     await addEventSongs(mockRepo, "event-uuid-1", {
@@ -128,17 +124,25 @@ describe("addEventSongs", () => {
     });
   });
 
-  it("duplicate: 既に登録済みの songId が含まれる場合は追加せず duplicate を返す", async () => {
-    mockRepo.findSongIdsByEventId.mockResolvedValue(["song-uuid-1"]);
+  it("ok: 同一イベントに同じ曲を複数回追加できる", async () => {
+    mockRepo.addEventSongs.mockResolvedValue([mockEventSongRecord, mockEventSongRecord]);
 
     const result = await addEventSongs(mockRepo, "event-uuid-1", {
-      songs: [{ songId: "song-uuid-1", parts: ["vocal"] }],
+      songs: [
+        { songId: "song-uuid-1", parts: ["vocal"] },
+        { songId: "song-uuid-1", parts: ["drums"] },
+      ],
     });
 
-    expect(result.status).toBe("duplicate");
-    if (result.status !== "duplicate") return;
-    expect(result.duplicateSongIds).toEqual(["song-uuid-1"]);
-    expect(mockRepo.addEventSongs).not.toHaveBeenCalled();
+    expect(result.status).toBe("ok");
+    expect(result.eventSongs).toHaveLength(2);
+    expect(mockRepo.addEventSongs).toHaveBeenCalledWith({
+      eventId: "event-uuid-1",
+      songs: [
+        { songId: "song-uuid-1", parts: ["vocal"] },
+        { songId: "song-uuid-1", parts: ["drums"] },
+      ],
+    });
   });
 });
 

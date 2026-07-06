@@ -37,6 +37,12 @@ interface ConfirmRemovePart {
   part: Part;
 }
 
+interface PendingAdd {
+  id: string;
+  songId: string;
+  parts: Set<Part>;
+}
+
 /**
  * サーバー側の登録内容から、編集中のパート選択(draft)の初期値を作る。
  */
@@ -70,12 +76,17 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   );
   // 削除予定としてマークされた eventSongId の集合。
   const [markedForDelete, setMarkedForDelete] = useState<Set<string>>(new Set());
-  // 新規追加予定の曲（songId -> 選択パート）。デフォルトで全パートを選択した状態で追加される。
-  const [pendingAdds, setPendingAdds] = useState<Map<string, Set<Part>>>(new Map());
+  // 新規追加予定の曲の一覧。同じ曲を複数回追加できるよう、songId ではなく生成したid をキーに持つ。
+  const [pendingAdds, setPendingAdds] = useState<PendingAdd[]>([]);
 
   const [confirmRemovePart, setConfirmRemovePart] = useState<ConfirmRemovePart | null>(null);
   // 削除予定としてマークされたエントリー（予約）の集合。キーは `${eventSongId}:${part}`。
   const [pendingEntrantRemovals, setPendingEntrantRemovals] = useState<Set<string>>(new Set());
+
+  // 曲追加の検索キーワード。
+  const [searchQuery, setSearchQuery] = useState("");
+  // 検索結果のドロップダウンを表示するかどうか。検索欄からフォーカスが外れたら閉じる。
+  const [searchOpen, setSearchOpen] = useState(false);
 
   /**
    * サーバーから受け取った eventSongs が変わったら（初回表示・更新後の再読み込み時）、
@@ -84,16 +95,22 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   useEffect(() => {
     setDraftParts(buildDraftPartsFromEventSongs(eventSongs));
     setMarkedForDelete(new Set());
-    setPendingAdds(new Map());
+    setPendingAdds([]);
     setPendingEntrantRemovals(new Set());
   }, [eventSongs]);
 
   const disabled = committing || isPending;
 
-  const unregisteredSongs = useMemo(() => {
-    const registeredSongIds = new Set(eventSongs.map((s) => s.songId));
-    return allSongs.filter((song) => !registeredSongIds.has(song.id) && !pendingAdds.has(song.id));
-  }, [allSongs, eventSongs, pendingAdds]);
+  /**
+   * 曲名の部分一致（大文字小文字を区別しない）で曲マスタを検索する。
+   * 検索語が空の場合は先頭から10件、入力がある場合は部分一致するものを最大10件返す。
+   * 同じ曲を複数回追加できるよう、登録済み・追加予定かどうかによる絞り込みは行わない。
+   */
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const matched = query === "" ? allSongs : allSongs.filter((song) => song.title.toLowerCase().includes(query));
+    return matched.slice(0, 10);
+  }, [allSongs, searchQuery]);
 
   /**
    * 既存曲のパート選択がサーバー側の内容から変更されているかどうかを判定する。
@@ -183,45 +200,37 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }
 
   /**
-   * 未登録の曲を新規追加予定としてステージングする。パートはデフォルトで全選択にする。
+   * 検索結果の曲を新規追加予定としてステージングする。クリックするたびに新しい追加予定行が1件増え、
+   * 同じ曲を複数回追加することもできる。パートはデフォルトで全選択にする。
    */
-  function stageAdd(songId: string) {
-    setPendingAdds((prev) => {
-      const next = new Map(prev);
-      next.set(songId, new Set(ALL_PARTS));
-      return next;
-    });
+  function handleAddSearchResult(songId: string) {
+    setPendingAdds((prev) => [...prev, { id: crypto.randomUUID(), songId, parts: new Set(ALL_PARTS) }]);
   }
 
   /**
-   * 新規追加予定を取り消し、「曲を追加する」テーブルに戻す。
+   * 新規追加予定を取り消す。
    */
-  function unstageAdd(songId: string) {
-    setPendingAdds((prev) => {
-      const next = new Map(prev);
-      next.delete(songId);
-      return next;
-    });
+  function unstageAdd(id: string) {
+    setPendingAdds((prev) => prev.filter((p) => p.id !== id));
   }
 
   /**
    * 新規追加予定の曲のパートチェックボックスを切り替える。
    */
-  function togglePendingAddPart(songId: string, part: Part) {
-    setPendingAdds((prev) => {
-      const current = prev.get(songId);
-      if (!current) return prev;
-      if (current.has(part) && current.size === 1) {
-        setToast({ message: "パートを1つ以上選択してください", variant: "error" });
-        return prev;
-      }
-      const next = new Map(prev);
-      const parts = new Set(current);
-      if (parts.has(part)) parts.delete(part);
-      else parts.add(part);
-      next.set(songId, parts);
-      return next;
-    });
+  function togglePendingAddPart(id: string, part: Part) {
+    setPendingAdds((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        if (p.parts.has(part) && p.parts.size === 1) {
+          setToast({ message: "パートを1つ以上選択してください", variant: "error" });
+          return p;
+        }
+        const parts = new Set(p.parts);
+        if (parts.has(part)) parts.delete(part);
+        else parts.add(part);
+        return { ...p, parts };
+      })
+    );
   }
 
   /**
@@ -230,7 +239,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   function handleDiscard() {
     setDraftParts(buildDraftPartsFromEventSongs(eventSongs));
     setMarkedForDelete(new Set());
-    setPendingAdds(new Map());
+    setPendingAdds([]);
     setPendingEntrantRemovals(new Set());
     setToast({ message: "変更を破棄しました", variant: "success" });
   }
@@ -259,13 +268,13 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
 
     const tasks: Promise<Response>[] = [];
 
-    if (pendingAdds.size > 0) {
+    if (pendingAdds.length > 0) {
       tasks.push(
         fetchWithCsrf(`/api/admin/events/${eventId}/songs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            songs: Array.from(pendingAdds.entries()).map(([songId, parts]) => ({
+            songs: pendingAdds.map(({ songId, parts }) => ({
               songId,
               parts: Array.from(parts),
             })),
@@ -314,19 +323,16 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     const failed = results.filter((r) => r.status === "rejected" || !r.value.ok);
 
     if (failed.length === 0) {
-      setToast({
-        message: `追加${pendingAdds.size}件・変更${changedSongs.length}件・削除${markedForDelete.size}件・エントリー削除${entrantRemovalTargets.length}件を反映しました`,
-        variant: "success",
-      });
+      setToast({ message: "イベントに曲を登録・更新しました。", variant: "success" });
     } else {
-      setToast({ message: `一部の変更に失敗しました（${failed.length}件）`, variant: "error" });
+      setToast({ message: "一部の変更に失敗しました", variant: "error" });
     }
 
     startTransition(() => router.refresh());
   }
 
   const pendingCount =
-    pendingAdds.size +
+    pendingAdds.length +
     markedForDelete.size +
     eventSongs.filter(isPartsChanged).length +
     pendingEntrantRemovals.size;
@@ -334,8 +340,56 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   return (
     <div className="space-y-6">
       <div>
+        <h2 className="text-xl font-bold mb-2">曲を追加する</h2>
+        <div
+          className="relative"
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setSearchOpen(false);
+            }
+          }}
+        >
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            onClick={() => setSearchOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setSearchOpen(false);
+            }}
+            placeholder="曲名で検索"
+            disabled={disabled}
+            className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          {searchOpen && (
+            <div className="absolute z-20 mt-1 w-full max-h-72 overflow-y-auto rounded-lg border bg-background shadow-lg">
+              {searchResults.length === 0 ? (
+                <p className="text-muted-foreground text-sm p-3">該当する曲がありません。</p>
+              ) : (
+                <div className="divide-y">
+                  {searchResults.map((song) => (
+                    <button
+                      key={song.id}
+                      type="button"
+                      onClick={() => handleAddSearchResult(song.id)}
+                      disabled={disabled}
+                      className="w-full text-left p-3 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <p className="font-medium text-sm">{song.title}</p>
+                      <p className="text-xs text-muted-foreground">{song.artist}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div>
         <h2 className="text-xl font-bold mb-2">イベント曲一覧</h2>
-        {eventSongs.length === 0 && pendingAdds.size === 0 ? (
+        {eventSongs.length === 0 && pendingAdds.length === 0 ? (
           <p className="text-muted-foreground text-sm">曲が登録されていません。</p>
         ) : (
           <div className="border rounded-lg overflow-x-auto">
@@ -417,11 +471,11 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
                   );
                 })}
 
-                {Array.from(pendingAdds.entries()).map(([songId, parts]) => {
+                {pendingAdds.map(({ id, songId, parts }) => {
                   const song = allSongs.find((s) => s.id === songId);
                   if (!song) return null;
                   return (
-                    <tr key={songId} className="border-t bg-green-50">
+                    <tr key={id} className="border-t bg-green-50">
                       <td className="p-3">
                         <p className="font-medium">{song.title}</p>
                         <p className="text-xs text-muted-foreground">{song.artist}</p>
@@ -434,60 +488,24 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
                             className="h-4 w-4 cursor-pointer"
                             checked={parts.has(part)}
                             disabled={disabled}
-                            onChange={() => togglePendingAddPart(songId, part)}
+                            onChange={() => togglePendingAddPart(id, part)}
                           />
                         </td>
                       ))}
                       <td className="p-3 text-right">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => unstageAdd(songId)}
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => unstageAdd(id)}
                           disabled={disabled}
+                          aria-label={`${song.title}を追加予定から削除`}
                         >
-                          取り消す
+                          <Trash2 className="size-4.5" />
                         </Button>
                       </td>
                     </tr>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      <div>
-        <h2 className="text-xl font-bold mb-2">曲を追加する</h2>
-        {unregisteredSongs.length === 0 ? (
-          <p className="text-muted-foreground text-sm">追加できる曲がありません。</p>
-        ) : (
-          <div className="border rounded-lg overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="p-3 w-10"></th>
-                  <th className="text-left font-medium p-3">曲名 / アーティスト</th>
-                </tr>
-              </thead>
-              <tbody>
-                {unregisteredSongs.map((song) => (
-                  <tr key={song.id} className="border-t">
-                    <td className="p-3">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 cursor-pointer"
-                        checked={false}
-                        disabled={disabled}
-                        onChange={() => stageAdd(song.id)}
-                      />
-                    </td>
-                    <td className="p-3">
-                      <p className="font-medium">{song.title}</p>
-                      <p className="text-xs text-muted-foreground">{song.artist}</p>
-                    </td>
-                  </tr>
-                ))}
               </tbody>
             </table>
           </div>
