@@ -13,6 +13,7 @@ beforeEach(() => {
     create: vi.fn(),
     update: vi.fn(),
     setEmailVerified: vi.fn(),
+    updateLastLogin: vi.fn(),
     updatePassword: vi.fn(),
     getProfile: vi.fn(),
     updateProfile: vi.fn(),

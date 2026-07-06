@@ -12,6 +12,10 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   create: vi.fn(),
   update: vi.fn(),
   setEmailVerified: vi.fn(),
+  updateLastLogin: vi.fn(),
+  updatePassword: vi.fn(),
+  getProfile: vi.fn(),
+  updateProfile: vi.fn(),
   findAll: vi.fn(),
   updateRole: vi.fn(),
 });
@@ -28,6 +32,7 @@ const mockTokenRepo = (): Mocked<IVerificationTokenRepository> => ({
 const mockEmailService = (): Mocked<IEmailService> => ({
   sendVerificationEmail: vi.fn(),
   sendWelcomeEmail: vi.fn(),
+  sendPasswordResetEmail: vi.fn(),
   sendPasswordChangedEmail: vi.fn(),
 });
 
@@ -80,7 +85,7 @@ describe("signUp", () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
       const emailService = mockEmailService();
-      userRepo.findByEmail.mockResolvedValue({ id: "existing-user-id", emailVerified: null });
+      userRepo.findByEmail.mockResolvedValue({ id: "existing-user-id", name: "テストユーザー", emailVerified: null });
       userRepo.update.mockResolvedValue();
       tokenRepo.deleteByUserId.mockResolvedValue();
       tokenRepo.create.mockResolvedValue({ id: "token-id-2" });
@@ -109,7 +114,7 @@ describe("signUp", () => {
       const userRepo = mockUserRepo();
       const tokenRepo = mockTokenRepo();
       const emailService = mockEmailService();
-      userRepo.findByEmail.mockResolvedValue({ id: "existing-user-id", emailVerified: new Date() });
+      userRepo.findByEmail.mockResolvedValue({ id: "existing-user-id", name: "テストユーザー", emailVerified: new Date() });
       tokenRepo.deleteByUserId.mockResolvedValue();
       tokenRepo.create.mockResolvedValue({ id: "token-id-3" });
 
