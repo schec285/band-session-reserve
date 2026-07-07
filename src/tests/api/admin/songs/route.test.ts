@@ -7,16 +7,16 @@ vi.mock("@/auth", () => ({
 
 vi.mock("@/server/services/admin/songs", () => ({
   getAllSongs: vi.fn(),
-  createSong: vi.fn(),
+  createSongs: vi.fn(),
 }));
 
 import { auth } from "@/auth";
-import { getAllSongs, createSong } from "@/server/services/admin/songs";
+import { getAllSongs, createSongs } from "@/server/services/admin/songs";
 import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const mockSongs = [
-  { id: "song-uuid-1", title: "千本桜", artist: "黒うさP" },
-  { id: "song-uuid-2", title: "命に嫌われている。", artist: "カンザキイオリ" },
+  { id: "song-uuid-1", title: "千本桜", artist: "黒うさP", createdAt: "2026-01-15T12:00:00+09:00", inUse: false },
+  { id: "song-uuid-2", title: "命に嫌われている。", artist: "カンザキイオリ", createdAt: "2026-02-20T12:00:00+09:00", inUse: false },
 ];
 
 function makeRequest(method: string, body?: unknown) {
@@ -32,7 +32,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   (auth as Mock).mockResolvedValue({ user: { id: "user-uuid", role: "admin" } });
   (getAllSongs as Mock).mockResolvedValue(mockSongs);
-  (createSong as Mock).mockResolvedValue({ status: "ok", song: mockSongs[0] });
+  (createSongs as Mock).mockResolvedValue({ status: "ok", songs: mockSongs });
 });
 
 // ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ describe("GET /api/admin/songs", () => {
 // ---------------------------------------------------------------------------
 
 describe("POST /api/admin/songs", () => {
-  const validBody = { title: "千本桜", artist: "黒うさP" };
+  const validBody = { songs: [{ title: "千本桜", artist: "黒うさP" }] };
 
   describe("正常系", () => {
     it("201: 曲作成成功", async () => {
@@ -96,8 +96,28 @@ describe("POST /api/admin/songs", () => {
       const json = await res.json();
 
       expect(res.status).toBe(201);
-      expect(json.song.id).toBe("song-uuid-1");
-      expect(json.song.title).toBe("千本桜");
+      expect(json.songs[0].id).toBe("song-uuid-1");
+      expect(json.songs[0].title).toBe("千本桜");
+    });
+
+    it("201: 複数件まとめて作成できる", async () => {
+      const res = await POST(
+        makeRequest("POST", {
+          songs: [
+            { title: "千本桜", artist: "黒うさP" },
+            { title: "命に嫌われている。", artist: "カンザキイオリ" },
+          ],
+        })
+      );
+      const json = await res.json();
+
+      expect(res.status).toBe(201);
+      expect(createSongs).toHaveBeenCalledWith(expect.anything(), {
+        songs: [
+          { title: "千本桜", artist: "黒うさP" },
+          { title: "命に嫌われている。", artist: "カンザキイオリ" },
+        ],
+      });
     });
   });
 
@@ -115,19 +135,49 @@ describe("POST /api/admin/songs", () => {
 
   describe("異常系 — バリデーション", () => {
     it("400: title が空", async () => {
-      const res = await POST(makeRequest("POST", { ...validBody, title: "" }));
+      const res = await POST(
+        makeRequest("POST", { songs: [{ title: "", artist: "黒うさP" }] })
+      );
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.errors).toContainEqual({ field: "title", message: "曲名は必須です" });
+      expect(json.errors).toContainEqual({ field: "songs.0.title", message: "曲名は必須です" });
     });
 
     it("400: artist が空", async () => {
-      const res = await POST(makeRequest("POST", { ...validBody, artist: "" }));
+      const res = await POST(
+        makeRequest("POST", { songs: [{ title: "千本桜", artist: "" }] })
+      );
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.errors).toContainEqual({ field: "artist", message: "アーティスト名は必須です" });
+      expect(json.errors).toContainEqual({ field: "songs.0.artist", message: "アーティスト名は必須です" });
+    });
+
+    it("400: songs が空配列", async () => {
+      const res = await POST(makeRequest("POST", { songs: [] }));
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.errors).toContainEqual({ field: "songs", message: "曲を1件以上入力してください" });
+    });
+  });
+
+  describe("異常系 — 重複", () => {
+    it("409: 既存曲と同じ曲名・アーティストの組み合わせがある場合", async () => {
+      (createSongs as Mock).mockResolvedValue({
+        status: "duplicate",
+        duplicates: [{ title: "千本桜", artist: "黒うさP" }],
+      });
+
+      const res = await POST(makeRequest("POST", validBody));
+      const json = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(json.message).toBe("重複した曲があります");
+      expect(json.message).not.toContain("千本桜");
+      expect(json.message).not.toContain("黒うさP");
+      expect(json.duplicates).toEqual([{ title: "千本桜", artist: "黒うさP" }]);
     });
   });
 

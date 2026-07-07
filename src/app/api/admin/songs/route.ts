@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getAllSongs, createSong } from "@/server/services/admin/songs";
+import { getAllSongs, createSongs } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
-import { CreateSongSchema } from "@/lib/types/api/admin/songs";
+import { CreateSongsSchema } from "@/lib/types/api/admin/songs";
 import { withApiHandler } from "@/lib/api/error-handler";
 import { verifyCsrfToken } from "@/lib/api/csrf";
 
@@ -38,7 +38,7 @@ export async function GET(_request: Request) {
 }
 
 /**
- * 曲マスタ作成エンドポイント。
+ * 曲マスタ作成エンドポイント。複数件まとめて作成できる。
  * admin のみアクセス可。
  */
 export async function POST(request: Request) {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     if (error) return error;
 
     const body = await request.json();
-    const parsed = CreateSongSchema.safeParse(body);
+    const parsed = CreateSongsSchema.safeParse(body);
 
     if (!parsed.success) {
       const errors = parsed.error.issues.map((e) => ({
@@ -61,8 +61,15 @@ export async function POST(request: Request) {
     }
 
     const repo = new DrizzleSongRepository();
-    const result = await createSong(repo, parsed.data);
+    const result = await createSongs(repo, parsed.data);
 
-    return NextResponse.json({ song: result.song }, { status: 201 });
+    if (result.status === "duplicate") {
+      return NextResponse.json(
+        { message: "重複した曲があります", duplicates: result.duplicates },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({ songs: result.songs }, { status: 201 });
   });
 }

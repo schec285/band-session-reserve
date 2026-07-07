@@ -1,9 +1,32 @@
-import type { ISongRepository } from "@/server/repositories/songs/song-repository";
-import type { AdminSongResponse, AdminEventSongResponse, CreateSongInput, AddEventSongsInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
+import type { ISongRepository, ISongRecord } from "@/server/repositories/songs/song-repository";
+import type { AdminSongResponse, AdminEventSongResponse, CreateSongsInput, UpdateSongInput, AddEventSongsInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
 import type { Part } from "@drizzle/schema/enums";
+import { toJST } from "@/lib/utils/date";
 
-type CreateSongResult =
+type CreateSongsResult =
+  | { status: "ok"; songs: AdminSongResponse[] }
+  | { status: "duplicate"; duplicates: { title: string; artist: string }[] };
+
+type UpdateSongResult =
   | { status: "ok"; song: AdminSongResponse }
+  | { status: "not-found" };
+
+type DeleteSongResult =
+  | { status: "ok" }
+  | { status: "not-found" };
+
+/**
+ * 曲マスタのレコードをAPIレスポンス形式に変換する（登録日時をJSTのISO文字列に変換）。
+ */
+function toAdminSongResponse(record: ISongRecord): AdminSongResponse {
+  return {
+    id: record.id,
+    title: record.title,
+    artist: record.artist,
+    createdAt: toJST(record.createdAt),
+    inUse: record.inUse,
+  };
+}
 
 type AddEventSongsResult = { status: "ok"; eventSongs: AdminEventSongResponse[] };
 
@@ -25,18 +48,72 @@ type UpdateEventSongPartsResult =
  * 全曲マスタを取得する。
  */
 export async function getAllSongs(repo: ISongRepository): Promise<AdminSongResponse[]> {
-  return await repo.findAllSongs();
+  const records = await repo.findAllSongs();
+  return records.map(toAdminSongResponse);
 }
 
 /**
- * 曲マスタを作成する。
+ * 曲名・アーティストの組み合わせからマップのキーを作る。
  */
-export async function createSong(
+function songKey(title: string, artist: string): string {
+  return `${title} ${artist}`;
+}
+
+/**
+ * 曲マスタを複数件まとめて作成する。
+ * 既存の曲、またはリクエスト内で同じ曲名・アーティストの組み合わせが重複する場合は
+ * 作成を行わず status: "duplicate" を返す。
+ */
+export async function createSongs(
   repo: ISongRepository,
-  input: CreateSongInput
-): Promise<CreateSongResult> {
-  const record = await repo.createSong({ title: input.title, artist: input.artist });
-  return { status: "ok", song: record };
+  input: CreateSongsInput
+): Promise<CreateSongsResult> {
+  const existingSongs = await repo.findAllSongs();
+  const existingKeys = new Set(existingSongs.map((s) => songKey(s.title, s.artist)));
+
+  const seenInRequest = new Set<string>();
+  const duplicates = new Map<string, { title: string; artist: string }>();
+
+  for (const song of input.songs) {
+    const key = songKey(song.title, song.artist);
+    if (existingKeys.has(key) || seenInRequest.has(key)) {
+      duplicates.set(key, { title: song.title, artist: song.artist });
+    }
+    seenInRequest.add(key);
+  }
+
+  if (duplicates.size > 0) {
+    return { status: "duplicate", duplicates: Array.from(duplicates.values()) };
+  }
+
+  const records = await repo.createSongs(
+    input.songs.map((song) => ({ title: song.title, artist: song.artist }))
+  );
+  return { status: "ok", songs: records.map(toAdminSongResponse) };
+}
+
+/**
+ * 曲名を更新する。存在しない場合は status: "not-found" を返す。
+ */
+export async function updateSong(
+  repo: ISongRepository,
+  songId: string,
+  input: UpdateSongInput
+): Promise<UpdateSongResult> {
+  const record = await repo.updateSong(songId, { title: input.title });
+  if (!record) return { status: "not-found" };
+  return { status: "ok", song: toAdminSongResponse(record) };
+}
+
+/**
+ * 曲マスタを削除する。存在しない場合は status: "not-found" を返す。
+ * イベントで使用中の曲を削除した場合、当該曲のイベントへの登録・エントリー（予約）も
+ * あわせて削除される（呼び出し側で削除内容の同意を得た前提。src/server/repositories 参照）。
+ */
+export async function deleteSong(repo: ISongRepository, songId: string): Promise<DeleteSongResult> {
+  const deleted = await repo.deleteSong(songId);
+  if (!deleted) return { status: "not-found" };
+  return { status: "ok" };
 }
 
 /**

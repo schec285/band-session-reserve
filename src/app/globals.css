@@ -130,3 +130,16 @@
     @apply cursor-pointer;
     }
 }
+
+@keyframes duplicate-blink {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: color-mix(in oklch, var(--destructive) 20%, transparent);
+  }
+}
+
+.animate-duplicate-blink {
+  animation: duplicate-blink 0.4s ease-in-out 3;
+}

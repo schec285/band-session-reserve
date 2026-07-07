@@ -1,4 +1,4 @@
-import { eq, and, inArray, notInArray } from "drizzle-orm";
+import { eq, and, asc, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { songs, eventSongs, eventSongParts, reservations } from "@drizzle/schema";
 import type { Part } from "@drizzle/schema/enums";
@@ -6,6 +6,7 @@ import type {
   ISongRecord,
   IEventSongRecord,
   ICreateSongInput,
+  IUpdateSongInput,
   IAddEventSongsInput,
   ISongRepository,
 } from "./song-repository";
@@ -15,12 +16,25 @@ import type {
  */
 export class DrizzleSongRepository implements ISongRepository {
   /**
+   * いずれかのイベントに登録されている曲IDの集合を取得する。
+   */
+  private async getUsedSongIds(): Promise<Set<string>> {
+    const rows = await db.select({ songId: eventSongs.songId }).from(eventSongs);
+    return new Set(rows.map((row) => row.songId));
+  }
+
+  /**
    * 全曲マスタを取得する。
+   * アーティスト名昇順・曲名昇順で返す（同名同アーティスト曲が複数存在する場合は songs.id をタイブレークに使う）。
    */
   async findAllSongs(): Promise<ISongRecord[]> {
-    return await db
-      .select({ id: songs.id, title: songs.title, artist: songs.artist })
-      .from(songs);
+    const rows = await db
+      .select({ id: songs.id, title: songs.title, artist: songs.artist, createdAt: songs.createdAt })
+      .from(songs)
+      .orderBy(asc(songs.artist), asc(songs.title), asc(songs.id));
+
+    const usedSongIds = await this.getUsedSongIds();
+    return rows.map((row) => ({ ...row, inUse: usedSongIds.has(row.id) }));
   }
 
   /**
@@ -28,24 +42,58 @@ export class DrizzleSongRepository implements ISongRepository {
    */
   async findSongById(songId: string): Promise<ISongRecord | null> {
     const rows = await db
-      .select({ id: songs.id, title: songs.title, artist: songs.artist })
+      .select({ id: songs.id, title: songs.title, artist: songs.artist, createdAt: songs.createdAt })
       .from(songs)
       .where(eq(songs.id, songId))
       .limit(1);
 
-    return rows[0] ?? null;
+    if (!rows[0]) return null;
+
+    const usedSongIds = await this.getUsedSongIds();
+    return { ...rows[0], inUse: usedSongIds.has(rows[0].id) };
   }
 
   /**
-   * 曲マスタを作成し、作成したレコードを返す。
+   * 曲マスタを複数件まとめて作成し、作成したレコード一覧を返す。
+   * 作成直後の曲はどのイベントにも登録されていないため inUse は常に false。
    */
-  async createSong(input: ICreateSongInput): Promise<ISongRecord> {
+  async createSongs(inputs: ICreateSongInput[]): Promise<ISongRecord[]> {
     const rows = await db
       .insert(songs)
-      .values({ title: input.title, artist: input.artist })
-      .returning({ id: songs.id, title: songs.title, artist: songs.artist });
+      .values(inputs.map((input) => ({ title: input.title, artist: input.artist })))
+      .returning({ id: songs.id, title: songs.title, artist: songs.artist, createdAt: songs.createdAt });
 
-    return rows[0];
+    return rows.map((row) => ({ ...row, inUse: false }));
+  }
+
+  /**
+   * 曲名を更新する。存在しない場合は null を返す。
+   */
+  async updateSong(songId: string, input: IUpdateSongInput): Promise<ISongRecord | null> {
+    const rows = await db
+      .update(songs)
+      .set({ title: input.title, updatedAt: new Date() })
+      .where(eq(songs.id, songId))
+      .returning({ id: songs.id, title: songs.title, artist: songs.artist, createdAt: songs.createdAt });
+
+    if (!rows[0]) return null;
+
+    const usedSongIds = await this.getUsedSongIds();
+    return { ...rows[0], inUse: usedSongIds.has(rows[0].id) };
+  }
+
+  /**
+   * 曲マスタを削除する。存在しない場合は false を返す。
+   * イベントで使用中の場合、transaction 内で当該曲の event_songs を先に削除する
+   * （FK cascade により event_song_parts・reservations も自動的に削除される）。
+   */
+  async deleteSong(songId: string): Promise<boolean> {
+    return await db.transaction(async (tx) => {
+      await tx.delete(eventSongs).where(eq(eventSongs.songId, songId));
+
+      const rows = await tx.delete(songs).where(eq(songs.id, songId)).returning({ id: songs.id });
+      return rows.length > 0;
+    });
   }
 
   /**
