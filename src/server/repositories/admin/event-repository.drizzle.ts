@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { events, eventSongs, eventSongParts, songs, reservations, users, eventCollections } from "@drizzle/schema";
 import type { IAdminEventRecord, IAdminCreateEventInput, IAdminEventRepository, IAdminSongWithReservations } from "./event-repository";
@@ -48,6 +48,7 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
    * イベントIDで曲一覧とパート別予約状況を取得する。
    * events を起点に LEFT JOIN することでイベントの存在有無を判別する。
    * イベントが存在しない場合は null、曲が 0 件の場合は空配列を返す。
+   * 曲一覧はアーティスト名昇順・曲名昇順で並べる。
    */
   async findEventSongsWithReservations(eventId: string): Promise<IAdminSongWithReservations[] | null> {
     const songRows = await db
@@ -60,7 +61,8 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
       .from(events)
       .leftJoin(eventSongs, eq(eventSongs.eventId, events.id))
       .leftJoin(songs, eq(eventSongs.songId, songs.id))
-      .where(eq(events.id, eventId));
+      .where(eq(events.id, eventId))
+      .orderBy(asc(songs.artist), asc(songs.title));
 
     if (songRows.length === 0) return null;
 

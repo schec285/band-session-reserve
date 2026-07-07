@@ -62,7 +62,7 @@ function entrantKey(eventSongId: string, part: Part): string {
  * 曲の追加・パート変更・削除はその場でAPIを呼ばず、いったんローカルの編集内容(draft)として保持する。
  * 既存曲は変更なし=通常色、パート変更あり=オレンジ、削除予定=赤（全操作不可・ボタンは「戻す」に変化）で表示し、
  * 新規に追加予定の曲は緑（パートはデフォルト全選択）で登録済み曲テーブルに表示する。
- * 「更新する」ボタンで一括してAPIに送信し、「変更を破棄する」ボタンで編集内容を破棄してサーバーの状態に戻す。
+ * 「更新する」ボタンで一括してAPIに送信し、「変更を破棄する」ボタンは確認ダイアログを経て編集内容を破棄しサーバーの状態に戻す。
  */
 export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) {
   const router = useRouter();
@@ -80,6 +80,8 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   const [pendingAdds, setPendingAdds] = useState<PendingAdd[]>([]);
 
   const [confirmRemovePart, setConfirmRemovePart] = useState<ConfirmRemovePart | null>(null);
+  // 変更破棄の確認ダイアログを表示するかどうか。
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
   // 削除予定としてマークされたエントリー（予約）の集合。キーは `${eventSongId}:${part}`。
   const [pendingEntrantRemovals, setPendingEntrantRemovals] = useState<Set<string>>(new Set());
 
@@ -87,6 +89,10 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   const [searchQuery, setSearchQuery] = useState("");
   // 検索結果のドロップダウンを表示するかどうか。検索欄からフォーカスが外れたら閉じる。
   const [searchOpen, setSearchOpen] = useState(false);
+  // 追加済み・追加予定の曲が再度選択されたときの通知ダイアログ。null なら非表示。
+  const [duplicateNotice, setDuplicateNotice] = useState<{ song: Song; pendingAddId: string } | null>(
+    null
+  );
 
   /**
    * サーバーから受け取った eventSongs が変わったら（初回表示・更新後の再読み込み時）、
@@ -103,12 +109,18 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
 
   /**
    * 曲名の部分一致（大文字小文字を区別しない）で曲マスタを検索する。
-   * 検索語が空の場合は先頭から10件、入力がある場合は部分一致するものを最大10件返す。
+   * 検索語が空の場合は先頭から10件、入力がある場合は曲名またはアーティスト名に部分一致するものを最大10件返す。
    * 同じ曲を複数回追加できるよう、登録済み・追加予定かどうかによる絞り込みは行わない。
    */
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const matched = query === "" ? allSongs : allSongs.filter((song) => song.title.toLowerCase().includes(query));
+    const matched =
+      query === ""
+        ? allSongs
+        : allSongs.filter(
+            (song) =>
+              song.title.toLowerCase().includes(query) || song.artist.toLowerCase().includes(query)
+          );
     return matched.slice(0, 10);
   }, [allSongs, searchQuery]);
 
@@ -202,9 +214,29 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   /**
    * 検索結果の曲を新規追加予定としてステージングする。クリックするたびに新しい追加予定行が1件増え、
    * 同じ曲を複数回追加することもできる。パートはデフォルトで全選択にする。
+   * すでに登録済み・追加予定の曲が選択された場合は、通知ダイアログを表示する（「取り消し」で今回の追加分のみ取り消せる）。
    */
   function handleAddSearchResult(songId: string) {
-    setPendingAdds((prev) => [...prev, { id: crypto.randomUUID(), songId, parts: new Set(ALL_PARTS) }]);
+    const isDuplicate =
+      eventSongs.some((s) => s.songId === songId) || pendingAdds.some((p) => p.songId === songId);
+
+    const pendingAddId = crypto.randomUUID();
+    setPendingAdds((prev) => [...prev, { id: pendingAddId, songId, parts: new Set(ALL_PARTS) }]);
+    setSearchOpen(false);
+
+    if (isDuplicate) {
+      const song = allSongs.find((s) => s.id === songId);
+      if (song) setDuplicateNotice({ song, pendingAddId });
+    }
+  }
+
+  /**
+   * 重複曲通知ダイアログの「取り消し」ボタン押下時、今回追加した分だけを取り消す。
+   */
+  function handleCancelDuplicateAdd() {
+    if (!duplicateNotice) return;
+    unstageAdd(duplicateNotice.pendingAddId);
+    setDuplicateNotice(null);
   }
 
   /**
@@ -234,13 +266,21 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
   }
 
   /**
-   * 編集中の内容（追加予定・パート変更・削除予定）をすべて破棄し、サーバーの状態に戻す。
+   * 変更破棄の確認ダイアログを開く。
    */
   function handleDiscard() {
+    setConfirmDiscardOpen(true);
+  }
+
+  /**
+   * 編集中の内容（追加予定・パート変更・削除予定）をすべて破棄し、サーバーの状態に戻す。
+   */
+  function handleConfirmDiscard() {
     setDraftParts(buildDraftPartsFromEventSongs(eventSongs));
     setMarkedForDelete(new Set());
     setPendingAdds([]);
     setPendingEntrantRemovals(new Set());
+    setConfirmDiscardOpen(false);
     setToast({ message: "変更を破棄しました", variant: "success" });
   }
 
@@ -358,7 +398,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
             onKeyDown={(e) => {
               if (e.key === "Escape") setSearchOpen(false);
             }}
-            placeholder="曲名で検索"
+            placeholder="曲名・アーティスト名で検索"
             disabled={disabled}
             className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
@@ -544,6 +584,42 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
           </Button>
           <Button variant="destructive" size="sm" onClick={handleConfirmRemovePart}>
             外す
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* 変更破棄確認ダイアログ */}
+      <Dialog open={confirmDiscardOpen} onClose={() => setConfirmDiscardOpen(false)}>
+        <DialogHeader title="変更の破棄確認" onClose={() => setConfirmDiscardOpen(false)} />
+        <DialogContent>
+          <p className="text-sm">編集中の変更をすべて破棄し、保存前の状態に戻します。よろしいですか？</p>
+        </DialogContent>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setConfirmDiscardOpen(false)}>
+            キャンセル
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleConfirmDiscard}>
+            破棄する
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* 重複曲選択の通知ダイアログ */}
+      <Dialog open={duplicateNotice !== null} onClose={() => setDuplicateNotice(null)}>
+        <DialogHeader title="同じ曲が選択されました" onClose={() => setDuplicateNotice(null)} />
+        <DialogContent>
+          <p className="text-sm">曲名：{duplicateNotice?.song.title}</p>
+          <p className="text-sm">アーティスト：{duplicateNotice?.song.artist}</p>
+          <p className="text-sm mt-2">
+            同一イベント内で同じ曲が選択されました。意図的ではない場合は取り消してください
+          </p>
+        </DialogContent>
+        <DialogFooter>
+          <Button variant="destructive" size="sm" onClick={handleCancelDuplicateAdd}>
+            取り消し
+          </Button>
+          <Button size="sm" onClick={() => setDuplicateNotice(null)}>
+            OK
           </Button>
         </DialogFooter>
       </Dialog>
