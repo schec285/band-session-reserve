@@ -409,6 +409,25 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs, onClose }
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end gap-3">
+        {onClose && (
+          <Button variant="outline" size="sm" onClick={handleCloseClick} disabled={disabled}>
+            閉じる
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDiscard}
+          disabled={disabled || pendingCount === 0}
+        >
+          変更を破棄する
+        </Button>
+        <Button size="sm" onClick={handleCommit} disabled={disabled || pendingCount === 0}>
+          {committing ? "更新中..." : "更新する"}
+        </Button>
+      </div>
+
       <div>
         <h2 className="text-xl font-bold mb-2">曲を追加する</h2>
         <div
@@ -582,25 +601,6 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs, onClose }
         )}
       </div>
 
-      <div className="flex justify-end gap-3">
-        {onClose && (
-          <Button variant="outline" size="sm" onClick={handleCloseClick} disabled={disabled}>
-            閉じる
-          </Button>
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDiscard}
-          disabled={disabled || pendingCount === 0}
-        >
-          変更を破棄する
-        </Button>
-        <Button size="sm" onClick={handleCommit} disabled={disabled || pendingCount === 0}>
-          {committing ? "更新中..." : `更新する（${pendingCount}）`}
-        </Button>
-      </div>
-
       {/* エントリー済みパート除去確認ダイアログ */}
       <Dialog open={confirmRemovePart !== null} onClose={() => setConfirmRemovePart(null)}>
         <DialogHeader
@@ -646,7 +646,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs, onClose }
           <p className="text-sm">曲名：{duplicateNotice?.song.title}</p>
           <p className="text-sm">アーティスト：{duplicateNotice?.song.artist}</p>
           <p className="text-sm mt-2">
-            同一イベント内で同じ曲が選択されました。意図的ではない場合は取り消してください
+            同一イベント内で同じ曲が選択されました。意図的ではない場合は取り消してください。
           </p>
         </DialogContent>
         <DialogFooter>
