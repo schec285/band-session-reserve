@@ -76,11 +76,13 @@ describe("getAllSongs", () => {
 
 describe("createSongs", () => {
   it("ok: 作成した曲一覧を返す", async () => {
+    mockRepo.findAllSongs.mockResolvedValue([]);
     mockRepo.createSongs.mockResolvedValue([mockSongRecord]);
 
     const result = await createSongs(mockRepo, { songs: [{ title: "千本桜", artist: "黒うさP" }] });
 
     expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
     expect(result.songs).toHaveLength(1);
     expect(result.songs[0].id).toBe("song-uuid-1");
     expect(result.songs[0].title).toBe("千本桜");
@@ -88,6 +90,7 @@ describe("createSongs", () => {
   });
 
   it("ok: 複数件まとめて作成できる", async () => {
+    mockRepo.findAllSongs.mockResolvedValue([]);
     mockRepo.createSongs.mockResolvedValue([mockSongRecord, mockSongRecord2]);
 
     const result = await createSongs(mockRepo, {
@@ -98,16 +101,59 @@ describe("createSongs", () => {
     });
 
     expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
     expect(result.songs).toHaveLength(2);
     expect(result.songs.map((s) => s.id)).toEqual(["song-uuid-1", "song-uuid-2"]);
   });
 
   it("リポジトリに正しい入力を渡す", async () => {
+    mockRepo.findAllSongs.mockResolvedValue([]);
     mockRepo.createSongs.mockResolvedValue([mockSongRecord]);
 
     await createSongs(mockRepo, { songs: [{ title: "千本桜", artist: "黒うさP" }] });
 
     expect(mockRepo.createSongs).toHaveBeenCalledWith([{ title: "千本桜", artist: "黒うさP" }]);
+  });
+
+  it("duplicate: 既存曲と同じ曲名・アーティストの組み合わせがある場合は作成せず重複を返す", async () => {
+    mockRepo.findAllSongs.mockResolvedValue([mockSongRecord]);
+
+    const result = await createSongs(mockRepo, { songs: [{ title: "千本桜", artist: "黒うさP" }] });
+
+    expect(result.status).toBe("duplicate");
+    if (result.status !== "duplicate") return;
+    expect(result.duplicates).toEqual([{ title: "千本桜", artist: "黒うさP" }]);
+    expect(mockRepo.createSongs).not.toHaveBeenCalled();
+  });
+
+  it("duplicate: リクエスト内に同じ組み合わせが複数回ある場合も重複として扱う", async () => {
+    mockRepo.findAllSongs.mockResolvedValue([]);
+
+    const result = await createSongs(mockRepo, {
+      songs: [
+        { title: "千本桜", artist: "黒うさP" },
+        { title: "千本桜", artist: "黒うさP" },
+      ],
+    });
+
+    expect(result.status).toBe("duplicate");
+    if (result.status !== "duplicate") return;
+    expect(result.duplicates).toEqual([{ title: "千本桜", artist: "黒うさP" }]);
+    expect(mockRepo.createSongs).not.toHaveBeenCalled();
+  });
+
+  it("ok: 曲名が同じでもアーティストが異なれば重複扱いしない", async () => {
+    mockRepo.findAllSongs.mockResolvedValue([mockSongRecord]);
+    mockRepo.createSongs.mockResolvedValue([mockSongRecord2]);
+
+    const result = await createSongs(mockRepo, {
+      songs: [{ title: "千本桜", artist: "別のアーティスト" }],
+    });
+
+    expect(result.status).toBe("ok");
+    expect(mockRepo.createSongs).toHaveBeenCalledWith([
+      { title: "千本桜", artist: "別のアーティスト" },
+    ]);
   });
 });
 

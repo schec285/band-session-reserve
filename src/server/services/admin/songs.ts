@@ -2,7 +2,9 @@ import type { ISongRepository } from "@/server/repositories/songs/song-repositor
 import type { AdminSongResponse, AdminEventSongResponse, CreateSongsInput, AddEventSongsInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
 import type { Part } from "@drizzle/schema/enums";
 
-type CreateSongsResult = { status: "ok"; songs: AdminSongResponse[] };
+type CreateSongsResult =
+  | { status: "ok"; songs: AdminSongResponse[] }
+  | { status: "duplicate"; duplicates: { title: string; artist: string }[] };
 
 type AddEventSongsResult = { status: "ok"; eventSongs: AdminEventSongResponse[] };
 
@@ -28,12 +30,39 @@ export async function getAllSongs(repo: ISongRepository): Promise<AdminSongRespo
 }
 
 /**
+ * 曲名・アーティストの組み合わせからマップのキーを作る。
+ */
+function songKey(title: string, artist: string): string {
+  return `${title} ${artist}`;
+}
+
+/**
  * 曲マスタを複数件まとめて作成する。
+ * 既存の曲、またはリクエスト内で同じ曲名・アーティストの組み合わせが重複する場合は
+ * 作成を行わず status: "duplicate" を返す。
  */
 export async function createSongs(
   repo: ISongRepository,
   input: CreateSongsInput
 ): Promise<CreateSongsResult> {
+  const existingSongs = await repo.findAllSongs();
+  const existingKeys = new Set(existingSongs.map((s) => songKey(s.title, s.artist)));
+
+  const seenInRequest = new Set<string>();
+  const duplicates = new Map<string, { title: string; artist: string }>();
+
+  for (const song of input.songs) {
+    const key = songKey(song.title, song.artist);
+    if (existingKeys.has(key) || seenInRequest.has(key)) {
+      duplicates.set(key, { title: song.title, artist: song.artist });
+    }
+    seenInRequest.add(key);
+  }
+
+  if (duplicates.size > 0) {
+    return { status: "duplicate", duplicates: Array.from(duplicates.values()) };
+  }
+
   const records = await repo.createSongs(
     input.songs.map((song) => ({ title: song.title, artist: song.artist }))
   );

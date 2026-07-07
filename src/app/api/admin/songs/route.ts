@@ -63,6 +63,13 @@ export async function POST(request: Request) {
     const repo = new DrizzleSongRepository();
     const result = await createSongs(repo, parsed.data);
 
+    if (result.status === "duplicate") {
+      return NextResponse.json(
+        { message: "重複した曲があります", duplicates: result.duplicates },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json({ songs: result.songs }, { status: 201 });
   });
 }

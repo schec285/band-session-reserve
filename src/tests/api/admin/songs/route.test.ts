@@ -163,6 +163,24 @@ describe("POST /api/admin/songs", () => {
     });
   });
 
+  describe("異常系 — 重複", () => {
+    it("409: 既存曲と同じ曲名・アーティストの組み合わせがある場合", async () => {
+      (createSongs as Mock).mockResolvedValue({
+        status: "duplicate",
+        duplicates: [{ title: "千本桜", artist: "黒うさP" }],
+      });
+
+      const res = await POST(makeRequest("POST", validBody));
+      const json = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(json.message).toBe("重複した曲があります");
+      expect(json.message).not.toContain("千本桜");
+      expect(json.message).not.toContain("黒うさP");
+      expect(json.duplicates).toEqual([{ title: "千本桜", artist: "黒うさP" }]);
+    });
+  });
+
   describe("異常系 — CSRF", () => {
     it("403: CSRFトークンが不正な場合", async () => {
       const res = await POST(

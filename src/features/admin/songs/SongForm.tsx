@@ -30,6 +30,13 @@ interface Props {
 }
 
 /**
+ * 曲名・アーティストの組み合わせから重複判定用のキーを作る。
+ */
+function songKey(title: string, artist: string): string {
+  return `${title} ${artist}`;
+}
+
+/**
  * 曲マスタの新規作成フォーム。
  * 「追加する」で入力内容を登録予定の一覧に積み上げ、「登録する」でまとめて送信する。
  * アーティスト入力欄には、既存曲のアーティスト名から部分一致で候補を表示する。
@@ -46,6 +53,8 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
 
   // 「追加する」で積み上げた、登録予定の曲一覧。
   const [pendingSongs, setPendingSongs] = useState<PendingSong[]>([]);
+  // 重複と判定された曲名・アーティストのキー。該当行を赤背景で表示する。
+  const [duplicateKeys, setDuplicateKeys] = useState<Set<string>>(new Set());
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
@@ -66,6 +75,7 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
   /**
    * 曲名・アーティストの入力内容を登録予定の一覧に追加し、入力欄をクリアする。
    * どちらかが未入力の場合はエラーを表示し追加しない。
+   * 登録予定の一覧に同じ組み合わせが既にある場合はトースト通知のみ出し、該当行を赤背景で示す。
    */
   function handleStage() {
     const trimmedTitle = title.trim();
@@ -75,8 +85,17 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
       setStageError("曲名とアーティストの両方を入力してください");
       return;
     }
-
     setStageError(null);
+
+    const key = songKey(trimmedTitle, trimmedArtist);
+    const isDuplicateInPending = pendingSongs.some((s) => songKey(s.title, s.artist) === key);
+
+    if (isDuplicateInPending) {
+      setDuplicateKeys((prev) => new Set(prev).add(key));
+      setToast({ message: "重複した曲があります", variant: "error" });
+      return;
+    }
+
     setPendingSongs((prev) => [
       ...prev,
       { id: crypto.randomUUID(), title: trimmedTitle, artist: trimmedArtist },
@@ -87,7 +106,18 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
   }
 
   function handleRemovePending(id: string) {
-    setPendingSongs((prev) => prev.filter((s) => s.id !== id));
+    setPendingSongs((prev) => {
+      const removed = prev.find((s) => s.id === id);
+      if (removed) {
+        const key = songKey(removed.title, removed.artist);
+        setDuplicateKeys((keys) => {
+          const next = new Set(keys);
+          next.delete(key);
+          return next;
+        });
+      }
+      return prev.filter((s) => s.id !== id);
+    });
   }
 
   /**
@@ -126,6 +156,15 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
     } else {
       setSubmitting(false);
       const json = await res.json();
+      if (Array.isArray(json.duplicates)) {
+        setDuplicateKeys((prev) => {
+          const next = new Set(prev);
+          for (const d of json.duplicates as { title: string; artist: string }[]) {
+            next.add(songKey(d.title, d.artist));
+          }
+          return next;
+        });
+      }
       setToast({ message: json.message ?? "登録に失敗しました", variant: "error" });
     }
   }
@@ -232,20 +271,28 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
                 <span aria-hidden="true" />
               </div>
               <div className="divide-y">
-                {pendingSongs.map((song) => (
-                  <div key={song.id} className="grid grid-cols-[1fr_1fr_auto] items-center gap-3 px-3 py-2">
-                    <p className="text-sm">{song.title}</p>
-                    <p className="text-sm">{song.artist}</p>
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePending(song.id)}
-                      aria-label="削除"
-                      className="text-muted-foreground hover:text-destructive"
+                {pendingSongs.map((song) => {
+                  const isDuplicate = duplicateKeys.has(songKey(song.title, song.artist));
+                  return (
+                    <div
+                      key={song.id}
+                      className={`grid grid-cols-[1fr_1fr_auto] items-center gap-3 px-3 py-2 ${
+                        isDuplicate ? "bg-destructive/10" : ""
+                      }`}
                     >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                      <p className="text-sm">{song.title}</p>
+                      <p className="text-sm">{song.artist}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePending(song.id)}
+                        aria-label="削除"
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
