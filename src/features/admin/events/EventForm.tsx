@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import type { AdminEventResponse } from "@/lib/types/api/admin/events";
 import { toDatetimeLocal } from "@/lib/utils/date";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
@@ -14,13 +15,17 @@ interface Props {
   event?: AdminEventResponse;
   /** キャンセル時の遷移先。省略時は /admin/events */
   cancelPath?: string;
+  /** 指定時、キャンセル操作はページ遷移せずこのコールバックを呼ぶ（未保存の変更がある場合は確認ダイアログを挟む） */
+  onCancel?: () => void;
+  /** 指定時、保存成功時はページ遷移せずこのコールバックを呼ぶ */
+  onSuccess?: () => void;
 }
 
 /**
  * イベント作成・編集フォーム。
  * event が渡された場合は PUT、なければ POST を使用する。
  */
-export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
+export function EventForm({ event, cancelPath = "/admin/events", onCancel, onSuccess }: Props) {
   const router = useRouter();
   const isEdit = !!event;
   const [isPending, startTransition] = useTransition();
@@ -40,9 +45,55 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
   const [description, setDescription] = useState(event?.description ?? "");
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
+
+  // マウント時点の初期値。キャンセル時の未保存変更判定（isDirty）の比較基準にする。
+  const initialValues = useRef({
+    title: event?.title ?? "",
+    startAt: event ? toDatetimeLocal(event.startAt) : "",
+    endAt: event ? toDatetimeLocal(event.endAt) : "",
+    closedAt: event?.closedAt ? toDatetimeLocal(event.closedAt) : "",
+    venue: event?.venue ?? "",
+    mapEmbedUrl: event?.mapEmbedUrl ?? "",
+    venueFee: event?.venueFee ?? 0,
+    participationFee: event?.participationFee ?? 0,
+    vocalEntryLimit: event?.vocalEntryLimit ?? "",
+    instrumentEntryLimit: event?.instrumentEntryLimit ?? "",
+    description: event?.description ?? "",
+  }).current;
+
+  const isDirty =
+    title !== initialValues.title ||
+    startAt !== initialValues.startAt ||
+    endAt !== initialValues.endAt ||
+    closedAt !== initialValues.closedAt ||
+    venue !== initialValues.venue ||
+    mapEmbedUrl !== initialValues.mapEmbedUrl ||
+    venueFee !== initialValues.venueFee ||
+    participationFee !== initialValues.participationFee ||
+    vocalEntryLimit !== initialValues.vocalEntryLimit ||
+    instrumentEntryLimit !== initialValues.instrumentEntryLimit ||
+    description !== initialValues.description;
 
   function fieldError(field: string) {
     return errors.find((e) => e.field === field)?.message;
+  }
+
+  /**
+   * キャンセルボタン押下時の処理。onCancel が渡されている場合（インライン利用時）は
+   * 未保存の変更があれば破棄確認ダイアログを挟み、なければ即座に onCancel を呼ぶ。
+   * onCancel が渡されていない場合は既存通りページ遷移する。
+   */
+  function handleCancelClick() {
+    if (onCancel) {
+      if (isDirty) {
+        setConfirmDiscardOpen(true);
+      } else {
+        onCancel();
+      }
+    } else {
+      startTransition(() => router.push(cancelPath));
+    }
   }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -76,10 +127,14 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
     setSubmitting(false);
 
     if (res.ok) {
-      startTransition(() => {
-        router.push(cancelPath);
-        router.refresh();
-      });
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        startTransition(() => {
+          router.push(cancelPath);
+          router.refresh();
+        });
+      }
     } else {
       const json = await res.json();
       setErrors(json.errors ?? [{ field: "", message: json.message }]);
@@ -88,11 +143,7 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
 
   const actionButtons = (
     <div className="flex justify-end gap-3">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => startTransition(() => router.push(cancelPath))}
-      >
+      <Button type="button" variant="outline" onClick={handleCancelClick}>
         キャンセル
       </Button>
       <Button type="submit" disabled={submitting || isPending}>
@@ -272,6 +323,30 @@ export function EventForm({ event, cancelPath = "/admin/events" }: Props) {
       )}
 
       {!isEdit && actionButtons}
+
+      {/* 変更破棄確認ダイアログ（onCancel が渡されているインライン利用時のみ意味を持つ） */}
+      <Dialog open={confirmDiscardOpen} onClose={() => setConfirmDiscardOpen(false)}>
+        <DialogHeader title="変更の破棄確認" onClose={() => setConfirmDiscardOpen(false)} />
+        <DialogContent>
+          <p className="text-sm">編集中の変更を破棄し、保存前の状態に戻します。よろしいですか？</p>
+        </DialogContent>
+        <DialogFooter>
+          <Button type="button" variant="outline" size="sm" onClick={() => setConfirmDiscardOpen(false)}>
+            キャンセル
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setConfirmDiscardOpen(false);
+              onCancel?.();
+            }}
+          >
+            破棄する
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </form>
   );
 }

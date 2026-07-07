@@ -30,6 +30,8 @@ interface Props {
   eventId: string;
   eventSongs: EventSong[];
   allSongs: Song[];
+  /** 指定時、「閉じる」ボタンを表示する。未保存の変更がある場合は破棄確認ダイアログを経て呼ぶ。 */
+  onClose?: () => void;
 }
 
 interface ConfirmRemovePart {
@@ -64,11 +66,13 @@ function entrantKey(eventSongId: string, part: Part): string {
  * 新規に追加予定の曲は緑（パートはデフォルト全選択）で登録済み曲テーブルに表示する。
  * 「更新する」ボタンで一括してAPIに送信し、「変更を破棄する」ボタンは確認ダイアログを経て編集内容を破棄しサーバーの状態に戻す。
  */
-export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) {
+export function AdminEventSongManager({ eventId, eventSongs, allSongs, onClose }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [toast, setToast] = useState<{ message: string; variant: ToastVariant } | null>(null);
   const [committing, setCommitting] = useState(false);
+  // 「閉じる」経由で破棄確認ダイアログを開いたかどうか。確認後に onClose も呼ぶかの判定に使う。
+  const [closeAfterDiscard, setCloseAfterDiscard] = useState(false);
 
   // 登録済み曲の編集中パート選択（draft）。サーバーの eventSongs が更新されたら同期し直す。
   const [draftParts, setDraftParts] = useState<Map<string, Set<Part>>>(() =>
@@ -274,6 +278,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
 
   /**
    * 編集中の内容（追加予定・パート変更・削除予定）をすべて破棄し、サーバーの状態に戻す。
+   * 「閉じる」ボタン経由で開かれていた場合は、破棄後に onClose も呼ぶ。
    */
   function handleConfirmDiscard() {
     setDraftParts(buildDraftPartsFromEventSongs(eventSongs));
@@ -282,6 +287,31 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
     setPendingEntrantRemovals(new Set());
     setConfirmDiscardOpen(false);
     setToast({ message: "変更を破棄しました", variant: "success" });
+    if (closeAfterDiscard) {
+      setCloseAfterDiscard(false);
+      onClose?.();
+    }
+  }
+
+  /**
+   * 「閉じる」ボタン押下時の処理。未保存の変更があれば破棄確認ダイアログを経由し、
+   * なければ即座に onClose を呼ぶ。
+   */
+  function handleCloseClick() {
+    if (pendingCount > 0) {
+      setCloseAfterDiscard(true);
+      setConfirmDiscardOpen(true);
+    } else {
+      onClose?.();
+    }
+  }
+
+  /**
+   * 変更破棄確認ダイアログを、破棄せずに閉じる（キャンセル・背景クリック・✕ボタン共通）。
+   */
+  function handleDismissConfirmDiscard() {
+    setConfirmDiscardOpen(false);
+    setCloseAfterDiscard(false);
   }
 
   /**
@@ -379,6 +409,25 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end gap-3">
+        {onClose && (
+          <Button variant="outline" size="sm" onClick={handleCloseClick} disabled={disabled}>
+            閉じる
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDiscard}
+          disabled={disabled || pendingCount === 0}
+        >
+          変更を破棄する
+        </Button>
+        <Button size="sm" onClick={handleCommit} disabled={disabled || pendingCount === 0}>
+          {committing ? "更新中..." : "更新する"}
+        </Button>
+      </div>
+
       <div>
         <h2 className="text-xl font-bold mb-2">曲を追加する</h2>
         <div
@@ -552,20 +601,6 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
         )}
       </div>
 
-      <div className="flex justify-end gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleDiscard}
-          disabled={disabled || pendingCount === 0}
-        >
-          変更を破棄する
-        </Button>
-        <Button size="sm" onClick={handleCommit} disabled={disabled || pendingCount === 0}>
-          {committing ? "更新中..." : `更新する（${pendingCount}）`}
-        </Button>
-      </div>
-
       {/* エントリー済みパート除去確認ダイアログ */}
       <Dialog open={confirmRemovePart !== null} onClose={() => setConfirmRemovePart(null)}>
         <DialogHeader
@@ -589,13 +624,13 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
       </Dialog>
 
       {/* 変更破棄確認ダイアログ */}
-      <Dialog open={confirmDiscardOpen} onClose={() => setConfirmDiscardOpen(false)}>
-        <DialogHeader title="変更の破棄確認" onClose={() => setConfirmDiscardOpen(false)} />
+      <Dialog open={confirmDiscardOpen} onClose={handleDismissConfirmDiscard}>
+        <DialogHeader title="変更の破棄確認" onClose={handleDismissConfirmDiscard} />
         <DialogContent>
           <p className="text-sm">編集中の変更をすべて破棄し、保存前の状態に戻します。よろしいですか？</p>
         </DialogContent>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={() => setConfirmDiscardOpen(false)}>
+          <Button variant="outline" size="sm" onClick={handleDismissConfirmDiscard}>
             キャンセル
           </Button>
           <Button variant="destructive" size="sm" onClick={handleConfirmDiscard}>
@@ -611,7 +646,7 @@ export function AdminEventSongManager({ eventId, eventSongs, allSongs }: Props) 
           <p className="text-sm">曲名：{duplicateNotice?.song.title}</p>
           <p className="text-sm">アーティスト：{duplicateNotice?.song.artist}</p>
           <p className="text-sm mt-2">
-            同一イベント内で同じ曲が選択されました。意図的ではない場合は取り消してください
+            同一イベント内で同じ曲が選択されました。意図的ではない場合は取り消してください。
           </p>
         </DialogContent>
         <DialogFooter>

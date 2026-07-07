@@ -48,7 +48,8 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
    * イベントIDで曲一覧とパート別予約状況を取得する。
    * events を起点に LEFT JOIN することでイベントの存在有無を判別する。
    * イベントが存在しない場合は null、曲が 0 件の場合は空配列を返す。
-   * 曲一覧はアーティスト名昇順・曲名昇順で並べる。
+   * 曲一覧はアーティスト名昇順・曲名昇順で並べる。同じ曲が複数回登録され artist・title が
+   * 同値になる場合、その中の並び順を安定させるため eventSongs.id を最後のタイブレークに使う。
    */
   async findEventSongsWithReservations(eventId: string): Promise<IAdminSongWithReservations[] | null> {
     const songRows = await db
@@ -62,7 +63,7 @@ export class DrizzleAdminEventRepository implements IAdminEventRepository {
       .leftJoin(eventSongs, eq(eventSongs.eventId, events.id))
       .leftJoin(songs, eq(eventSongs.songId, songs.id))
       .where(eq(events.id, eventId))
-      .orderBy(asc(songs.artist), asc(songs.title));
+      .orderBy(asc(songs.artist), asc(songs.title), asc(eventSongs.id));
 
     if (songRows.length === 0) return null;
 
