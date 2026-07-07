@@ -7,16 +7,24 @@ import { partEnum } from "@drizzle/schema/enums";
 const PartSchema = z.enum(partEnum.enumValues);
 
 /**
- * POST /api/admin/events/[eventId]/songs のリクエストボディスキーマ。
- * 既存の曲をイベントに追加し、募集するパートを指定する。
- * エラーレスポンスは ErrorResponse 型（src/lib/types/api/index.ts）を使用する。
+ * bulk追加における曲1件分のスキーマ。
  */
-export const AddEventSongSchema = z.object({
+const AddEventSongItemSchema = z.object({
   songId: z.string().min(1, "曲は必須です"),
   parts: z.array(PartSchema).min(1, "パートを1つ以上選択してください"),
 });
 
-export type AddEventSongInput = z.infer<typeof AddEventSongSchema>;
+/**
+ * POST /api/admin/events/[eventId]/songs のリクエストボディスキーマ。
+ * 複数の既存曲をまとめてイベントに追加し、曲ごとに募集するパートを指定する。
+ * 同一イベントに同じ曲を複数回登録することも許容する。
+ * エラーレスポンスは ErrorResponse 型（src/lib/types/api/index.ts）を使用する。
+ */
+export const AddEventSongsSchema = z.object({
+  songs: z.array(AddEventSongItemSchema).min(1, "曲を1つ以上選択してください"),
+});
+
+export type AddEventSongsInput = z.infer<typeof AddEventSongsSchema>;
 
 /**
  * POST /api/admin/songs のリクエストボディスキーマ。
@@ -63,3 +71,13 @@ export const UpdateEventSongPartsSchema = z.object({
 });
 
 export type UpdateEventSongPartsInput = z.infer<typeof UpdateEventSongPartsSchema>;
+
+/**
+ * DELETE /api/admin/events/[eventId]/songs のリクエストボディスキーマ。
+ * 指定した eventSongId を一括削除する。
+ */
+export const DeleteEventSongsSchema = z.object({
+  eventSongIds: z.array(z.string().min(1)).min(1, "削除対象を1件以上選択してください"),
+});
+
+export type DeleteEventSongsInput = z.infer<typeof DeleteEventSongsSchema>;

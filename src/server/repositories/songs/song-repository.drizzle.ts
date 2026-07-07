@@ -1,12 +1,12 @@
-import { eq, and, notInArray } from "drizzle-orm";
+import { eq, and, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { songs, eventSongs, eventSongParts } from "@drizzle/schema";
+import { songs, eventSongs, eventSongParts, reservations } from "@drizzle/schema";
 import type { Part } from "@drizzle/schema/enums";
 import type {
   ISongRecord,
   IEventSongRecord,
   ICreateSongInput,
-  IAddEventSongInput,
+  IAddEventSongsInput,
   ISongRepository,
 } from "./song-repository";
 
@@ -49,36 +49,39 @@ export class DrizzleSongRepository implements ISongRepository {
   }
 
   /**
-   * イベントに曲を追加し、作成したレコードを返す。
-   * event_songs に INSERT した後、event_song_parts に募集パートを bulk INSERT する。
+   * イベントに複数曲を一括追加し、作成したレコード一覧を返す。
+   * transaction 内で event_songs を bulk INSERT した後、全曲分の event_song_parts を bulk INSERT する。
    */
-  async addEventSong(input: IAddEventSongInput): Promise<IEventSongRecord> {
-    const rows = await db
-      .insert(eventSongs)
-      .values({
-        eventId: input.eventId,
-        songId: input.songId,
-      })
-      .returning({
-        eventSongId: eventSongs.id,
-        songId: eventSongs.songId,
+  async addEventSongs(input: IAddEventSongsInput): Promise<IEventSongRecord[]> {
+    return await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(eventSongs)
+        .values(input.songs.map((song) => ({ eventId: input.eventId, songId: song.songId })))
+        .returning({ eventSongId: eventSongs.id, songId: eventSongs.songId });
+
+      const partsRows = inserted.flatMap((row, i) =>
+        input.songs[i].parts.map((part) => ({ eventSongId: row.eventSongId, part }))
+      );
+      await tx.insert(eventSongParts).values(partsRows);
+
+      const songIds = input.songs.map((song) => song.songId);
+      const songMasters = await tx
+        .select({ id: songs.id, title: songs.title, artist: songs.artist })
+        .from(songs)
+        .where(inArray(songs.id, songIds));
+      const songMasterById = new Map(songMasters.map((s) => [s.id, s]));
+
+      return inserted.map((row, i) => {
+        const master = songMasterById.get(row.songId)!;
+        return {
+          eventSongId: row.eventSongId,
+          songId: row.songId,
+          title: master.title,
+          artist: master.artist,
+          parts: input.songs[i].parts,
+        };
       });
-
-    const eventSongId = rows[0].eventSongId;
-
-    await db.insert(eventSongParts).values(
-      input.parts.map((part) => ({ eventSongId, part }))
-    );
-
-    const song = await this.findSongById(input.songId);
-
-    return {
-      eventSongId,
-      songId: rows[0].songId,
-      title: song!.title,
-      artist: song!.artist,
-      parts: input.parts,
-    };
+    });
   }
 
   /**
@@ -128,6 +131,32 @@ export class DrizzleSongRepository implements ISongRepository {
       .delete(eventSongs)
       .where(eq(eventSongs.id, eventSongId))
       .returning({ id: eventSongs.id });
+
+    return rows.length > 0;
+  }
+
+  /**
+   * 指定した eventSongId 群のうち eventId に属するものを一括削除し、削除できた eventSongId 一覧を返す。
+   * eventId に属さない eventSongId は無視される。
+   */
+  async deleteEventSongs(eventId: string, eventSongIds: string[]): Promise<string[]> {
+    const rows = await db
+      .delete(eventSongs)
+      .where(and(eq(eventSongs.eventId, eventId), inArray(eventSongs.id, eventSongIds)))
+      .returning({ id: eventSongs.id });
+
+    return rows.map((row) => row.id);
+  }
+
+  /**
+   * イベント曲の指定パートのエントリー（予約）を削除する。募集パート自体（event_song_parts）は残す。
+   * 存在しない場合は false を返す。
+   */
+  async removeReservation(eventSongId: string, part: Part): Promise<boolean> {
+    const rows = await db
+      .delete(reservations)
+      .where(and(eq(reservations.eventSongId, eventSongId), eq(reservations.part, part)))
+      .returning({ id: reservations.id });
 
     return rows.length > 0;
   }
