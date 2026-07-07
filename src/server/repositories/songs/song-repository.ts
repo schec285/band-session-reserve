@@ -49,8 +49,8 @@ export interface ISongRepository {
   findAllSongs(): Promise<ISongRecord[]>;
   /** 曲IDで1件取得する。存在しない場合は null を返す */
   findSongById(songId: string): Promise<ISongRecord | null>;
-  /** 曲マスタを作成し、作成したレコードを返す */
-  createSong(input: ICreateSongInput): Promise<ISongRecord>;
+  /** 曲マスタを複数件まとめて作成し、作成したレコード一覧を返す */
+  createSongs(inputs: ICreateSongInput[]): Promise<ISongRecord[]>;
   /** イベントに複数曲を一括追加し、作成したレコード一覧を返す */
   addEventSongs(input: IAddEventSongsInput): Promise<IEventSongRecord[]>;
   /** イベント曲IDでイベント曲を削除する。存在しない場合は false を返す */

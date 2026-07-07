@@ -1,6 +1,6 @@
 import type { Mocked } from "vitest";
 import {
-  createSong,
+  createSongs,
   addEventSongs,
   deleteEventSong,
   deleteEventSongs,
@@ -14,6 +14,12 @@ const mockSongRecord = {
   id: "song-uuid-1",
   title: "千本桜",
   artist: "黒うさP",
+};
+
+const mockSongRecord2 = {
+  id: "song-uuid-2",
+  title: "打上花火",
+  artist: "DAOKO×米津玄師",
 };
 
 const mockEventSongRecord = {
@@ -30,7 +36,7 @@ beforeEach(() => {
   mockRepo = {
     findAllSongs: vi.fn(),
     findSongById: vi.fn(),
-    createSong: vi.fn(),
+    createSongs: vi.fn(),
     addEventSongs: vi.fn(),
     deleteEventSong: vi.fn(),
     deleteEventSongs: vi.fn(),
@@ -65,31 +71,43 @@ describe("getAllSongs", () => {
 });
 
 // ---------------------------------------------------------------------------
-// createSong
+// createSongs
 // ---------------------------------------------------------------------------
 
-describe("createSong", () => {
-  it("ok: 作成した曲を返す", async () => {
-    mockRepo.createSong.mockResolvedValue(mockSongRecord);
+describe("createSongs", () => {
+  it("ok: 作成した曲一覧を返す", async () => {
+    mockRepo.createSongs.mockResolvedValue([mockSongRecord]);
 
-    const result = await createSong(mockRepo, { title: "千本桜", artist: "黒うさP" });
+    const result = await createSongs(mockRepo, { songs: [{ title: "千本桜", artist: "黒うさP" }] });
 
     expect(result.status).toBe("ok");
-    if (result.status !== "ok") return;
-    expect(result.song.id).toBe("song-uuid-1");
-    expect(result.song.title).toBe("千本桜");
-    expect(result.song.artist).toBe("黒うさP");
+    expect(result.songs).toHaveLength(1);
+    expect(result.songs[0].id).toBe("song-uuid-1");
+    expect(result.songs[0].title).toBe("千本桜");
+    expect(result.songs[0].artist).toBe("黒うさP");
+  });
+
+  it("ok: 複数件まとめて作成できる", async () => {
+    mockRepo.createSongs.mockResolvedValue([mockSongRecord, mockSongRecord2]);
+
+    const result = await createSongs(mockRepo, {
+      songs: [
+        { title: "千本桜", artist: "黒うさP" },
+        { title: "打上花火", artist: "DAOKO×米津玄師" },
+      ],
+    });
+
+    expect(result.status).toBe("ok");
+    expect(result.songs).toHaveLength(2);
+    expect(result.songs.map((s) => s.id)).toEqual(["song-uuid-1", "song-uuid-2"]);
   });
 
   it("リポジトリに正しい入力を渡す", async () => {
-    mockRepo.createSong.mockResolvedValue(mockSongRecord);
+    mockRepo.createSongs.mockResolvedValue([mockSongRecord]);
 
-    await createSong(mockRepo, { title: "千本桜", artist: "黒うさP" });
+    await createSongs(mockRepo, { songs: [{ title: "千本桜", artist: "黒うさP" }] });
 
-    expect(mockRepo.createSong).toHaveBeenCalledWith({
-      title: "千本桜",
-      artist: "黒うさP",
-    });
+    expect(mockRepo.createSongs).toHaveBeenCalledWith([{ title: "千本桜", artist: "黒うさP" }]);
   });
 });
 

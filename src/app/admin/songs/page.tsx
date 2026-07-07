@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { getAllSongs } from "@/server/services/admin/songs";
 import { DrizzleSongRepository } from "@/server/repositories/songs/song-repository.drizzle";
 import { ArtistSongAccordion } from "@/features/admin/songs/ArtistSongAccordion";
+import { SongsCreatedToast } from "@/features/admin/songs/SongsCreatedToast";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +16,10 @@ export default async function AdminSongsPage() {
 
   return (
     <div>
+      <Suspense fallback={null}>
+        <SongsCreatedToast />
+      </Suspense>
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">曲管理</h1>
         <Link href="/admin/songs/new" className={cn(buttonVariants())}>

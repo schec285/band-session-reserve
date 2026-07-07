@@ -39,15 +39,13 @@ export class DrizzleSongRepository implements ISongRepository {
   }
 
   /**
-   * 曲マスタを作成し、作成したレコードを返す。
+   * 曲マスタを複数件まとめて作成し、作成したレコード一覧を返す。
    */
-  async createSong(input: ICreateSongInput): Promise<ISongRecord> {
-    const rows = await db
+  async createSongs(inputs: ICreateSongInput[]): Promise<ISongRecord[]> {
+    return await db
       .insert(songs)
-      .values({ title: input.title, artist: input.artist })
+      .values(inputs.map((input) => ({ title: input.title, artist: input.artist })))
       .returning({ id: songs.id, title: songs.title, artist: songs.artist });
-
-    return rows[0];
   }
 
   /**

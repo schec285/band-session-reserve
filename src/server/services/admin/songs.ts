@@ -1,9 +1,8 @@
 import type { ISongRepository } from "@/server/repositories/songs/song-repository";
-import type { AdminSongResponse, AdminEventSongResponse, CreateSongInput, AddEventSongsInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
+import type { AdminSongResponse, AdminEventSongResponse, CreateSongsInput, AddEventSongsInput, UpdateEventSongPartsInput } from "@/lib/types/api/admin/songs";
 import type { Part } from "@drizzle/schema/enums";
 
-type CreateSongResult =
-  | { status: "ok"; song: AdminSongResponse }
+type CreateSongsResult = { status: "ok"; songs: AdminSongResponse[] };
 
 type AddEventSongsResult = { status: "ok"; eventSongs: AdminEventSongResponse[] };
 
@@ -29,14 +28,16 @@ export async function getAllSongs(repo: ISongRepository): Promise<AdminSongRespo
 }
 
 /**
- * 曲マスタを作成する。
+ * 曲マスタを複数件まとめて作成する。
  */
-export async function createSong(
+export async function createSongs(
   repo: ISongRepository,
-  input: CreateSongInput
-): Promise<CreateSongResult> {
-  const record = await repo.createSong({ title: input.title, artist: input.artist });
-  return { status: "ok", song: record };
+  input: CreateSongsInput
+): Promise<CreateSongsResult> {
+  const records = await repo.createSongs(
+    input.songs.map((song) => ({ title: song.title, artist: song.artist }))
+  );
+  return { status: "ok", songs: records };
 }
 
 /**

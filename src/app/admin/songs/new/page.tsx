@@ -11,7 +11,6 @@ export default async function NewSongPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">曲登録</h1>
       <SongForm songs={songs} />
     </div>
   );
