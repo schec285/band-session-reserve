@@ -55,6 +55,8 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
   const [pendingSongs, setPendingSongs] = useState<PendingSong[]>([]);
   // 重複と判定された曲名・アーティストのキー。該当行を赤背景で表示する。
   const [duplicateKeys, setDuplicateKeys] = useState<Set<string>>(new Set());
+  // 登録予定の一覧内で重複を試みた際、該当行を一時的に点滅させるためのキー。
+  const [blinkingKey, setBlinkingKey] = useState<string | null>(null);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
@@ -75,7 +77,9 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
   /**
    * 曲名・アーティストの入力内容を登録予定の一覧に追加し、入力欄をクリアする。
    * どちらかが未入力の場合はエラーを表示し追加しない。
-   * 登録予定の一覧に同じ組み合わせが既にある場合はトースト通知のみ出し、該当行を赤背景で示す。
+   * 既存の曲マスタ（songs プロップ、サーバーアクセスなしで判定）に既に登録されている場合、
+   * または登録予定の一覧内に同じ組み合わせが既にある場合も、入力欄付近にインラインでエラー表示し
+   * 追加しない。後者の場合は該当行を3回点滅させて示す。
    */
   function handleStage() {
     const trimmedTitle = title.trim();
@@ -85,17 +89,24 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
       setStageError("曲名とアーティストの両方を入力してください");
       return;
     }
-    setStageError(null);
 
     const key = songKey(trimmedTitle, trimmedArtist);
-    const isDuplicateInPending = pendingSongs.some((s) => songKey(s.title, s.artist) === key);
 
-    if (isDuplicateInPending) {
-      setDuplicateKeys((prev) => new Set(prev).add(key));
-      setToast({ message: "重複した曲があります", variant: "error" });
+    if (songs.some((s) => songKey(s.title, s.artist) === key)) {
+      setStageError("既に登録されています");
       return;
     }
 
+    if (pendingSongs.some((s) => songKey(s.title, s.artist) === key)) {
+      setStageError("既に登録候補に追加されています。");
+      setBlinkingKey(key);
+      window.setTimeout(() => {
+        setBlinkingKey((current) => (current === key ? null : current));
+      }, 1200);
+      return;
+    }
+
+    setStageError(null);
     setPendingSongs((prev) => [
       ...prev,
       { id: crypto.randomUUID(), title: trimmedTitle, artist: trimmedArtist },
@@ -272,13 +283,15 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
               </div>
               <div className="divide-y">
                 {pendingSongs.map((song) => {
-                  const isDuplicate = duplicateKeys.has(songKey(song.title, song.artist));
+                  const key = songKey(song.title, song.artist);
+                  const isDuplicate = duplicateKeys.has(key);
+                  const isBlinking = blinkingKey === key;
                   return (
                     <div
                       key={song.id}
                       className={`grid grid-cols-[1fr_1fr_auto] items-center gap-3 px-3 py-2 ${
                         isDuplicate ? "bg-destructive/10" : ""
-                      }`}
+                      } ${isBlinking ? "animate-duplicate-blink" : ""}`}
                     >
                       <p className="text-sm">{song.title}</p>
                       <p className="text-sm">{song.artist}</p>
