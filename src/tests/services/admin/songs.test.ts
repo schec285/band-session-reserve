@@ -1,6 +1,8 @@
 import type { Mocked } from "vitest";
 import {
   createSongs,
+  updateSong,
+  deleteSong,
   addEventSongs,
   deleteEventSong,
   deleteEventSongs,
@@ -14,12 +16,16 @@ const mockSongRecord = {
   id: "song-uuid-1",
   title: "千本桜",
   artist: "黒うさP",
+  createdAt: new Date("2026-01-15T03:00:00.000Z"),
+  inUse: false,
 };
 
 const mockSongRecord2 = {
   id: "song-uuid-2",
   title: "打上花火",
   artist: "DAOKO×米津玄師",
+  createdAt: new Date("2026-02-20T03:00:00.000Z"),
+  inUse: false,
 };
 
 const mockEventSongRecord = {
@@ -37,6 +43,8 @@ beforeEach(() => {
     findAllSongs: vi.fn(),
     findSongById: vi.fn(),
     createSongs: vi.fn(),
+    updateSong: vi.fn(),
+    deleteSong: vi.fn(),
     addEventSongs: vi.fn(),
     deleteEventSong: vi.fn(),
     deleteEventSongs: vi.fn(),
@@ -59,6 +67,8 @@ describe("getAllSongs", () => {
     expect(result[0].id).toBe("song-uuid-1");
     expect(result[0].title).toBe("千本桜");
     expect(result[0].artist).toBe("黒うさP");
+    expect(result[0].createdAt).toMatch(/\+09:00$/);
+    expect(result[0].inUse).toBe(false);
   });
 
   it("曲が0件の場合は空配列を返す", async () => {
@@ -87,6 +97,7 @@ describe("createSongs", () => {
     expect(result.songs[0].id).toBe("song-uuid-1");
     expect(result.songs[0].title).toBe("千本桜");
     expect(result.songs[0].artist).toBe("黒うさP");
+    expect(result.songs[0].createdAt).toMatch(/\+09:00$/);
   });
 
   it("ok: 複数件まとめて作成できる", async () => {
@@ -154,6 +165,54 @@ describe("createSongs", () => {
     expect(mockRepo.createSongs).toHaveBeenCalledWith([
       { title: "千本桜", artist: "別のアーティスト" },
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// updateSong
+// ---------------------------------------------------------------------------
+
+describe("updateSong", () => {
+  it("ok: 曲名を更新して返す", async () => {
+    mockRepo.updateSong.mockResolvedValue({ ...mockSongRecord, title: "新しい曲名" });
+
+    const result = await updateSong(mockRepo, "song-uuid-1", { title: "新しい曲名" });
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.song.title).toBe("新しい曲名");
+    expect(mockRepo.updateSong).toHaveBeenCalledWith("song-uuid-1", { title: "新しい曲名" });
+  });
+
+  it("not-found: 曲が存在しない場合", async () => {
+    mockRepo.updateSong.mockResolvedValue(null);
+
+    const result = await updateSong(mockRepo, "nonexistent-uuid", { title: "新しい曲名" });
+
+    expect(result.status).toBe("not-found");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteSong
+// ---------------------------------------------------------------------------
+
+describe("deleteSong", () => {
+  it("ok: 削除成功", async () => {
+    mockRepo.deleteSong.mockResolvedValue(true);
+
+    const result = await deleteSong(mockRepo, "song-uuid-1");
+
+    expect(result.status).toBe("ok");
+    expect(mockRepo.deleteSong).toHaveBeenCalledWith("song-uuid-1");
+  });
+
+  it("not-found: 曲が存在しない場合", async () => {
+    mockRepo.deleteSong.mockResolvedValue(false);
+
+    const result = await deleteSong(mockRepo, "nonexistent-uuid");
+
+    expect(result.status).toBe("not-found");
   });
 });
 

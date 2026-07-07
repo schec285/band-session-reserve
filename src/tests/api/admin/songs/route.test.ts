@@ -15,8 +15,8 @@ import { getAllSongs, createSongs } from "@/server/services/admin/songs";
 import { makeCsrfPair } from "@/tests/helpers/csrf";
 
 const mockSongs = [
-  { id: "song-uuid-1", title: "千本桜", artist: "黒うさP" },
-  { id: "song-uuid-2", title: "命に嫌われている。", artist: "カンザキイオリ" },
+  { id: "song-uuid-1", title: "千本桜", artist: "黒うさP", createdAt: "2026-01-15T12:00:00+09:00", inUse: false },
+  { id: "song-uuid-2", title: "命に嫌われている。", artist: "カンザキイオリ", createdAt: "2026-02-20T12:00:00+09:00", inUse: false },
 ];
 
 function makeRequest(method: string, body?: unknown) {

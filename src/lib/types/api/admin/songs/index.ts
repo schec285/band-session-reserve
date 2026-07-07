@@ -47,14 +47,27 @@ export type CreateSongsInput = z.infer<typeof CreateSongsSchema>;
 
 /**
  * 曲マスタのレスポンススキーマ。
+ * inUse は、いずれかのイベントに登録されているかどうか（削除時の警告表示に使用）。
  */
 export const AdminSongResponseSchema = z.object({
   id: z.string(),
   title: z.string(),
   artist: z.string(),
+  createdAt: z.string(),
+  inUse: z.boolean(),
 });
 
 export type AdminSongResponse = z.infer<typeof AdminSongResponseSchema>;
+
+/**
+ * PATCH /api/admin/songs/[songId] のリクエストボディスキーマ。
+ * 曲名のみ更新可能（アーティスト名は変更不可。表記ゆれ等は新規登録＋不要曲の削除で対応する）。
+ */
+export const UpdateSongSchema = z.object({
+  title: z.string().min(1, "曲名は必須です"),
+});
+
+export type UpdateSongInput = z.infer<typeof UpdateSongSchema>;
 
 /**
  * イベント曲のレスポンススキーマ。

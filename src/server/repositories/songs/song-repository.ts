@@ -2,11 +2,21 @@ import type { Part } from "@drizzle/schema/enums";
 
 /**
  * 曲マスタ 1 件を表すレコード型。
+ * inUse は、いずれかのイベントに登録されているかどうか。
  */
 export interface ISongRecord {
   id: string;
   title: string;
   artist: string;
+  createdAt: Date;
+  inUse: boolean;
+}
+
+/**
+ * 曲名更新時の入力型。
+ */
+export interface IUpdateSongInput {
+  title: string;
 }
 
 /**
@@ -51,6 +61,14 @@ export interface ISongRepository {
   findSongById(songId: string): Promise<ISongRecord | null>;
   /** 曲マスタを複数件まとめて作成し、作成したレコード一覧を返す */
   createSongs(inputs: ICreateSongInput[]): Promise<ISongRecord[]>;
+  /** 曲名を更新する。存在しない場合は null を返す */
+  updateSong(songId: string, input: IUpdateSongInput): Promise<ISongRecord | null>;
+  /**
+   * 曲マスタを削除する。存在しない場合は false を返す。
+   * イベントで使用中の場合、当該曲の event_songs を先に削除してからカスケードで
+   * event_song_parts・reservations も削除する（呼び出し側で削除内容の同意を得た前提）。
+   */
+  deleteSong(songId: string): Promise<boolean>;
   /** イベントに複数曲を一括追加し、作成したレコード一覧を返す */
   addEventSongs(input: IAddEventSongsInput): Promise<IEventSongRecord[]>;
   /** イベント曲IDでイベント曲を削除する。存在しない場合は false を返す */
