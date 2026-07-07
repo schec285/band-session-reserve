@@ -1,4 +1,4 @@
-import { eq, and, inArray, notInArray } from "drizzle-orm";
+import { eq, and, asc, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { songs, eventSongs, eventSongParts, reservations } from "@drizzle/schema";
 import type { Part } from "@drizzle/schema/enums";
@@ -16,11 +16,13 @@ import type {
 export class DrizzleSongRepository implements ISongRepository {
   /**
    * 全曲マスタを取得する。
+   * アーティスト名昇順・曲名昇順で返す（同名同アーティスト曲が複数存在する場合は songs.id をタイブレークに使う）。
    */
   async findAllSongs(): Promise<ISongRecord[]> {
     return await db
       .select({ id: songs.id, title: songs.title, artist: songs.artist })
-      .from(songs);
+      .from(songs)
+      .orderBy(asc(songs.artist), asc(songs.title), asc(songs.id));
   }
 
   /**

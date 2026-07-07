@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
+import { ArtistSongAccordion } from "./ArtistSongAccordion";
 
 interface Song {
   id: string;
@@ -27,6 +28,19 @@ export function AdminSongList({ songs }: Props) {
   const [artist, setArtist] = useState("");
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // アーティスト入力の候補ドロップダウンを表示するかどうか。入力欄からフォーカスが外れたら閉じる。
+  const [artistSearchOpen, setArtistSearchOpen] = useState(false);
+
+  // 曲マスタ上のアーティスト名を重複排除した候補一覧。songs はアーティスト昇順のため追加ソート不要。
+  const artistCandidates = useMemo(() => Array.from(new Set(songs.map((s) => s.artist))), [songs]);
+
+  // 入力中のアーティスト名で部分一致（大文字小文字を区別しない）する候補を最大10件返す。
+  const artistSearchResults = useMemo(() => {
+    const query = artist.trim().toLowerCase();
+    const matched =
+      query === "" ? artistCandidates : artistCandidates.filter((a) => a.toLowerCase().includes(query));
+    return matched.slice(0, 10);
+  }, [artistCandidates, artist]);
 
   function fieldError(field: string) {
     return errors.find((e) => e.field === field)?.message;
@@ -61,16 +75,7 @@ export function AdminSongList({ songs }: Props) {
       {songs.length === 0 ? (
         <p className="text-muted-foreground text-sm">曲が登録されていません。</p>
       ) : (
-        <div className="space-y-2">
-          {songs.map((song) => (
-            <div key={song.id} className="flex items-center p-3 border rounded-lg">
-              <div>
-                <p className="font-medium text-sm">{song.title}</p>
-                <p className="text-xs text-muted-foreground">{song.artist}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ArtistSongAccordion songs={songs} />
       )}
 
       {/* 新規追加フォーム */}
@@ -92,12 +97,43 @@ export function AdminSongList({ songs }: Props) {
 
           <div className="space-y-1">
             <Label htmlFor="artist">アーティスト</Label>
-            <Input
-              id="artist"
-              value={artist}
-              onChange={(e) => setArtist(e.target.value)}
-              required
-            />
+            <div
+              className="relative"
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                  setArtistSearchOpen(false);
+                }
+              }}
+            >
+              <Input
+                id="artist"
+                value={artist}
+                onChange={(e) => setArtist(e.target.value)}
+                onFocus={() => setArtistSearchOpen(true)}
+                onClick={() => setArtistSearchOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setArtistSearchOpen(false);
+                }}
+                required
+              />
+              {artistSearchOpen && artistSearchResults.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border bg-background shadow-lg divide-y">
+                  {artistSearchResults.map((candidate) => (
+                    <button
+                      key={candidate}
+                      type="button"
+                      onClick={() => {
+                        setArtist(candidate);
+                        setArtistSearchOpen(false);
+                      }}
+                      className="w-full text-left p-2 text-sm hover:bg-muted"
+                    >
+                      {candidate}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {fieldError("artist") && (
               <p className="text-destructive text-sm">{fieldError("artist")}</p>
             )}
