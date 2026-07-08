@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { getEvents } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
+import { AdminNavLink } from "@/features/admin/AdminNavLink";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
@@ -17,9 +17,9 @@ export default async function AdminEventsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">イベント管理</h1>
-        <Link href="/admin/events/new" className={cn(buttonVariants())}>
+        <AdminNavLink href="/admin/events/new" className={cn(buttonVariants())}>
           新規作成
-        </Link>
+        </AdminNavLink>
       </div>
 
       {events.length === 0 ? (
@@ -29,7 +29,7 @@ export default async function AdminEventsPage() {
           {events.map((event) => {
             const status = getEventStatus(event);
             return (
-              <Link
+              <AdminNavLink
                 key={event.id}
                 href={`/admin/events/${event.id}`}
                 className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-0"
@@ -44,7 +44,7 @@ export default async function AdminEventsPage() {
                     {formatDatetime(event.startAt)}〜{formatDatetime(event.endAt)}
                   </p>
                 </div>
-              </Link>
+              </AdminNavLink>
             );
           })}
         </div>

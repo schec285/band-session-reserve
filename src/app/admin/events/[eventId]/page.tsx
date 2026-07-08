@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { getEventForEdit } from "@/server/services/admin/events";
+import { AdminNavLink } from "@/features/admin/AdminNavLink";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDeleteButton";
@@ -35,9 +35,9 @@ export default async function AdminEventDetailPage({
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <Link href="/admin/events" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-3")}>
+        <AdminNavLink href="/admin/events" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-3")}>
           ← 一覧へ
-        </Link>
+        </AdminNavLink>
         <h1 className="text-2xl font-bold">イベント詳細</h1>
       </div>
 
