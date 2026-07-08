@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,15 +105,15 @@ export function SignInForm({ flash }: SignInFormProps) {
             {loading || isPending ? "サインイン中..." : "サインイン"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            <a href="/auth/reset-password" className="underline">
+            <Link href="/auth/reset-password" className="underline">
               パスワードをお忘れの方
-            </a>
+            </Link>
           </p>
           <p className="text-center text-sm text-muted-foreground">
             アカウントをお持ちでない方は{" "}
-            <a href="/auth/signup" className="underline">
+            <Link href="/auth/signup" className="underline">
               新規登録
-            </a>
+            </Link>
           </p>
         </form>
       </CardContent>

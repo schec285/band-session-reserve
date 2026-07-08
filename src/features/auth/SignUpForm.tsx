@@ -12,6 +12,7 @@ import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist
 import { clearFlash } from "@/server/actions/flash";
 import { isPasswordPolicySatisfied } from "@/lib/utils/password";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
+import Link from "next/link";
 
 interface SignUpFormProps {
   flash?: { type: ToastVariant; message: string } | null;
@@ -131,9 +132,9 @@ export function SignUpForm({ flash }: SignUpFormProps) {
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             すでにアカウントをお持ちの方は{" "}
-            <a href="/auth/signin" className="underline">
+            <Link href="/auth/signin" className="underline">
               サインイン
-            </a>
+            </Link>
           </p>
         </form>
       </CardContent>

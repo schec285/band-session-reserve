@@ -1,8 +1,8 @@
+import Link from "next/link";
 import { AlarmClock, Calendar, MapPin, Ticket } from "lucide-react";
 import type { Event } from "@/lib/types/domain/events";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
 import { calcRemainingDays, formatDateRange, formatDatetime } from "@/lib/utils/date";
-import { TransitionLink } from "@/components/layout/TransitionLink";
 
 /**
  * イベント 1 件のカード表示。
@@ -15,7 +15,7 @@ export function EventCard({ event }: { event: Event }) {
   const remainingDays = event.closedAt ? calcRemainingDays(event.closedAt) : null;
 
   return (
-    <TransitionLink href={`/events/${event.id}`} className="block group">
+    <Link href={`/events/${event.id}`} className="block group">
       <div className={`relative rounded-xl border bg-card transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5 overflow-hidden ${status === "ongoing" ? "border-green-200" : status === "upcoming" ? "border-blue-200" : "border-border"}`}>
         {/* 左アクセントライン */}
         <div className={`absolute left-0 top-0 bottom-0 w-1 ${status === "ongoing" ? "bg-green-500" : status === "upcoming" ? "bg-blue-500" : "bg-muted-foreground/30"}`} />
@@ -55,6 +55,6 @@ export function EventCard({ event }: { event: Event }) {
           </div>
         </div>
       </div>
-    </TransitionLink>
+    </Link>
   );
 }

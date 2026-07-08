@@ -1,7 +1,6 @@
 import { getEvents } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { EventList } from "@/features/events/EventList";
-import { PageReady } from "@/components/layout/PageTransition";
 
 /**
  * トップページ。イベント一覧を表示する。
@@ -12,7 +11,6 @@ export default async function HomePage() {
 
   return (
     <div>
-      <PageReady />
       <h1 className="text-2xl font-bold mb-6">イベント一覧</h1>
       <EventList events={events} />
     </div>

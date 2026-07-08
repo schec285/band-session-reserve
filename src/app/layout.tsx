@@ -7,8 +7,8 @@ import { SessionProvider } from "@/features/auth/SessionProvider";
 import { UserMenu } from "@/features/user/UserMenu";
 import { Footer } from "@/features/layout/Footer";
 import { APP_NAME } from "@/lib/constants/app";
-import { PageTransitionProvider, PageContentArea } from "@/components/layout/PageTransition";
-import { TransitionLink } from "@/components/layout/TransitionLink";
+import Link from "next/link";
+import { AutoNavProvider, AutoNavContentArea } from "@/components/layout/AutoNavTransition";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -46,20 +46,20 @@ export default async function RootLayout({
     <html lang="ja" className={cn("font-sans", geist.variable)}>
       <body className="min-h-screen flex flex-col bg-background">
         <SessionProvider session={session}>
-          <PageTransitionProvider>
+          <AutoNavProvider skipPrefixes={["/admin"]}>
             <header className={`border-b sticky top-0 ${headerBgColor} z-40`}>
               <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
-                <TransitionLink href="/" className="font-bold text-xl tracking-tight">
+                <Link href="/" className="font-bold text-xl tracking-tight">
                   {title}
-                </TransitionLink>
+                </Link>
                 <UserMenu />
               </div>
             </header>
             <main className="flex-1 max-w-4xl w-full mx-auto px-6 py-8">
-              <PageContentArea>{children}</PageContentArea>
+              <AutoNavContentArea>{children}</AutoNavContentArea>
             </main>
             <Footer />
-          </PageTransitionProvider>
+          </AutoNavProvider>
         </SessionProvider>
       </body>
     </html>
