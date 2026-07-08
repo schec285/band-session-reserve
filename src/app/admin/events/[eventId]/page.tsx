@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { getEventForEdit } from "@/server/services/admin/events";
 import { AdminNavLink } from "@/features/admin/AdminNavLink";
+import { AdminPageReady } from "@/features/admin/AdminContentTransition";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDeleteButton";
@@ -34,6 +35,7 @@ export default async function AdminEventDetailPage({
 
   return (
     <div className="space-y-6">
+      <AdminPageReady />
       <div className="space-y-1">
         <AdminNavLink href="/admin/events" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-3")}>
           ← 一覧へ

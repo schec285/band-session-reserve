@@ -1,6 +1,7 @@
 import { getEvents } from "@/server/services/events/events";
 import { DrizzleEventRepository } from "@/server/repositories/events/event-repository.drizzle";
 import { AdminNavLink } from "@/features/admin/AdminNavLink";
+import { AdminPageReady } from "@/features/admin/AdminContentTransition";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
@@ -15,6 +16,7 @@ export default async function AdminEventsPage() {
 
   return (
     <div>
+      <AdminPageReady />
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">イベント管理</h1>
         <AdminNavLink href="/admin/events/new" className={cn(buttonVariants())}>

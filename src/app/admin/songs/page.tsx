@@ -4,6 +4,7 @@ import { DrizzleSongRepository } from "@/server/repositories/songs/song-reposito
 import { ArtistSongAccordion } from "@/features/admin/songs/ArtistSongAccordion";
 import { SongsCreatedToast } from "@/features/admin/songs/SongsCreatedToast";
 import { AdminNavLink } from "@/features/admin/AdminNavLink";
+import { AdminPageReady } from "@/features/admin/AdminContentTransition";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ export default async function AdminSongsPage() {
 
   return (
     <div>
+      <AdminPageReady />
       <Suspense fallback={null}>
         <SongsCreatedToast />
       </Suspense>
