@@ -48,7 +48,7 @@ export function UserMenu() {
     <div className="flex items-center gap-2">
       {isAdmin && (
         <Link
-          href="/admin"
+          href="/admin/events"
           aria-label="管理者ページ"
           className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border hover:bg-accent transition-colors"
         >
