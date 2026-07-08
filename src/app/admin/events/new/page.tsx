@@ -1,5 +1,5 @@
 import { EventForm } from "@/features/admin/events/EventForm";
-import { AdminPageReady } from "@/features/admin/AdminContentTransition";
+import { PageReady } from "@/components/layout/PageTransition";
 
 /**
  * イベント新規作成ページ。
@@ -7,7 +7,7 @@ import { AdminPageReady } from "@/features/admin/AdminContentTransition";
 export default function NewEventPage() {
   return (
     <div>
-      <AdminPageReady />
+      <PageReady />
       <h1 className="text-2xl font-bold mb-6">イベント作成</h1>
       <EventForm />
     </div>

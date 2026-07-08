@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { AdminNavLink } from "@/features/admin/AdminNavLink";
+import { TransitionLink } from "@/components/layout/TransitionLink";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -24,7 +24,7 @@ export function AdminNav() {
           const isActive = pathname.startsWith(href);
           return (
             <li key={href}>
-              <AdminNavLink
+              <TransitionLink
                 href={href}
                 className={cn(
                   "inline-block px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
@@ -34,7 +34,7 @@ export function AdminNav() {
                 )}
               >
                 {label}
-              </AdminNavLink>
+              </TransitionLink>
             </li>
           );
         })}

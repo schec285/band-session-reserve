@@ -7,6 +7,8 @@ import { SongList } from "@/features/events/SongList";
 import { MapEmbed } from "@/features/events/MapEmbed";
 import { calcRemainingDays, formatDateRange, formatDatetime } from "@/lib/utils/date";
 import { EventStatusBadge, getEventStatus } from "@/components/EventStatusBadge";
+import { TransitionLink } from "@/components/layout/TransitionLink";
+import { PageReady } from "@/components/layout/PageTransition";
 
 /**
  * イベント詳細ページ。イベント情報と曲一覧・パート別予約状況を表示する。
@@ -34,9 +36,10 @@ export default async function EventDetailPage({
 
   return (
     <div className="space-y-6">
-      <a href="/" className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1">
+      <PageReady />
+      <TransitionLink href="/" className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1">
         ← イベント一覧に戻る
-      </a>
+      </TransitionLink>
 
       {/* イベント情報カード */}
       <div className="rounded-xl border bg-card overflow-hidden">
