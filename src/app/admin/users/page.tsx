@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { getAllUsers } from "@/server/services/admin/users";
 import { DrizzleUserRepository } from "@/server/repositories/auth/user-repository.drizzle";
 import { AdminUserList } from "@/features/admin/users/AdminUserList";
-import { PageReady } from "@/components/layout/PageTransition";
 
 /**
  * 管理者用登録ユーザー一覧ページ。
@@ -14,7 +13,6 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <PageReady />
       <h1 className="text-2xl font-bold mb-6">ユーザー管理</h1>
       <AdminUserList users={users} currentUserId={session!.user.id} />
     </div>

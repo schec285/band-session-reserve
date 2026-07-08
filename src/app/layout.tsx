@@ -46,7 +46,7 @@ export default async function RootLayout({
     <html lang="ja" className={cn("font-sans", geist.variable)}>
       <body className="min-h-screen flex flex-col bg-background">
         <SessionProvider session={session}>
-          <AutoNavProvider skipPrefixes={["/admin"]}>
+          <AutoNavProvider nestedScopePrefixes={["/admin"]}>
             <header className={`border-b sticky top-0 ${headerBgColor} z-40`}>
               <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
                 <Link href="/" className="font-bold text-xl tracking-tight">

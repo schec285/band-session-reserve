@@ -37,7 +37,7 @@ export function useAutoNavPending(): boolean {
 }
 
 /**
- * ルート直下に1つだけ設置するプロバイダー。
+ * アプリ全体・管理画面など、スコープごとに1つ設置するプロバイダー。
  *
  * 個々の Link を専用コンポーネントに置き換えたり、遷移先ページにマーカーを
  * 設置したりする必要がないよう、内部リンクのクリックをドキュメント全体で
@@ -49,20 +49,27 @@ export function useAutoNavPending(): boolean {
  * 完了してコミットされるまで isPending が true のまま維持される（React が
  * 「フォールバックへの一瞬の切り替え」を避けるため）。ただし対象ルートに
  * loading.tsx が存在すると、その Suspense フォールバックが表示可能になった
- * 時点で isPending が早期に false へ倒れてしまうため、一般画面からは
- * loading.tsx を撤去してある。
+ * 時点で isPending が早期に false へ倒れてしまうため、この仕組みを使う画面
+ * (一般画面・管理画面とも) では loading.tsx を撤去してある。
+ *
+ * 管理画面のようにナビゲーション部分を固定表示にしたいスコープは、この
+ * Provider を入れ子でもう1つ設置する（例: admin/layout.tsx）。外側の
+ * Provider は `nestedScopePrefixes` に現在地が該当する間、クリックの
+ * ハンドリングを完全に内側の Provider に譲る（何もしない）ため、二重に
+ * 処理されることはない。
  */
 export function AutoNavProvider({
   children,
-  skipPrefixes,
+  nestedScopePrefixes,
 }: {
   children: ReactNode;
   /**
-   * このプレフィックスで始まるパスへのリンクは自動検知の対象外にする
-   * （別の仕組みで遷移を扱うページ向け）。
+   * 現在のURL（遷移先ではなく現在地）がこのプレフィックスに該当する間、
+   * クリックのハンドリングを内側にネストされた別の AutoNavProvider に譲り、
+   * この Provider 自身は何もしない。
    * layout.tsx は Server Component のため、関数ではなく文字列配列で受け取る。
    */
-  skipPrefixes?: string[];
+  nestedScopePrefixes?: string[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -76,6 +83,14 @@ export function AutoNavProvider({
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      if (
+        nestedScopePrefixes?.some(
+          (prefix) => window.location.pathname === prefix || window.location.pathname.startsWith(`${prefix}/`)
+        )
+      ) {
+        return;
+      }
 
       const target = e.target as HTMLElement | null;
       const anchor = target?.closest?.("a[href]") as HTMLAnchorElement | null;
@@ -92,7 +107,6 @@ export function AutoNavProvider({
       }
       if (url.origin !== window.location.origin) return;
       if (url.pathname === window.location.pathname) return;
-      if (skipPrefixes?.some((prefix) => url.pathname === prefix || url.pathname.startsWith(`${prefix}/`))) return;
 
       // next/link の Link は自前の onClick で preventDefault + router.push を行う。
       // そのハンドラは React のイベント委譲によりバブリングフェーズで先に発火するため、
@@ -107,7 +121,7 @@ export function AutoNavProvider({
     document.addEventListener("click", handleClick, true);
     return () => document.removeEventListener("click", handleClick, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, skipPrefixes]);
+  }, [router, nestedScopePrefixes]);
 
   return (
     <AutoNavContext.Provider value={{ navigate, isPending }}>
@@ -120,21 +134,30 @@ export function AutoNavProvider({
  * ナビゲーション対象のコンテンツ領域。遷移中は中央スピナー表示で覆う。
  * 実コンテンツは裏側でそのまま描画させておき、opacityのトランジションで
  * 消すことで、実描画とオーバーレイ消滅のタイミングのズレを吸収する。
+ *
+ * 背景（bg-background の板）はこの div のサイズ（＝children の高さ）に
+ * absolute inset-0 でフィットさせて実コンテンツを覆うが、そのサイズは
+ * ページごと・遷移中の新旧コンテンツの入れ替わりで変わりうる。スピナー
+ * アイコン自体をその板の中央に置くと、板の高さが変わるたびにアイコンの
+ * 表示位置もジャンプしてしまうため、アイコンは fixed でビューポート中央に
+ * 固定し、板の高さ変化から完全に切り離す。
  */
 export function AutoNavContentArea({ children }: { children: ReactNode }) {
   const { isPending } = useAutoNavContext();
 
   return (
-    <div className="relative">
+    <div className="relative min-h-[60vh]">
       {children}
       <div
         aria-hidden={!isPending}
         className={cn(
-          "absolute inset-0 flex items-center justify-center bg-background transition-opacity duration-150",
+          "absolute inset-0 bg-background transition-opacity duration-150",
           isPending ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
       >
-        <LoadingSpinner />
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <LoadingSpinner />
+        </div>
       </div>
     </div>
   );

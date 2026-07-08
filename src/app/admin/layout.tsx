@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AdminNav } from "@/features/admin/AdminNav";
-import { PageTransitionProvider, PageContentArea } from "@/components/layout/PageTransition";
+import { AutoNavProvider, AutoNavContentArea } from "@/components/layout/AutoNavTransition";
 
 /**
  * 管理者画面レイアウト。
@@ -19,13 +19,13 @@ export default async function AdminLayout({
   }
 
   return (
-    <PageTransitionProvider>
+    <AutoNavProvider>
       <div className="flex flex-col gap-6">
         <AdminNav />
-        <PageContentArea>
+        <AutoNavContentArea>
           <div>{children}</div>
-        </PageContentArea>
+        </AutoNavContentArea>
       </div>
-    </PageTransitionProvider>
+    </AutoNavProvider>
   );
 }

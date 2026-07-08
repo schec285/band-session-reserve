@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { DrizzleAdminEventRepository } from "@/server/repositories/admin/event-repository.drizzle";
 import { getEventForEdit } from "@/server/services/admin/events";
-import { TransitionLink } from "@/components/layout/TransitionLink";
-import { PageReady } from "@/components/layout/PageTransition";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AdminEventDeleteButton } from "@/features/admin/events/AdminEventDeleteButton";
@@ -35,11 +34,10 @@ export default async function AdminEventDetailPage({
 
   return (
     <div className="space-y-6">
-      <PageReady />
       <div className="space-y-1">
-        <TransitionLink href="/admin/events" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-3")}>
+        <Link href="/admin/events" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-3")}>
           ← 一覧へ
-        </TransitionLink>
+        </Link>
         <h1 className="text-2xl font-bold">イベント詳細</h1>
       </div>
 
