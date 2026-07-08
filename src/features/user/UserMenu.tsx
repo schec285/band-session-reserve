@@ -1,9 +1,10 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { UserCircle, ShieldCheck } from "lucide-react";
+import { useAutoNavigate } from "@/components/layout/AutoNavTransition";
 
 /**
  * ヘッダー右端のユーザーアイコンメニュー。
@@ -12,7 +13,7 @@ import { UserCircle, ShieldCheck } from "lucide-react";
  */
 export function UserMenu() {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const navigate = useAutoNavigate();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +34,7 @@ export function UserMenu() {
   if (!session) {
     return (
       <button
-        onClick={() => router.push("/auth/signin")}
+        onClick={() => navigate("/auth/signin")}
         className="text-sm font-medium px-4 py-2 rounded-md border border-border hover:bg-accent transition-colors"
       >
         サインイン
@@ -46,14 +47,14 @@ export function UserMenu() {
   return (
     <div className="flex items-center gap-2">
       {isAdmin && (
-        <button
-          onClick={() => router.push("/admin")}
+        <Link
+          href="/admin/events"
           aria-label="管理者ページ"
           className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border hover:bg-accent transition-colors"
         >
           <ShieldCheck className="w-4 h-4" />
           管理者
-        </button>
+        </Link>
       )}
     <div className="relative" ref={menuRef}>
       <button
@@ -72,13 +73,13 @@ export function UserMenu() {
           </div>
           <nav className="py-1">
             <button
-              onClick={() => { setOpen(false); router.push("/user/reservations"); }}
+              onClick={() => { setOpen(false); navigate("/user/reservations"); }}
               className="w-full text-left px-4 py-2 text-sm hover:bg-accent transition-colors"
             >
               マイ予約
             </button>
             <button
-              onClick={() => { setOpen(false); router.push("/profile"); }}
+              onClick={() => { setOpen(false); navigate("/profile"); }}
               className="w-full text-left px-4 py-2 text-sm hover:bg-accent transition-colors"
             >
               プロフィール

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { AlarmClock, Calendar, MapPin, Ticket } from "lucide-react";
 import { auth } from "@/auth";
 import { getEventSongs } from "@/server/services/events/events";
@@ -34,9 +35,9 @@ export default async function EventDetailPage({
 
   return (
     <div className="space-y-6">
-      <a href="/" className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1">
+      <Link href="/" className="text-sm text-muted-foreground hover:underline inline-flex items-center gap-1">
         ← イベント一覧に戻る
-      </a>
+      </Link>
 
       {/* イベント情報カード */}
       <div className="rounded-xl border bg-card overflow-hidden">

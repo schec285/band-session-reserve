@@ -10,6 +10,7 @@ import { Toast } from "@/components/ui/Toast";
 import type { ToastVariant } from "@/components/ui/Toast";
 import { clearFlash } from "@/server/actions/flash";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
+import Link from "next/link";
 
 interface ResetPasswordRequestFormProps {
   flash?: { type: ToastVariant; message: string } | null;
@@ -88,9 +89,9 @@ export function ResetPasswordRequestForm({ flash }: ResetPasswordRequestFormProp
               {loading ? "送信中..." : "認証コードを送信"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              <a href="/auth/signin" className="underline">
+              <Link href="/auth/signin" className="underline">
                 サインインに戻る
-              </a>
+              </Link>
             </p>
           </form>
         </CardContent>
