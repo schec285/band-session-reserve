@@ -6,7 +6,7 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/
 import { Button } from "@/components/ui/button";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
 import { ROLE_LABELS, type Role } from "@/lib/utils/roles";
-import { formatDatetime } from "@/lib/utils/date";
+import { formatDate } from "@/lib/utils/date";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
 interface User {
@@ -16,7 +16,7 @@ interface User {
   role: Role;
   isVerified: boolean;
   createdAt: string;
-  lastLoginAt: string | null;
+  lastAccessDate: string | null;
 }
 
 interface Props {
@@ -121,7 +121,7 @@ export function AdminUserList({ users, currentUserId }: Props) {
                 <th className="text-left font-medium p-3">メールアドレス</th>
                 <th className="text-left font-medium p-3">ステータス</th>
                 <th className="text-left font-medium p-3">ロール</th>
-                <th className="text-left font-medium p-3">最終ログイン日時</th>
+                <th className="text-left font-medium p-3">最終アクセス日</th>
                 <th className="text-left font-medium p-3">登録日時</th>
               </tr>
             </thead>
@@ -164,7 +164,7 @@ export function AdminUserList({ users, currentUserId }: Props) {
                       )}
                     </td>
                     <td className="p-3 text-muted-foreground">
-                      {user.lastLoginAt ? formatDatetime(user.lastLoginAt) : "未ログイン"}
+                      {user.lastAccessDate ? formatDate(user.lastAccessDate) : "未アクセス"}
                     </td>
                     <td className="p-3 text-muted-foreground">{createdAtLabel}</td>
                   </tr>

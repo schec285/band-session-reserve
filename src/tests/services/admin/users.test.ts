@@ -9,7 +9,7 @@ const mockUserRecord = {
   role: "member",
   emailVerified: new Date("2026-01-01T00:00:00.000Z"),
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
-  lastLoginAt: new Date("2026-03-01T12:00:00.000Z"),
+  lastAccessDate: "2026-03-01",
 };
 
 let mockRepo: Mocked<IUserRepository>;
@@ -23,7 +23,7 @@ beforeEach(() => {
     create: vi.fn(),
     update: vi.fn(),
     setEmailVerified: vi.fn(),
-    updateLastLogin: vi.fn(),
+    updateLastAccessDate: vi.fn(),
     updatePassword: vi.fn(),
     getProfile: vi.fn(),
     updateProfile: vi.fn(),
@@ -50,7 +50,7 @@ describe("getAllUsers", () => {
       role: "member",
       isVerified: true,
       createdAt: "2026-01-01T00:00:00.000Z",
-      lastLoginAt: "2026-03-01T12:00:00.000Z",
+      lastAccessDate: "2026-03-01",
     });
   });
 
@@ -70,12 +70,12 @@ describe("getAllUsers", () => {
     expect(result[0].isVerified).toBe(false);
   });
 
-  it("lastLoginAt が null（未ログイン）のユーザーは null を返す", async () => {
-    mockRepo.findAll.mockResolvedValue([{ ...mockUserRecord, lastLoginAt: null }]);
+  it("lastAccessDate が null（未アクセス）のユーザーは null を返す", async () => {
+    mockRepo.findAll.mockResolvedValue([{ ...mockUserRecord, lastAccessDate: null }]);
 
     const result = await getAllUsers(mockRepo);
 
-    expect(result[0].lastLoginAt).toBeNull();
+    expect(result[0].lastAccessDate).toBeNull();
   });
 });
 

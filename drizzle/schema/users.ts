@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, timestamp, text } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, text, date } from "drizzle-orm/pg-core";
 import { partEnum } from "./enums";
 
 export const users = pgTable("users", {
@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 50 }).notNull().default("member"),
   part: partEnum("part"),
   comment: text("comment"),
-  lastLoginAt: timestamp("last_login_at", { mode: "date", withTimezone: true }),
+  lastAccessDate: date("last_access_date", { mode: "string" }),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
 });

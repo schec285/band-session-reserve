@@ -109,10 +109,10 @@ export class DrizzleUserRepository implements IUserRepository {
   }
 
   /**
-   * 最終ログイン日時を現在時刻でセットする。
+   * 最終アクセス日（YYYY-MM-DD）をセットする。
    */
-  async updateLastLogin(id: string): Promise<void> {
-    await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, id));
+  async updateLastAccessDate(id: string, dateString: string): Promise<void> {
+    await db.update(users).set({ lastAccessDate: dateString }).where(eq(users.id, id));
   }
 
   /**
@@ -146,7 +146,7 @@ export class DrizzleUserRepository implements IUserRepository {
         role: users.role,
         emailVerified: users.emailVerified,
         createdAt: users.createdAt,
-        lastLoginAt: users.lastLoginAt,
+        lastAccessDate: users.lastAccessDate,
       })
       .from(users)
       .orderBy(desc(users.createdAt));
@@ -167,7 +167,7 @@ export class DrizzleUserRepository implements IUserRepository {
         role: users.role,
         emailVerified: users.emailVerified,
         createdAt: users.createdAt,
-        lastLoginAt: users.lastLoginAt,
+        lastAccessDate: users.lastAccessDate,
       });
     return user ?? null;
   }

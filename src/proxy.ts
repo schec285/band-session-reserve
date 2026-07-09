@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import type { NextAuthRequest } from "next-auth";
+import { recordLastAccess } from "@/server/services/auth/record-last-access";
+import { DrizzleUserRepository } from "@/server/repositories/auth/user-repository.drizzle";
 
-export const proxy = auth((request) => {
+/**
+ * 認証状態に応じたルーティング判定を行い、レスポンスを組み立てる。
+ */
+function buildResponse(request: NextAuthRequest): NextResponse {
   const { pathname } = request.nextUrl;
   const isAuthenticated = !!request.auth;
 
@@ -96,6 +102,31 @@ export const proxy = auth((request) => {
   }
 
   return NextResponse.next();
+}
+
+export const proxy = auth(async (request) => {
+  const response = buildResponse(request);
+
+  if (request.auth) {
+    const cookieDate = request.cookies.get("last_access_synced")?.value;
+    const result = await recordLastAccess(
+      new DrizzleUserRepository(),
+      request.auth.user.id,
+      cookieDate,
+      new Date()
+    );
+    if (result) {
+      response.cookies.set("last_access_synced", result.cookieValue, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+      });
+    }
+  }
+
+  return response;
 });
 
 export const config = {

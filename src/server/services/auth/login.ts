@@ -12,7 +12,7 @@ type LoginResult = {
 /**
  * メール/パスワードでユーザーを認証する。
  * passwordHash が null（OAuthユーザー）・パスワード不一致・emailVerified が null（未認証）
- * のいずれかの場合は null を返す。認証に成功した場合は最終ログイン日時を更新する。
+ * のいずれかの場合は null を返す。
  * bcrypt形式の既存ハッシュ（移行期のユーザー）で認証に成功した場合はArgon2idへ遅延リハッシュする。
  */
 export async function login(
@@ -26,8 +26,6 @@ export async function login(
   if (!valid) return null;
 
   if (!user.emailVerified) return null;
-
-  await userRepo.updateLastLogin(user.id);
 
   // ↓ ここから移行期のみ必要な処理（旧bcryptハッシュをArgon2idへ上書きする箇所）。
   // 全ユーザーのpasswordHashがArgon2id形式に置き換わったら、
