@@ -11,7 +11,7 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   create: vi.fn(),
   update: vi.fn(),
   setEmailVerified: vi.fn(),
-  updateLastLogin: vi.fn(),
+  updateLastAccessDate: vi.fn(),
   updatePassword: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
@@ -54,7 +54,6 @@ describe("login", () => {
       expect(result).not.toBeNull();
       expect(result?.id).toBe("user-id-1");
       expect(result?.email).toBe("test@example.com");
-      expect(userRepo.updateLastLogin).toHaveBeenCalledWith("user-id-1");
       expect(userRepo.updatePassword).toHaveBeenCalledTimes(1);
       const [rehashedId, rehashedHash] = userRepo.updatePassword.mock.calls[0];
       expect(rehashedId).toBe("user-id-1");
@@ -70,7 +69,6 @@ describe("login", () => {
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe("user-id-1");
-      expect(userRepo.updateLastLogin).toHaveBeenCalledWith("user-id-1");
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
     });
   });
@@ -83,7 +81,6 @@ describe("login", () => {
       const result = await login(userRepo, { email: "nouser@example.com", password: VALID_PASSWORD });
 
       expect(result).toBeNull();
-      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
 
     it("passwordHash が null（OAuthユーザー）の場合 null を返す", async () => {
@@ -93,7 +90,6 @@ describe("login", () => {
       const result = await login(userRepo, { email: "test@example.com", password: VALID_PASSWORD });
 
       expect(result).toBeNull();
-      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
 
     it("パスワードが不一致の場合 null を返す", async () => {
@@ -106,7 +102,6 @@ describe("login", () => {
       const result = await login(userRepo, { email: "test@example.com", password: "wrongpassword" });
 
       expect(result).toBeNull();
-      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
       expect(userRepo.updatePassword).not.toHaveBeenCalled();
     });
 
@@ -120,7 +115,6 @@ describe("login", () => {
       const result = await login(userRepo, { email: "test@example.com", password: VALID_PASSWORD });
 
       expect(result).toBeNull();
-      expect(userRepo.updateLastLogin).not.toHaveBeenCalled();
     });
   });
 });

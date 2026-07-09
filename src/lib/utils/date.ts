@@ -69,6 +69,14 @@ export function formatDatetime(iso: string): string {
 }
 
 /**
+ * Date を JST の暦日で YYYY-MM-DD 形式にする。
+ */
+export function todayJSTDateString(date: Date): string {
+  const p = getJSTParts(date);
+  return `${p.year}-${p.month.padStart(2, "0")}-${p.day.padStart(2, "0")}`;
+}
+
+/**
  * 開始・終了日時を JST で範囲表示用にフォーマットする。
  * 同じ日付内: 「YYYY年M月D日 HH:mm 〜 HH:mm」
  * 日付をまたぐ場合: 「YYYY年M月D日 HH:mm 〜 YYYY年M月D日 HH:mm」

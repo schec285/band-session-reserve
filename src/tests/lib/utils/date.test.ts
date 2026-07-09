@@ -6,6 +6,7 @@ import {
   formatDatetime,
   formatDateRange,
   calcRemainingDays,
+  todayJSTDateString,
 } from "@/lib/utils/date";
 
 // UTC 2026-04-12T06:00:00Z = JST 2026-04-12T15:00:00+09:00
@@ -164,5 +165,24 @@ describe("calcRemainingDays", () => {
     // closedAt: UTC 2026-04-12T16:00:00Z = JST 2026-04-13T01:00:00（同じ JST 日付なので 0）
     const now = new Date("2026-04-12T15:00:00.000Z");
     expect(calcRemainingDays("2026-04-12T16:00:00.000Z", now)).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// todayJSTDateString
+// ---------------------------------------------------------------------------
+
+describe("todayJSTDateString", () => {
+  it("Date を JST の暦日で YYYY-MM-DD 形式にする", () => {
+    expect(todayJSTDateString(UTC_6AM)).toBe("2026-04-12");
+  });
+
+  it("UTCでは同日でもJSTで日付が繰り上がる場合は繰り上がった日付を返す", () => {
+    expect(todayJSTDateString(UTC_15H30)).toBe("2026-04-13");
+  });
+
+  it("月・日を2桁にゼロパディングする", () => {
+    // UTC 2026-01-01T00:00:00Z = JST 2026-01-01T09:00:00+09:00
+    expect(todayJSTDateString(new Date("2026-01-01T00:00:00.000Z"))).toBe("2026-01-01");
   });
 });
