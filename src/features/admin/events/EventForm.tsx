@@ -9,6 +9,7 @@ import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/
 import type { AdminEventResponse } from "@/lib/types/api/admin/events";
 import { toDatetimeLocal } from "@/lib/utils/date";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
+import { useAutoNavigate } from "@/components/layout/AutoNavTransition";
 
 interface Props {
   /** 編集時は既存イベントを渡す。新規作成時は undefined */
@@ -27,6 +28,7 @@ interface Props {
  */
 export function EventForm({ event, cancelPath = "/admin/events", onCancel, onSuccess }: Props) {
   const router = useRouter();
+  const navigate = useAutoNavigate();
   const isEdit = !!event;
   const [isPending, startTransition] = useTransition();
 
@@ -92,7 +94,7 @@ export function EventForm({ event, cancelPath = "/admin/events", onCancel, onSuc
         onCancel();
       }
     } else {
-      startTransition(() => router.push(cancelPath));
+      navigate(cancelPath);
     }
   }
 

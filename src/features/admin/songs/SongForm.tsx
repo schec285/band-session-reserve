@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
+import { useAutoNavigate } from "@/components/layout/AutoNavTransition";
 
 interface Song {
   id: string;
@@ -43,6 +44,7 @@ function songKey(title: string, artist: string): string {
  */
 export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
   const router = useRouter();
+  const navigate = useAutoNavigate();
   const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState("");
@@ -139,7 +141,7 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
     if (pendingSongs.length > 0) {
       setConfirmDiscardOpen(true);
     } else {
-      startTransition(() => router.push(cancelPath));
+      navigate(cancelPath);
     }
   }
 
@@ -344,7 +346,7 @@ export function SongForm({ songs, cancelPath = "/admin/songs" }: Props) {
             size="sm"
             onClick={() => {
               setConfirmDiscardOpen(false);
-              startTransition(() => router.push(cancelPath));
+              navigate(cancelPath);
             }}
           >
             破棄する
