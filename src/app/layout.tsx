@@ -34,6 +34,19 @@ const { title, headerBgColor } =
 export const metadata: Metadata = {
   title: title,
   description: "バンドセッションの参加予約システム",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.jpg", sizes: "32x32", type: "image/jpeg" },
+      { url: "/favicon-192x192.jpg", sizes: "192x192", type: "image/jpeg" },
+    ],
+    apple: [
+      {
+        url: "/apple-touch-icon-270x270.jpg",
+        sizes: "270x270",
+        type: "image/jpeg",
+      },
+    ],
+  },
 };
 
 export default async function RootLayout({
