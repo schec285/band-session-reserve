@@ -29,6 +29,7 @@ export type AdminEventSongInfo = {
 /**
  * エントリー一覧に表示する参加者情報。
  * ユーザー単位で、そのユーザーがエントリーしているパートを PART_ORDER 順で持つ。
+ * 一覧全体はユーザー名の五十音順（日本語ロケール比較）で並べる。
  */
 export type AdminEventEntrant = {
   userId: string;
@@ -177,12 +178,14 @@ export async function getEventForEdit(
 
   const collectedIds = await repo.findCollectedUserIds(eventId);
 
-  const entrants: AdminEventEntrant[] = [...entrantMap.entries()].map(([userId, { username, parts }]) => ({
-    userId,
-    username,
-    parts: [...parts].sort((a, b) => PART_ORDER.indexOf(a) - PART_ORDER.indexOf(b)),
-    collected: collectedIds.has(userId),
-  }));
+  const entrants: AdminEventEntrant[] = [...entrantMap.entries()]
+    .map(([userId, { username, parts }]) => ({
+      userId,
+      username,
+      parts: [...parts].sort((a, b) => PART_ORDER.indexOf(a) - PART_ORDER.indexOf(b)),
+      collected: collectedIds.has(userId),
+    }))
+    .sort((a, b) => a.username.localeCompare(b.username, "ja"));
 
   return { status: "ok", event: toResponse(eventRecord), songs, entrants };
 }

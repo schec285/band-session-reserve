@@ -267,6 +267,28 @@ describe("getEventForEdit", () => {
     expect(result.entrants[0].collected).toBe(true);
   });
 
+  it("ok: エントラントはユーザー名の五十音順（日本語ロケール比較）でソートされる", async () => {
+    mockRepo.findEventById.mockResolvedValue(mockEventRecord);
+    mockRepo.findEventSongsWithReservations.mockResolvedValue([
+      {
+        id: "song-uuid-1",
+        eventSongId: "event-song-uuid-1",
+        title: "千本桜",
+        artist: "黒うさP",
+        reservations: [
+          { part: "vocal", username: "田中", userId: "user-uuid-tanaka" },
+          { part: "drums", username: "佐藤", userId: "user-uuid-sato" },
+        ],
+      },
+    ]);
+
+    const result = await getEventForEdit(mockRepo, "event-uuid-1");
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.entrants.map((e) => e.username)).toEqual(["佐藤", "田中"]);
+  });
+
   it("ok: 曲が 0 件の場合は songs が空配列", async () => {
     mockRepo.findEventById.mockResolvedValue(mockEventRecord);
     mockRepo.findEventSongsWithReservations.mockResolvedValue([]);
