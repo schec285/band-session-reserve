@@ -63,20 +63,18 @@ export default async function AdminEventDetailPage({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {[...entrants]
-                .sort((a, b) => a.username.localeCompare(b.username, "ja"))
-                .map(({ userId, username, parts, collected }, index) => (
-                  <tr key={userId}>
-                    <td className="py-2 pr-4 text-muted-foreground tabular-nums">{index + 1}</td>
-                    <td className="py-2 pr-4 font-medium whitespace-nowrap">{username}</td>
-                    <td className="py-2 pr-4">
-                      <PartBadgeList parts={parts.map((p) => ({ part: p, entered: true }))} />
-                    </td>
-                    <td className="py-2">
-                      <AdminCollectionButton eventId={eventId} userId={userId} collected={collected} />
-                    </td>
-                  </tr>
-                ))}
+              {entrants.map(({ userId, username, parts, collected }, index) => (
+                <tr key={userId}>
+                  <td className="py-2 pr-4 text-muted-foreground tabular-nums">{index + 1}</td>
+                  <td className="py-2 pr-4 font-medium whitespace-nowrap">{username}</td>
+                  <td className="py-2 pr-4">
+                    <PartBadgeList parts={parts.map((p) => ({ part: p, entered: true }))} />
+                  </td>
+                  <td className="py-2">
+                    <AdminCollectionButton eventId={eventId} userId={userId} collected={collected} />
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
