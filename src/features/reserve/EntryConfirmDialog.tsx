@@ -177,7 +177,7 @@ export function EntryConfirmDialog({
               <span>
                 参加費は{participationFee.toLocaleString()}円です。
                 <a
-                  href="/participation-policy.html"
+                  href="/participation-policy"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline text-blue-600 hover:text-blue-800"
