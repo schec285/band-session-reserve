@@ -171,4 +171,16 @@ export class DrizzleUserRepository implements IUserRepository {
       });
     return user ?? null;
   }
+
+  /**
+   * JWT再取得用に名前とロールを取得する。
+   */
+  async getAuthRefreshData(id: string): Promise<{ name: string; role: string } | null> {
+    const [user] = await db
+      .select({ name: users.name, role: users.role })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    return user ?? null;
+  }
 }

@@ -16,6 +16,7 @@ const mockUserRepo = (): Mocked<IUserRepository> => ({
   updateProfile: vi.fn(),
   findAll: vi.fn(),
   updateRole: vi.fn(),
+  getAuthRefreshData: vi.fn(),
 });
 
 // UTC 2026-04-12T06:00:00Z = JST 2026-04-12

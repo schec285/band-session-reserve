@@ -53,4 +53,6 @@ export interface IUserRepository {
   findAll(): Promise<IUserListRecord[]>;
   /** ロールを更新する。存在しない場合は null を返す */
   updateRole(id: string, role: string): Promise<IUserListRecord | null>;
+  /** JWT再取得用に名前とロールを取得する */
+  getAuthRefreshData(id: string): Promise<{ name: string; role: string } | null>;
 }
