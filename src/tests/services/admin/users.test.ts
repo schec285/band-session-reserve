@@ -29,6 +29,7 @@ beforeEach(() => {
     updateProfile: vi.fn(),
     findAll: vi.fn(),
     updateRole: vi.fn(),
+    getAuthRefreshData: vi.fn(),
   };
 });
 

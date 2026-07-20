@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { PART_ORDER, PART_LABELS } from "@/lib/utils/parts";
 import type { GetProfileResponse } from "@/lib/types/api/user";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
@@ -18,6 +19,7 @@ type Props = {
  * 名前・パート・自由コメントを編集し、PUT /api/user/profile に送信する。
  */
 export function ProfileForm({ profile }: Props) {
+  const { update } = useSession();
   const [name, setName] = useState(profile.name);
   const [part, setPart] = useState(profile.part ?? "");
   const [comment, setComment] = useState(profile.comment ?? "");
@@ -40,6 +42,7 @@ export function ProfileForm({ profile }: Props) {
       });
       const json = await res.json();
       if (res.ok) {
+        await update();
         setMessage({ type: "success", text: json.message });
       } else {
         setMessage({ type: "error", text: json.message ?? "更新に失敗しました" });
