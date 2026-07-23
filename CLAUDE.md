@@ -19,6 +19,7 @@ npm run test:api   # APIテストのみ
 
 - APIテスト: `node` 環境（`src/tests/api/**/*.test.ts`）
 - サービステスト: `node` 環境（`src/tests/services/**/*.test.ts`）
+- その他のユニットテスト（lib配下のユーティリティ等）: `node` 環境（`src/tests/lib/**/*.test.ts`）
 - 設定ファイル: `vitest.config.ts`
 
 **テストファイルの配置**: `src/tests/` 配下にソースのパスを反映した構造で配置する。
@@ -71,16 +72,19 @@ src/
   tests/
     api/         # APIルートテスト
     services/    # サービステスト
+    lib/         # lib配下のユニットテスト
   lib/
-    types/       # 型定義（api/{endpoint}/index.ts, common/index.ts）
+    types/       # 型定義（api/{endpoint}/index.ts, domain/{entity}.ts）
   components/    # フロントエンドコンポーネント
+  features/      # ページ固有のクライアントコンポーネント（events/, reserve/ など）
 ```
 
 **主なデータフロー**:
-1. ユーザーが `/reserve` ページのフォームを送信（`src/components/ReserveForm.tsx` がクライアントコンポーネントとして描画）
-2. `ReserveForm.tsx` でクライアントサイドバリデーション
+1. ユーザーが `/events/[eventId]` ページで曲・パートを選択（`src/features/events/SongList.tsx` がクライアントコンポーネントとして描画）
+2. `SongList.tsx` から `EntryConfirmDialog.tsx`（`src/features/reserve/EntryConfirmDialog.tsx`）を開き、譲渡可否・SNS同意・参加ポリシー同意・コメント入力を行った上でクライアントサイドバリデーション
 3. `/api/reserve` へ POST（`src/app/api/reserve/route.ts` が処理）
-4. サーバーサイドで再バリデーション → DBに保存 → JSON レスポンスを
+4. サーバーサイドで再バリデーション → DBに保存 → JSON レスポンスを返却
+
 ## CI / GitHub Actions
 
 - **job順序**: `test` → `build`（`needs: test` でテスト通過後にビルド実行）
