@@ -67,8 +67,11 @@ export function ProfileForm({ profile }: Props) {
 
       {/* 名前 */}
       <div className="py-5">
-        <label className="text-xs text-muted-foreground mb-1 block">名前</label>
+        <label htmlFor="profile-name" className="text-xs text-muted-foreground mb-1 block">
+          名前
+        </label>
         <input
+          id="profile-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -79,8 +82,11 @@ export function ProfileForm({ profile }: Props) {
 
       {/* パート */}
       <div className="py-5">
-        <label className="text-xs text-muted-foreground mb-1 block">パート</label>
+        <label htmlFor="profile-part" className="text-xs text-muted-foreground mb-1 block">
+          パート
+        </label>
         <select
+          id="profile-part"
           value={part}
           onChange={(e) => setPart(e.target.value)}
           className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer"
@@ -97,7 +103,9 @@ export function ProfileForm({ profile }: Props) {
       {/* 自由コメント */}
       <div className="py-5">
         <div className="flex items-center justify-between mb-1">
-          <label className="text-xs text-muted-foreground">自由コメント</label>
+          <label htmlFor="profile-comment" className="text-xs text-muted-foreground">
+            自由コメント
+          </label>
           <button
             type="button"
             onClick={() => {
@@ -113,6 +121,7 @@ export function ProfileForm({ profile }: Props) {
           </button>
         </div>
         <textarea
+          id="profile-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder={"・好きなアーティスト\n\n・演奏歴など"}

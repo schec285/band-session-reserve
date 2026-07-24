@@ -80,8 +80,11 @@ export function PasswordChangeForm() {
         <DialogHeader title="パスワード変更" onClose={() => setOpen(false)} />
         <DialogContent>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground mb-1 block">現在のパスワード</label>
+            <label htmlFor="current-password" className="text-xs text-muted-foreground mb-1 block">
+              現在のパスワード
+            </label>
             <input
+              id="current-password"
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
@@ -90,8 +93,11 @@ export function PasswordChangeForm() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground mb-1 block">新しいパスワード</label>
+            <label htmlFor="new-password" className="text-xs text-muted-foreground mb-1 block">
+              新しいパスワード
+            </label>
             <input
+              id="new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -101,8 +107,11 @@ export function PasswordChangeForm() {
             <PasswordPolicyChecklist password={newPassword} />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground mb-1 block">新しいパスワード（確認）</label>
+            <label htmlFor="confirm-new-password" className="text-xs text-muted-foreground mb-1 block">
+              新しいパスワード（確認）
+            </label>
             <input
+              id="confirm-new-password"
               type="password"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
