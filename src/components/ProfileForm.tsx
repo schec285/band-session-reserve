@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { PART_ORDER, PART_LABELS } from "@/lib/utils/parts";
 import type { GetProfileResponse } from "@/lib/types/api/user";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { PasswordChangeForm } from "@/components/PasswordChangeForm";
 import { fetchWithCsrf } from "@/lib/client/fetchWithCsrf";
 
@@ -66,25 +68,20 @@ export function ProfileForm({ profile }: Props) {
       <PasswordChangeForm />
 
       {/* 名前 */}
-      <div className="py-5">
-        <label htmlFor="profile-name" className="text-xs text-muted-foreground mb-1 block">
-          名前
-        </label>
-        <input
+      <div className="py-5 space-y-1">
+        <Label htmlFor="profile-name">名前</Label>
+        <Input
           id="profile-name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="例：山田 太郎"
-          className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       {/* パート */}
-      <div className="py-5">
-        <label htmlFor="profile-part" className="text-xs text-muted-foreground mb-1 block">
-          パート
-        </label>
+      <div className="py-5 space-y-1">
+        <Label htmlFor="profile-part">パート</Label>
         <select
           id="profile-part"
           value={part}
@@ -101,11 +98,9 @@ export function ProfileForm({ profile }: Props) {
       </div>
 
       {/* 自由コメント */}
-      <div className="py-5">
-        <div className="flex items-center justify-between mb-1">
-          <label htmlFor="profile-comment" className="text-xs text-muted-foreground">
-            自由コメント
-          </label>
+      <div className="py-5 space-y-1">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="profile-comment">自由コメント</Label>
           <button
             type="button"
             onClick={() => {

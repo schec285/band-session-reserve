@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Dialog, DialogHeader, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Toast, type ToastVariant } from "@/components/ui/Toast";
 import { PasswordPolicyChecklist } from "@/components/ui/PasswordPolicyChecklist";
 import { isPasswordPolicySatisfied } from "@/lib/utils/password";
@@ -80,43 +82,34 @@ export function PasswordChangeForm() {
         <DialogHeader title="パスワード変更" onClose={() => setOpen(false)} />
         <DialogContent>
           <div className="space-y-1">
-            <label htmlFor="current-password" className="text-xs text-muted-foreground mb-1 block">
-              現在のパスワード
-            </label>
-            <input
+            <Label htmlFor="current-password">現在のパスワード</Label>
+            <Input
               id="current-password"
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               autoComplete="current-password"
-              className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor="new-password" className="text-xs text-muted-foreground mb-1 block">
-              新しいパスワード
-            </label>
-            <input
+            <Label htmlFor="new-password">新しいパスワード</Label>
+            <Input
               id="new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
-              className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <PasswordPolicyChecklist password={newPassword} />
           </div>
           <div className="space-y-1">
-            <label htmlFor="confirm-new-password" className="text-xs text-muted-foreground mb-1 block">
-              新しいパスワード（確認）
-            </label>
-            <input
+            <Label htmlFor="confirm-new-password">新しいパスワード（確認）</Label>
+            <Input
               id="confirm-new-password"
               type="password"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
               autoComplete="new-password"
-              className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </DialogContent>
