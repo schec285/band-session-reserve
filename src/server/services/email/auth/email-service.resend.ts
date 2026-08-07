@@ -8,6 +8,9 @@ import { formatDatetime } from "@/lib/utils/date";
  * Resend を使ったメール送信サービスの実装。
  */
 export class ResendEmailService implements IEmailService {
+  /**
+   * Resend クライアントを受け取ってメール送信サービスを初期化する。
+   */
   constructor(private readonly resend: Resend) { }
 
   /**

@@ -36,6 +36,10 @@ export function SignInForm({ flash }: SignInFormProps) {
     if (flash) clearFlash();
   }, []);
 
+  /**
+   * メール/パスワードでサインインする。
+   * 失敗時はエラーメッセージを表示し、成功時は callbackUrl（なければトップページ）へ遷移する。
+   */
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);

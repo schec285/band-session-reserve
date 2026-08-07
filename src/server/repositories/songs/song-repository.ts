@@ -55,13 +55,21 @@ export interface IAddEventSongsInput {
 }
 
 export interface ISongRepository {
-  /** 全曲マスタを取得する */
+  /**
+   * 全曲マスタを取得する。
+   */
   findAllSongs(): Promise<ISongRecord[]>;
-  /** 曲IDで1件取得する。存在しない場合は null を返す */
+  /**
+   * 曲IDで1件取得する。存在しない場合は null を返す。
+   */
   findSongById(songId: string): Promise<ISongRecord | null>;
-  /** 曲マスタを複数件まとめて作成し、作成したレコード一覧を返す */
+  /**
+   * 曲マスタを複数件まとめて作成し、作成したレコード一覧を返す。
+   */
   createSongs(inputs: ICreateSongInput[]): Promise<ISongRecord[]>;
-  /** 曲名を更新する。存在しない場合は null を返す */
+  /**
+   * 曲名を更新する。存在しない場合は null を返す。
+   */
   updateSong(songId: string, input: IUpdateSongInput): Promise<ISongRecord | null>;
   /**
    * 曲マスタを削除する。存在しない場合は false を返す。
@@ -69,14 +77,24 @@ export interface ISongRepository {
    * event_song_parts・reservations も削除する（呼び出し側で削除内容の同意を得た前提）。
    */
   deleteSong(songId: string): Promise<boolean>;
-  /** イベントに複数曲を一括追加し、作成したレコード一覧を返す */
+  /**
+   * イベントに複数曲を一括追加し、作成したレコード一覧を返す。
+   */
   addEventSongs(input: IAddEventSongsInput): Promise<IEventSongRecord[]>;
-  /** イベント曲IDでイベント曲を削除する。存在しない場合は false を返す */
+  /**
+   * イベント曲IDでイベント曲を削除する。存在しない場合は false を返す。
+   */
   deleteEventSong(eventSongId: string): Promise<boolean>;
-  /** 指定した eventSongId 群のうち eventId に属するものを一括削除し、削除できた eventSongId 一覧を返す */
+  /**
+   * 指定した eventSongId 群のうち eventId に属するものを一括削除し、削除できた eventSongId 一覧を返す。
+   */
   deleteEventSongs(eventId: string, eventSongIds: string[]): Promise<string[]>;
-  /** イベント曲の募集パートを更新する。存在しない場合は null を返す */
+  /**
+   * イベント曲の募集パートを更新する。存在しない場合は null を返す。
+   */
   updateEventSongParts(eventSongId: string, parts: Part[]): Promise<{ eventSongId: string; parts: Part[] } | null>;
-  /** イベント曲の指定パートのエントリー（予約）を削除する。募集パート自体は残す。存在しない場合は false を返す */
+  /**
+   * イベント曲の指定パートのエントリー（予約）を削除する。募集パート自体は残す。存在しない場合は false を返す。
+   */
   removeReservation(eventSongId: string, part: Part): Promise<boolean>;
 }

@@ -62,6 +62,9 @@ export function EntryConfirmDialog({
     return map;
   }, new Map());
 
+  /**
+   * 指定した曲・パートキーの譲渡可能フラグをトグルする。
+   */
   function toggleTransferable(key: string) {
     setTransferable((prev) => {
       const next = new Set(prev);
@@ -74,6 +77,10 @@ export function EntryConfirmDialog({
     });
   }
 
+  /**
+   * フォーム送信時に SNS同意・参加ポリシー同意・コメント・譲渡可否を親コンポーネントの
+   * onSubmit に渡す。失敗時はエラーメッセージを表示する。
+   */
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -87,6 +94,11 @@ export function EntryConfirmDialog({
     }
   }
 
+  /**
+   * ダイアログを閉じる。送信中（loading）の場合は何もしない。
+   * 入力状態（SNS同意・参加ポリシー同意・コメント・譲渡可否・エラー）をすべて初期値に戻してから
+   * 親コンポーネントの onClose を呼び出す。
+   */
   function handleClose() {
     if (loading) return;
     setSnsConsent(true);

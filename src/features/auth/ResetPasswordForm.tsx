@@ -21,6 +21,10 @@ export function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * パスワードと確認用パスワードの一致を検証したうえで POST /api/auth/reset-password に送信する。
+   * 成功時はサインインページへ遷移し、失敗時はエラーメッセージを表示する。
+   */
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);

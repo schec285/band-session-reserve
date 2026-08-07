@@ -14,11 +14,18 @@ export interface IUserListRecord {
 }
 
 export interface IUserRepository {
-  /** メールアドレスでユーザーを検索する */
+  /**
+   * メールアドレスでユーザーを検索する。
+   */
   findByEmail(email: string): Promise<{ id: string; name: string; emailVerified: Date | null } | null>;
-  /** IDでユーザーを検索する */
+  /**
+   * IDでユーザーを検索する。
+   */
   findById(id: string): Promise<{ id: string; email: string; name: string } | null>;
-  /** 認証用にメールアドレスでユーザーを検索する（passwordHash・emailVerified 含む） */
+  /**
+   * 認証用にメールアドレスでユーザーを検索する。
+   * passwordHash・emailVerified を含む。
+   */
   findByEmailForAuth(email: string): Promise<{
     id: string;
     email: string;
@@ -28,31 +35,54 @@ export interface IUserRepository {
     passwordHash: string | null;
     emailVerified: Date | null;
   } | null>;
-  /** 認証用にIDでユーザーを検索する（email・name・passwordHash 含む） */
+  /**
+   * 認証用にIDでユーザーを検索する。
+   * email・name・passwordHash を含む。
+   */
   findByIdForAuth(id: string): Promise<{
     id: string;
     email: string;
     name: string | null;
     passwordHash: string | null;
   } | null>;
-  /** ユーザーを新規作成する */
+  /**
+   * ユーザーを新規作成する。
+   */
   create(data: { email: string; passwordHash: string; name: string }): Promise<{ id: string }>;
-  /** 名前とパスワードハッシュを更新する */
+  /**
+   * 名前とパスワードハッシュを更新する。
+   */
   update(id: string, data: { passwordHash: string; name: string }): Promise<void>;
-  /** email_verified を現在時刻でセットする */
+  /**
+   * email_verified を現在時刻でセットする。
+   */
   setEmailVerified(id: string): Promise<void>;
-  /** 最終アクセス日（YYYY-MM-DD）をセットする */
+  /**
+   * 最終アクセス日（YYYY-MM-DD）をセットする。
+   */
   updateLastAccessDate(id: string, dateString: string): Promise<void>;
-  /** パスワードハッシュのみを更新する */
+  /**
+   * パスワードハッシュのみを更新する。
+   */
   updatePassword(id: string, passwordHash: string): Promise<void>;
-  /** プロフィール情報（メール・名前・パート・コメント）を取得する */
+  /**
+   * プロフィール情報（メール・名前・パート・コメント）を取得する。
+   */
   getProfile(id: string): Promise<{ email: string; name: string; part: string | null; comment: string | null } | null>;
-  /** プロフィール情報（名前・パート・コメント）を更新する */
+  /**
+   * プロフィール情報（名前・パート・コメント）を更新する。
+   */
   updateProfile(id: string, data: { name?: string; part?: Part | null; comment?: string | null }): Promise<void>;
-  /** 全ユーザーを登録日時の降順で取得する */
+  /**
+   * 全ユーザーを登録日時の降順で取得する。
+   */
   findAll(): Promise<IUserListRecord[]>;
-  /** ロールを更新する。存在しない場合は null を返す */
+  /**
+   * ロールを更新する。存在しない場合は null を返す。
+   */
   updateRole(id: string, role: string): Promise<IUserListRecord | null>;
-  /** JWT再取得用に名前とロールを取得する */
+  /**
+   * JWT再取得用に名前とロールを取得する。
+   */
   getAuthRefreshData(id: string): Promise<{ name: string; role: string } | null>;
 }

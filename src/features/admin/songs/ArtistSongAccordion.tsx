@@ -67,6 +67,9 @@ export function ArtistSongAccordion({ songs }: Props) {
     }
   }
 
+  /**
+   * 曲名編集ダイアログを開く。編集対象の曲を設定し、入力欄を現在の曲名で初期化する。
+   */
   function handleRequestEdit(song: Song) {
     setEditTarget(song);
     setEditTitle(song.title);
@@ -104,11 +107,17 @@ export function ArtistSongAccordion({ songs }: Props) {
     }
   }
 
+  /**
+   * 削除確認ダイアログを開く。削除対象の曲を設定し、確認ワード入力欄をリセットする。
+   */
   function handleRequestDelete(song: Song) {
     setDeleteTarget(song);
     setDeleteConfirmText("");
   }
 
+  /**
+   * 削除確認ダイアログを閉じる。削除対象と確認ワード入力欄をリセットする。
+   */
   function handleCloseDeleteDialog() {
     setDeleteTarget(null);
     setDeleteConfirmText("");
