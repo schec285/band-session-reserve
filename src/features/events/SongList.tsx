@@ -79,6 +79,10 @@ export function SongList({
     return <p className="text-sm text-muted-foreground">曲が登録されていません</p>;
   }
 
+  /**
+   * 曲・パートの選択状態をトグルする。
+   * すでに選択済みの場合は選択を解除し、未選択の場合は選択に加える。
+   */
   function toggleEntry(eventSongId: string, part: string) {
     const key = `${eventSongId}:${part}`;
     setSelected((prev) => {
@@ -101,6 +105,10 @@ export function SongList({
     )
   );
 
+  /**
+   * 選択中の曲・パートから確認ダイアログ表示用のエントリー項目一覧を組み立てる。
+   * 各項目に曲名・アーティスト名と、譲渡引受対象かどうか（isTakeover）を付与する。
+   */
   function buildEntryItems(): EntryItem[] {
     return Array.from(selected).map((key) => {
       const colonIndex = key.indexOf(":");
@@ -117,6 +125,12 @@ export function SongList({
     });
   }
 
+  /**
+   * エントリー確認ダイアログの送信ハンドラ。
+   * 選択中の曲・パートをバリデートした上で POST /api/reserve に送信する。
+   * 未ログイン（401）の場合はサインインページへ遷移し、失敗時はエラーをスローする。
+   * 成功時は router.refresh() 完了後に選択状態をクリアしダイアログを閉じて成功メッセージを表示する。
+   */
   async function handleConfirmSubmit({
     snsConsent,
     policyConsent,
@@ -175,6 +189,11 @@ export function SongList({
     });
   }
 
+  /**
+   * 管理対象エントリーの譲渡可否を反転させて PUT /api/reserve/[id] に送信する。
+   * 失敗時はエラーメッセージをalert表示し、成功時は router.refresh() 完了後に
+   * 管理モーダルを閉じて結果メッセージを表示する。
+   */
   async function handleToggleTransferable() {
     if (!manageTarget) return;
     setManageLoading(true);
@@ -198,6 +217,11 @@ export function SongList({
     startTransition(() => router.refresh());
   }
 
+  /**
+   * 管理対象エントリーを DELETE /api/reserve/[id] でキャンセルする。
+   * 失敗時はエラーメッセージをalert表示し、成功時は router.refresh() 完了後に
+   * 管理モーダルを閉じてキャンセル完了メッセージを表示する。
+   */
   async function handleCancel() {
     if (!manageTarget) return;
     setManageLoading(true);

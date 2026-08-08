@@ -29,6 +29,10 @@ export function ProfileForm({ profile }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [templateConfirmOpen, setTemplateConfirmOpen] = useState(false);
 
+  /**
+   * 名前・パート・自由コメントを PUT /api/user/profile に送信して保存する。
+   * 成功時はセッションのユーザー情報を再取得（update）し、成功・失敗いずれもメッセージを表示する。
+   */
   async function handleSave() {
     setSaving(true);
     setMessage(null);

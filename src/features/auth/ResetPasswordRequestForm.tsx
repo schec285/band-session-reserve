@@ -32,6 +32,10 @@ export function ResetPasswordRequestForm({ flash }: ResetPasswordRequestFormProp
     if (flash) clearFlash();
   }, []);
 
+  /**
+   * 入力されたメールアドレスに認証コードを送るため POST /api/auth/reset-password/request に送信する。
+   * 成功時は認証コード入力ページへ遷移し、失敗時はエラーメッセージを表示する。
+   */
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);

@@ -55,9 +55,13 @@ export interface IAdminSongWithReservations {
 }
 
 export interface IAdminEventRepository {
-  /** 全イベントを取得する */
+  /**
+   * 全イベントを取得する。
+   */
   findAllEvents(): Promise<IAdminEventRecord[]>;
-  /** イベントIDで1件取得する。存在しない場合は null を返す */
+  /**
+   * イベントIDで1件取得する。存在しない場合は null を返す。
+   */
   findEventById(eventId: string): Promise<IAdminEventRecord | null>;
   /**
    * イベントIDで曲一覧とパート別予約状況を取得する。
@@ -65,7 +69,9 @@ export interface IAdminEventRepository {
    * イベントが存在するが曲が 0 件の場合は空配列を返す。
    */
   findEventSongsWithReservations(eventId: string): Promise<IAdminSongWithReservations[] | null>;
-  /** イベントの徴収済みユーザーIDセットを取得する */
+  /**
+   * イベントの徴収済みユーザーIDセットを取得する。
+   */
   findCollectedUserIds(eventId: string): Promise<Set<string>>;
   /**
    * 徴収状況を更新する。
@@ -74,10 +80,16 @@ export interface IAdminEventRepository {
    * イベントが存在しない場合は false を返す。
    */
   setCollected(eventId: string, userId: string, collected: boolean): Promise<boolean>;
-  /** イベントを作成し、作成したレコードを返す */
+  /**
+   * イベントを作成し、作成したレコードを返す。
+   */
   createEvent(input: IAdminCreateEventInput): Promise<IAdminEventRecord>;
-  /** イベントを更新し、更新後のレコードを返す。存在しない場合は null を返す */
+  /**
+   * イベントを更新し、更新後のレコードを返す。存在しない場合は null を返す。
+   */
   updateEvent(eventId: string, input: IAdminCreateEventInput): Promise<IAdminEventRecord | null>;
-  /** イベントを削除する。存在しない場合は false を返す */
+  /**
+   * イベントを削除する。存在しない場合は false を返す。
+   */
   deleteEvent(eventId: string): Promise<boolean>;
 }

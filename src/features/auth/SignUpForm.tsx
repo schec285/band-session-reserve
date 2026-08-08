@@ -37,6 +37,10 @@ export function SignUpForm({ flash }: SignUpFormProps) {
     if (flash) clearFlash();
   }, []);
 
+  /**
+   * パスワードと確認用パスワードの一致を検証したうえで POST /api/auth/signup に送信する。
+   * 成功時はメールアドレス認証ページへ遷移し、失敗時はエラーメッセージを表示する。
+   */
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);

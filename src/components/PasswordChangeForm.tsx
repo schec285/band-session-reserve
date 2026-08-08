@@ -23,17 +23,30 @@ export function PasswordChangeForm() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ variant: ToastVariant; message: string } | null>(null);
 
+  /**
+   * パスワード入力欄（現在・新規・確認）をすべて空文字に戻す。
+   */
   function resetFields() {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
   }
 
+  /**
+   * パスワード変更モーダルを開く。
+   * 開く前に入力欄をリセットし、前回の入力値が残らないようにする。
+   */
   function openModal() {
     resetFields();
     setOpen(true);
   }
 
+  /**
+   * 新しいパスワードと確認用パスワードが一致するか検証したうえで
+   * PUT /api/user/password に送信する。
+   * 成功時はモーダルを閉じて入力欄をリセットし成功トーストを表示、
+   * 失敗時（バリデーションエラー・APIエラー・通信エラー）はモーダルを開いたままエラートーストを表示する。
+   */
   async function handleSubmit() {
     if (newPassword !== confirmNewPassword) {
       setToast({ variant: "error", message: "パスワードが一致しません" });

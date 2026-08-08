@@ -19,6 +19,10 @@ export function AdminEventDeleteButton({ eventId }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  /**
+   * イベントを DELETE /api/admin/events/[id] で削除する。
+   * 成功時は確認ダイアログを閉じてイベント一覧へ遷移し、失敗時はエラーメッセージをalert表示する。
+   */
   async function handleDelete() {
     const res = await fetchWithCsrf(`/api/admin/events/${eventId}`, { method: "DELETE" });
 

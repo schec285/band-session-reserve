@@ -77,6 +77,10 @@ export function EventForm({ event, cancelPath = "/admin/events", onCancel, onSuc
     instrumentEntryLimit !== initialValues.instrumentEntryLimit ||
     description !== initialValues.description;
 
+  /**
+   * 指定フィールドに対応するバリデーションエラーメッセージを返す。
+   * 該当するエラーがなければ undefined を返す。
+   */
   function fieldError(field: string) {
     return errors.find((e) => e.field === field)?.message;
   }
@@ -98,6 +102,11 @@ export function EventForm({ event, cancelPath = "/admin/events", onCancel, onSuc
     }
   }
 
+  /**
+   * イベント作成・編集フォームの送信ハンドラ。
+   * isEdit に応じて PUT/POST を使い分けて送信し、成功時は onSuccess があればそれを呼び、
+   * なければ一覧ページへ遷移する。失敗時はレスポンスのエラー内容をフィールドごとに表示する。
+   */
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrors([]);

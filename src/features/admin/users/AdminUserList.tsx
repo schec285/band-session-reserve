@@ -47,16 +47,27 @@ export function AdminUserList({ users, currentUserId }: Props) {
     (user) => (user.isVerified && showVerified) || (!user.isVerified && showUnverified)
   );
 
+  /**
+   * ロール選択セレクトボックスの変更ハンドラ。
+   * 現在のロールと同じ場合は何もせず、異なる場合は確認ダイアログ表示用に変更内容を保持する。
+   */
   function handleSelectChange(user: User, toRole: Role) {
     if (toRole === user.role) return;
     setPendingChange({ userId: user.id, userName: user.name, toRole });
   }
 
+  /**
+   * ロール変更確認ダイアログをキャンセルする。送信中（submitting）の場合は何もしない。
+   */
   function handleCancel() {
     if (submitting) return;
     setPendingChange(null);
   }
 
+  /**
+   * 保持中のロール変更内容を PATCH /api/admin/users/[id] に送信して確定する。
+   * 成功・失敗いずれもダイアログを閉じてトースト通知を表示し、成功時は一覧を再取得する。
+   */
   async function handleConfirm() {
     if (!pendingChange) return;
     setSubmitting(true);

@@ -28,28 +28,47 @@ export interface IMyReservationRecord {
 }
 
 export interface IReservationRepository {
-  /** eventSongId でイベント曲とイベント情報を取得する */
+  /**
+   * eventSongId でイベント曲とイベント情報を取得する。
+   */
   findEventSongWithEvent(eventSongId: string): Promise<IEventSongRecord | null>;
-  /** userId に紐づく今後の予約一覧を開催日昇順で取得する */
+  /**
+   * userId に紐づく今後の予約一覧を開催日昇順で取得する。
+   */
   findUpcomingByUserId(userId: string): Promise<IMyReservationRecord[]>;
-  /** ユーザーがあるイベント内で指定パート群に持つ予約数を返す（isTransferable=true は除外） */
+  /**
+   * ユーザーがあるイベント内で指定パート群に持つ予約数を返す。
+   * isTransferable=true の予約は除外する。
+   */
   countByUserIdAndEventIdAndParts(userId: string, eventId: string, parts: string[]): Promise<number>;
-  /** eventSongId とパートで既存の予約を検索する */
+  /**
+   * eventSongId とパートで既存の予約を検索する。
+   */
   findByEventSongIdAndPart(eventSongId: string, part: string): Promise<{ id: string; isTransferable: boolean; userId: string } | null>;
-  /** userId と eventSongId でその曲における既存予約一覧を取得する */
+  /**
+   * userId と eventSongId でその曲における既存予約一覧を取得する。
+   */
   findByUserIdAndEventSongId(userId: string, eventSongId: string): Promise<IReservationRecord[]>;
-  /** 予約IDで予約を取得する */
+  /**
+   * 予約IDで予約を取得する。
+   */
   findById(reservationId: string): Promise<IReservationRecord | null>;
-  /** 予約の譲渡可否を更新する */
+  /**
+   * 予約の譲渡可否を更新する。
+   */
   updateTransferable(reservationId: string, isTransferable: boolean): Promise<void>;
-  /** 予約を削除する */
+  /**
+   * 予約を削除する。
+   */
   deleteById(reservationId: string): Promise<void>;
   /**
    * 譲渡引受: 既存予約の userId を新ユーザーに書き換え、previousUserId に元ユーザーを記録する。
    * isTransferable は常に false にセットされる。
    */
   takeoverReservation(reservationId: string, data: { userId: string; previousUserId: string; snsConsent: boolean; comment?: string }): Promise<void>;
-  /** 複数の予約をトランザクションで一括作成する */
+  /**
+   * 複数の予約をトランザクションで一括作成する。
+   */
   createMany(data: Array<{
     userId: string;
     eventSongId: string;
